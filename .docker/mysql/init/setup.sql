@@ -1,0 +1,5 @@
+CREATE DATABASE IF NOT EXISTS s6_db;
+CREATE DATABASE IF NOT EXISTS s6_db_test;
+
+CREATE USER 'admin'@'localhost' IDENTIFIED BY 'admin';
+GRANT ALL PRIVILEGES ON *.* TO 'admin'@'%';

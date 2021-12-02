@@ -1,0 +1,21 @@
+Options -Indexes
+DirectoryIndex index.php
+
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    # for api tests
+    #RewriteCond %{REQUEST_FILENAME} !-f
+    #RewriteCond %{REQUEST_FILENAME} !-d
+    #RewriteCond %{REMOTE_ADDR} (109.72.149.185)
+    #RewriteRule .* index-test.php [L]
+	RewriteBase /
+	RewriteCond %{THE_REQUEST} ^GET.*index\.php [NC]
+	RewriteRule (.?)index\.php/(.*) /$1$2 [R=301,NE,L]
+
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule .* index.php [L]
+</IfModule>

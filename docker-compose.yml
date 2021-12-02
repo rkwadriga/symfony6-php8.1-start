@@ -1,0 +1,37 @@
+services:
+  db:
+    build: './.docker/mysql'
+    ports:
+      - "3331:3306"
+    volumes:
+      #- ./.docker/mysql/data:/var/lib/mysql
+      - ./.docker/mysql/init/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: my_db
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+  php: # docker-compose run php bash
+    build: './.docker/php'
+    ports:
+      - "8081:80"
+    tty: true
+    environment:
+      PHP_IDE_CONFIG: "serverName=S6-Docker"
+    volumes:
+      - ./:/var/www/html/
+      - ./.docker/php/logs/:/var/log/apache2/
+      - ./.docker/php/conf.d/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./.docker/php/conf.d/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
+    depends_on:
+      - db
+  composer:
+    build: './.docker/composer'
+    tty: true
+    command: ["composer", "install"]
+    volumes:
+      - ./:/app/
+      - ./.docker/composer/tmp/:/tmp/
+    depends_on:
+      - php
