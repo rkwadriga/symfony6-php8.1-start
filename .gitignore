@@ -14,3 +14,7 @@
 /.docker/mysql/data/
 /.docker/php/logs/
 ###< docker ###
+
+###> docker ###
+/.idea/
+###< docker ###
