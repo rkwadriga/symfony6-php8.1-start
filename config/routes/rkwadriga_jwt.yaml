@@ -1,0 +1,3 @@
+rkwadriga_jwt_auth_login:
+    path: /api/token
+    methods: ["POST"]

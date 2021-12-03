@@ -21,9 +21,8 @@ security:
             lazy: true
             provider: app_user_provider
             custom_authenticator:
-                - App\Security\JwtAuthenticator
-                - App\Security\LoginAuthenticator
-
+                - rkwadriga.jws.login_authenticator
+                - rkwadriga.jws.jws_authenticator
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall

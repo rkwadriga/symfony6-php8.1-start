@@ -26,3 +26,14 @@ services:
 
     App\Doctrine\Listeners\UserCreateOrUpdateListener:
         tags: [ 'doctrine.orm.entity_listener' ]
+
+
+    rkwadriga.jws.login_authenticator:
+        class: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator
+        public: true
+        arguments:
+            $container: "@service_container"
+
+    rkwadriga.jws.jws_authenticator:
+        class: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator
+        public: true

@@ -1,0 +1,3 @@
+rkwadriga_jwt:
+    login_url: rkwadriga_jwt_auth_login
+    provider: app_user_provider

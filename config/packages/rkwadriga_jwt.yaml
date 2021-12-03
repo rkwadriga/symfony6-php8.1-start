@@ -1,0 +1,4 @@
+rkwadriga_jwt:
+    login_url: rkwadriga_jwt_auth_login
+    login_pram: email
+    password_param: password
