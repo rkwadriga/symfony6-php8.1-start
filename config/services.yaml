@@ -28,12 +28,26 @@ services:
         tags: [ 'doctrine.orm.entity_listener' ]
 
 
-    rkwadriga.jws.login_authenticator:
-        class: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator
+    ####> Rkwadriga JWS Bundle ###
+    Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem: ~
+    rkwadriga.jws.filesystem_service:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem
         public: true
-        arguments:
-            $container: "@service_container"
 
-    rkwadriga.jws.jws_authenticator:
-        class: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator
+    Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator: ~
+    rkwadriga.jws.login_authenticator:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator
         public: true
+
+    Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator: ~
+    rkwadriga.jws.jws_authenticator:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator
+        public: true
+
+    Rkwadriga\JwtBundle\DependencyInjection\Services\Generator: ~
+    rkwadriga.jws.jws_key_generator:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Services\Generator
+        public: true
+
+    Rkwadriga\JwtBundle\Command\CreateKeyPairCommand: ~
+    ####< Rkwadriga JWS Bundle ###

@@ -7,6 +7,7 @@
 namespace Rkwadriga\JwtBundle;
 
 use Rkwadriga\JwtBundle\DependencyInjection\RkwadrigaJwtExtension;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\Generator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;

@@ -27,3 +27,8 @@
 /phpunit.xml
 .phpunit.result.cache
 ###< phpunit/phpunit ###
+
+###> JWS ###
+/config/jwt/
+/config/jwt_test/
+###< JWS ###

@@ -19,7 +19,7 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class LoginAuthenticator extends AbstractAuthenticator
@@ -36,11 +36,12 @@ class LoginAuthenticator extends AbstractAuthenticator
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface $serializer,
         private UserProviderInterface $userProvider,
-        private ContainerInterface $container
+        private KernelInterface $kernel
     ) {
-        $this->loginUrl = (string) $container->getParameter(self::LOGIN_URL_CONFIG_KEY);
-        $this->loginParam = (string) $container->getParameter(self::LOGIN_PARAM_CONFIG_KEY);
-        $this->passwordParam = (string) $container->getParameter(self::PASSWORD_PARAM_CONFIG_KEY);
+        $container = $this->kernel->getContainer();
+        $this->loginUrl = $container->getParameter(self::LOGIN_URL_CONFIG_KEY);
+        $this->loginParam = $container->getParameter(self::LOGIN_PARAM_CONFIG_KEY);
+        $this->passwordParam = $container->getParameter(self::PASSWORD_PARAM_CONFIG_KEY);
     }
 
     public function supports(Request $request): ?bool

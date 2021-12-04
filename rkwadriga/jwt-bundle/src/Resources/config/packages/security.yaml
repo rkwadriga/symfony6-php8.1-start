@@ -1,0 +1,8 @@
+security:
+    firewalls:
+        main:
+            lazy: true
+            provider: app_user_provider
+            custom_authenticator:
+                - rkwadriga.jws.login_authenticator
+                - rkwadriga.jws.jws_authenticator
