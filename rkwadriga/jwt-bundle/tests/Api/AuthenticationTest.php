@@ -6,7 +6,6 @@
 
 namespace Rkwadriga\JwtBundle\Tests\Api;
 
-use Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator;
 use Rkwadriga\JwtBundle\Tests\Api\fixtures\UserFixture;
 use Rkwadriga\JwtBundle\Tests\Api\Helpers\ApiTestsHelperMethodsTrait;
 use Rkwadriga\JwtBundle\Tests\Api\Helpers\ApiTestsSetupTrait;
@@ -21,9 +20,9 @@ class AuthenticationTest extends WebTestCase
     public function testLoginSuccessful()
     {
         $user = $this->createUser();
-        $response = $this->request(LoginAuthenticator::LOGIN_URL_CONFIG_KEY, [
-            $this->getConfigValue(LoginAuthenticator::LOGIN_PARAM_CONFIG_KEY) => UserFixture::EMAIL,
-            $this->getConfigValue(LoginAuthenticator::PASSWORD_PARAM_CONFIG_KEY) => UserFixture::PASSWORD
+        $response = $this->request($this->loginUrl, [
+            $this->loginParam => UserFixture::EMAIL,
+            $this->passwordParam => UserFixture::PASSWORD
         ]);
 
         dd($response);

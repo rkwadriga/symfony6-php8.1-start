@@ -19,14 +19,14 @@ trait ApiTestsHelperMethodsTrait
         return self::getContainer()->getParameter($key);
     }
 
-    private function request(string|array $routeParamName, array $params = []): HttpResponse
+    private function request(string|array $route, array $params = []): HttpResponse
     {
-        if (is_array($routeParamName)) {
-            [$routeParamName, $routeParams] = $routeParamName;
+        if (is_array($route)) {
+            [$route, $routeParams] = $route;
         } else {
             $routeParams = [];
         }
-        [$method, $uri] = $this->createRoute($this->getConfigValue($routeParamName), $routeParams);
+        [$method, $uri] = $this->createRoute($route, $routeParams);
 
         $this->client->request($method, $uri, [], [], [], json_encode($params));
         return $this->getResponse();
