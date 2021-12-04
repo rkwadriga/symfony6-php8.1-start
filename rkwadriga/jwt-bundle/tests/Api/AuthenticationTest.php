@@ -21,7 +21,10 @@ class AuthenticationTest extends WebTestCase
     public function testLoginSuccessful()
     {
         $user = $this->createUser();
-        $response = $this->request(LoginAuthenticator::LOGIN_URL_CONFIG_KEY, ['email' => UserFixture::EMAIL, 'password' => UserFixture::PASSWORD]);
+        $response = $this->request(LoginAuthenticator::LOGIN_URL_CONFIG_KEY, [
+            $this->getConfigValue(LoginAuthenticator::LOGIN_PARAM_CONFIG_KEY) => UserFixture::EMAIL,
+            $this->getConfigValue(LoginAuthenticator::PASSWORD_PARAM_CONFIG_KEY) => UserFixture::PASSWORD
+        ]);
 
         dd($response);
     }
