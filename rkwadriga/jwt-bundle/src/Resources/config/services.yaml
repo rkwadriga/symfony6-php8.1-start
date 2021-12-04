@@ -1,10 +1,17 @@
 services:
-    Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem: ~
+    Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem:
+        arguments:
+            $kernel: '@kernel'
     rkwadriga.jws.filesystem_service:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem
         public: true
 
-    Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator: ~
+    Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator:
+        arguments:
+            $encoder: '@security.password_hasher_factory'
+            $serializer: '@Symfony\Component\Serializer\SerializerInterface'
+            $userProvider: '@security.user.provider.concrete.app_user_provider'
+            $kernel: '@kernel'
     rkwadriga.jws.login_authenticator:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator
         public: true

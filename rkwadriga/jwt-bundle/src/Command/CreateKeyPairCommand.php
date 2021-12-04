@@ -6,7 +6,6 @@
 
 namespace Rkwadriga\JwtBundle\Command;
 
-use Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\Generator;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\KeyPair;
 use Rkwadriga\JwtBundle\Exceptions\FileSystemException;
