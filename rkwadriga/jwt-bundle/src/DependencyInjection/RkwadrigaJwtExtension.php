@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 
@@ -22,8 +23,8 @@ class RkwadrigaJwtExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter('rkwadriga_jwt_configuration_login_url', $config['login_url']);
-        $container->setParameter('rkwadriga_jwt_configuration_login_pram', $config['login_pram']);
-        $container->setParameter('rkwadriga_jwt_configuration_password_param', $config['password_param']);
+        $container->setParameter(LoginAuthenticator::LOGIN_URL_CONFIG_KEY, $config['login_url']);
+        $container->setParameter(LoginAuthenticator::LOGIN_PARAM_CONFIG_KEY, $config['login_pram']);
+        $container->setParameter(LoginAuthenticator::PASSWORD_PARAM_CONFIG_KEY, $config['password_param']);
     }
 }

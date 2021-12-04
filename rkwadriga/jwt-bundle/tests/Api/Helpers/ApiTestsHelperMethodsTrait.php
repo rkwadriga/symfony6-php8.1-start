@@ -8,15 +8,70 @@ namespace Rkwadriga\JwtBundle\Tests\Api\Helpers;
 
 
 use App\Entity\User;
+use PHPUnit\TextUI\RuntimeException;
 use Rkwadriga\JwtBundle\Tests\Api\fixtures\UserFixture;
-use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 
 trait ApiTestsHelperMethodsTrait
 {
-    private function request(string $method, string $uri, array $params = []): Response
+    private function getConfigValue(string $key): mixed
     {
+        return self::getContainer()->getParameter($key);
+    }
+
+    private function request(string|array $routeParamName, array $params = []): HttpResponse
+    {
+        if (is_array($routeParamName)) {
+            [$routeParamName, $routeParams] = $routeParamName;
+        } else {
+            $routeParams = [];
+        }
+        [$method, $uri] = $this->createRoute($this->getConfigValue($routeParamName), $routeParams);
+
         $this->client->request($method, $uri, [], [], [], json_encode($params));
-        return $this->client->getResponse();
+        return $this->getResponse();
+    }
+
+    private function getResponse(): HttpResponse
+    {
+        return new HttpResponse($this->getResponseStatus(), $this->getResponseBody());
+    }
+
+    private function getResponseStatus(): int
+    {
+        return $this->client->getResponse()->getStatusCode();
+    }
+
+    private function getResponseBody(?string $paramName = null, mixed $defaultValue = null): ?array
+    {
+        $body = $this->client->getResponse()->getContent();
+        if (!$body) {
+            return null;
+        }
+
+        $params = json_decode($body, true);
+        if ($params === null) {
+            throw new RuntimeException('Invalid response format');
+        }
+
+        if ($paramName === null) {
+            return $params;
+        }
+
+        return $params[$paramName] ?? $defaultValue;
+    }
+
+    private function createRoute(string $routeName, array $routeParams = []): array
+    {
+        $route = $this->router->getRouteCollection()->get($routeName);
+        if ($route === null) {
+            throw new ParameterNotFoundException("Invalid route name \"{$routeName}\"");
+        }
+
+        $methods = $route->getMethods();
+        $uri = $this->router->generate($routeName, $routeParams);
+
+        return [array_shift($methods), $uri];
     }
 
     private function createUser(

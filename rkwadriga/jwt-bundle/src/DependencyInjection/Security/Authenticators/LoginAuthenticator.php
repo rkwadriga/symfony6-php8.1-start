@@ -24,6 +24,10 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
+    public const LOGIN_URL_CONFIG_KEY = 'rkwadriga_jwt_configuration_login_url';
+    public const LOGIN_PARAM_CONFIG_KEY = 'rkwadriga_jwt_configuration_login_pram';
+    public const PASSWORD_PARAM_CONFIG_KEY = 'rkwadriga_jwt_configuration_password_param';
+
     private string $loginUrl;
     private string $loginParam;
     private string $passwordParam;
@@ -34,9 +38,9 @@ class LoginAuthenticator extends AbstractAuthenticator
         private UserProviderInterface $userProvider,
         private ContainerInterface $container
     ) {
-        $this->loginUrl = (string) $container->getParameter('rkwadriga_jwt_configuration_login_url');
-        $this->loginParam = (string) $container->getParameter('rkwadriga_jwt_configuration_login_pram');
-        $this->passwordParam = (string) $container->getParameter('rkwadriga_jwt_configuration_password_param');
+        $this->loginUrl = (string) $container->getParameter(self::LOGIN_URL_CONFIG_KEY);
+        $this->loginParam = (string) $container->getParameter(self::LOGIN_PARAM_CONFIG_KEY);
+        $this->passwordParam = (string) $container->getParameter(self::PASSWORD_PARAM_CONFIG_KEY);
     }
 
     public function supports(Request $request): ?bool
