@@ -7,7 +7,9 @@
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
 use Rkwadriga\JwtBundle\Entities\Token;
+use Rkwadriga\JwtBundle\Entities\TokenData;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
+use Rkwadriga\JwtBundle\Helpers\TokenHelper;
 use Symfony\Component\HttpFoundation\Request;
 
 class TokenIdentifier
@@ -19,6 +21,7 @@ class TokenIdentifier
     public const TYPE_SIMPLE = 'Simple';
 
     public function __construct(
+        private Encoder $encoder,
         private string $accessTokenLocation,
         private string $accessTokenParamName,
         private string $refreshTokenLocation,
@@ -37,40 +40,89 @@ class TokenIdentifier
         self::TYPE_SIMPLE
     ];
 
-    public function identify(Request $request): Token
+    /**
+     * @param Request $request
+     *
+     * @throws TokenIdentifierException
+     *
+     * @return array<TokenData, ?TokenData>
+     */
+    public function identify(Request $request): array
     {
         $accessToken = $this->getToken($request, Token::ACCESS);
-        dd($accessToken);
+        $accessToken = new TokenData(...$accessToken);
+
+        $refreshToken = $this->getToken($request, Token::REFRESH);
+        if ($refreshToken !== null) {
+            $refreshToken = new TokenData(...$refreshToken);
+        }
+
+        return [$accessToken, $refreshToken];
     }
 
-    private function getToken(Request $request, string $type, bool $throwNotFoundException = true): string
+    private function getToken(Request $request, string $type): ?array
     {
         if ($type === Token::ACCESS) {
             $location = $this->accessTokenLocation;
             $paramName = $this->accessTokenParamName;
         } else {
-            $location = $this->accessTokenLocation;
-            $paramName = $this->accessTokenParamName;
+            $location = $this->refreshTokenLocation;
+            $paramName = $this->refreshTokenParamName;
         }
 
         $token = match ($location) {
-            self::LOCATION_HEADER => $request->headers->get($paramName),
-            self::LOCATION_URI => $request->request->get($paramName),
-            self::LOCATION_BODY => $this->getTokenFromRequestBody($request, $paramName),
+            self::LOCATION_HEADER => $this->getTokenFromHeader($request, $paramName),
+            self::LOCATION_URI => $request->get($paramName),
+            self::LOCATION_BODY => $this->getTokenFromBody($request, $paramName),
             default => null
         };
 
-        dd($token);
-
-        if ($token === null && $throwNotFoundException) {
-            throw new TokenIdentifierException('No token', TokenIdentifierException::TOKEN_NOT_FOUND);
+        if ($token === null) {
+            if ($type === Token::ACCESS) {
+                throw new TokenIdentifierException('No token', TokenIdentifierException::TOKEN_NOT_FOUND);
+            } else {
+                return null;
+            }
         }
 
-        return new $token;
+        // Parse token
+        [$header, $payload, $signature] = TokenHelper::parse($token, $type);
+
+        // Check token signature
+        $contentPart = TokenHelper::toContentPartString($header, $payload);
+        if ($signature !== $this->encoder->encode($contentPart)) {
+            throw new TokenIdentifierException('Invalid token', TokenIdentifierException::INVALID_TOKEN);
+        }
+
+        return [$token, array_merge($header, $payload)];
     }
 
-    private function getTokenFromRequestBody(Request $request, string $paramName): ?string
+    private function getTokenFromHeader(Request $request, string $paramName): ?string
     {
-        dd($paramName);
+        $token = $request->headers->get($paramName);
+        if ($token === null) {
+            return null;
+        }
+        if ($this->tokenType === self::TYPE_BEARER) {
+            if (strpos($token, $this->tokenType . ' ') !== 0) {
+                throw new TokenIdentifierException('Invalid token', TokenIdentifierException::INVALID_TOKEN);
+            }
+            $token = str_replace($this->tokenType . ' ', '', $token);
+        }
+
+        return $token;
+    }
+
+    private function getTokenFromBody(Request $request, string $paramName): ?string
+    {
+        if ($request->getContentType() !== 'json') {
+            return $request->get($paramName);
+        }
+        $requestParams = json_decode($request->getContent(), true);
+        if ($requestParams === null) {
+            return null;
+        }
+
+        return $requestParams[$paramName] ?? null;
     }
 }

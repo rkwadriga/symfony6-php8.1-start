@@ -3,7 +3,6 @@ services:
         arguments:
             $algorithm: '%rkwadriga.jwt.encoding_algorithm%'
             $secretKey: '%rkwadriga.jwt.secret_key%'
-
     rkwadriga.jws.encoder:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\Encoder
         public: true
@@ -19,6 +18,7 @@ services:
 
     Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier:
         arguments:
+            $encoder: '@rkwadriga.jws.encoder'
             $accessTokenLocation: '%rkwadriga.jwt.access_token_location%'
             $accessTokenParamName: '%rkwadriga.jwt.access_token_param_name%'
             $refreshTokenLocation: '%rkwadriga.jwt.refresh_token_location%'

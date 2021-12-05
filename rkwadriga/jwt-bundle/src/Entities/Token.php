@@ -7,6 +7,7 @@
 namespace Rkwadriga\JwtBundle\Entities;
 
 use DateTime;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class Token
 {
@@ -15,8 +16,9 @@ class Token
 
     public function __construct(
         private string $access,
-        private string $refresh,
-        private DateTime $expiredAt
+        private DateTime $expiredAt,
+        private ?string $refresh = null,
+        private ?UserInterface $user = null
     ) {}
 
     public function getAccessToken(): string

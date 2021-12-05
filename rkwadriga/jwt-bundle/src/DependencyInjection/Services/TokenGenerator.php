@@ -27,7 +27,7 @@ class TokenGenerator
         $expiredAt = $payload['exp'];
         $refreshToken = $this->generateRefreshToken($payload);
 
-        return new Token($accessToken, $refreshToken, TimeHelper::fromTimeStamp($expiredAt));
+        return new Token($accessToken, TimeHelper::fromTimeStamp($expiredAt), $refreshToken);
     }
 
     public function generateAccessToken(array &$payload): string

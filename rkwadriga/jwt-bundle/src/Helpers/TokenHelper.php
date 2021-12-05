@@ -12,12 +12,49 @@ class TokenHelper
 {
     public const SEPARATOR = '.';
 
-    public static function toBase64String(array $data): string
+    public static function toContentPartString(array $header, array $payload): string
     {
-        return base64_encode(json_encode($data));
+        return implode(self::SEPARATOR, [self::toBase64String($header), self::toBase64String($payload)]);
     }
 
-    public static function fromBase64String(string $encoded, bool $jsonEncoded = true): array|string
+    public static function serialize(string $contentPart, string $signature): string
+    {
+        $result = implode(self::SEPARATOR, [$contentPart, base64_encode($signature)]);
+        return str_replace('=', '', $result);
+    }
+
+    public static function parse(string $token, string $type): array
+    {
+        [$header, $payload, $signature] = self::deserialize($token);
+        if (!isset($header['sub']) || $header['sub'] !== $type) {
+            throw new TokenException('Invalid token', TokenException::INVALID_TOKEN_FORMAT);
+        }
+        if (!isset($payload['exp']) || !is_numeric($payload['exp'])) {
+            throw new TokenException('Invalid token', TokenException::INVALID_TOKEN_FORMAT);
+        }
+
+        return [$header, $payload, $signature];
+    }
+
+    private static function deserialize(string $token): array
+    {
+        $parts = explode(self::SEPARATOR, $token);
+        if (count($parts) !== 3) {
+            throw new TokenException(
+                sprintf('Invalid token format: it should have 3 parts separated by "%s"', self::SEPARATOR),
+                TokenException::INVALID_TOKEN_FORMAT
+            );
+        }
+
+        [$header, $payload, $signature] = $parts;
+        return [
+            self::fromBase64String($header),
+            self::fromBase64String($payload),
+            self::fromBase64String($signature, false)
+        ];
+    }
+
+    private static function fromBase64String(string $encoded, bool $jsonEncoded = true): array|string
     {
         $message = 'Invalid token format. Error: ';
         $decoded = base64_decode($encoded);
@@ -46,32 +83,8 @@ class TokenHelper
         return $data;
     }
 
-    public static function toContentPartString(array $header, array $payload): string
+    private static function toBase64String(array $data): string
     {
-        return implode(self::SEPARATOR, [self::toBase64String($header), self::toBase64String($payload)]);
-    }
-
-    public static function serialize(string $contentPart, string $signature): string
-    {
-        $result = implode(self::SEPARATOR, [$contentPart, base64_encode($signature)]);
-        return str_replace('=', '', $result);
-    }
-
-    public static function deserialize(string $token): array
-    {
-        $parts = explode(self::SEPARATOR, $token);
-        if (count($parts) !== 3) {
-            throw new TokenException(
-                sprintf('Invalid token format: it should have 3 parts separated by "%s"', self::SEPARATOR),
-                TokenException::INVALID_TOKEN_FORMAT
-            );
-        }
-
-        [$header, $payload, $signature] = $parts;
-        return [
-            self::fromBase64String($header),
-            self::fromBase64String($payload),
-            self::fromBase64String($signature, false)
-        ];
+        return base64_encode(json_encode($data));
     }
 }

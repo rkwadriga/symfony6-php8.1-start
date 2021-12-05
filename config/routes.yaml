@@ -7,4 +7,4 @@ kernel:
     type: annotation
 get_profile:
     path: /api/profile
-    methods: ["GET"]
+    methods: ["GET", "POST"]
