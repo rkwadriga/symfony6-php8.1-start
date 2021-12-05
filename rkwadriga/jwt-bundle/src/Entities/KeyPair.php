@@ -16,7 +16,8 @@ class KeyPair
         private string $publicKeyName,
         private string $algorithm,
         private int $keyLength,
-        private int $keyType
+        private int $keyType,
+        private array $config
     ) {}
 
     public function getPrivate(): string
@@ -57,5 +58,10 @@ class KeyPair
     public function getKeyType(): int
     {
         return $this->keyType;
+    }
+
+    public function getConfig(): array
+    {
+        return $this->config;
     }
 }

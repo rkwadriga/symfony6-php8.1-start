@@ -7,16 +7,20 @@
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
 use Rkwadriga\JwtBundle\Entities\KeyPair;
+use Rkwadriga\JwtBundle\Exceptions\KeyException;
 use Rkwadriga\JwtBundle\Exceptions\KeyGeneratorException;
 use Rkwadriga\JwtBundle\Helpers\FileSystemHelper;
 
 class KeyGenerator
 {
-    private const DEFAULT_ALGORITHM = 'sha512';
+    private const DEFAULT_ALGORITHM = 'sha256';
     private const DEFAULT_LENGTH = 2048;
     private const DEFAULT_TYPE = OPENSSL_KEYTYPE_RSA;
+    private const PRIVATE_KEY = 'private';
+    private const PUBLIC_KEY = 'public';
 
     public function __construct(
+        private FileSystem $fileSystem,
         private string $keysDir,
         private string $privateKeyName,
         private string $publicKeyName,
@@ -70,11 +74,7 @@ class KeyGenerator
             $this->keyType = $type;
         }
 
-        $openssl = openssl_pkey_new([
-            'digest_alg' => $this->algorithm,
-            'private_key_bits' => $this->keyLength,
-            'private_key_type' => $this->keyType,
-        ]);
+        $openssl = openssl_pkey_new($this->getKeyConfig());
         if ($openssl === false) {
             if ($error = openssl_error_string() ?: $php_errormsg) {
                 $errorMessage .= 'Error: ' . $error;
@@ -106,6 +106,53 @@ class KeyGenerator
         return $this->createKey($private, $public['key']);
     }
 
+    public function getKeyPair(): ?KeyPair
+    {
+        [$private, $public] = [
+            $this->fileSystem->getPath($this->getPrivateKeyPath(), false),
+            $this->fileSystem->getPath($this->getPublicKeyPath(), false)
+        ];
+        if (!file_exists($private) || !file_exists($public)) {
+            return null;
+        }
+        [$private, $public] = [$this->readKey($private), $this->readKey($public)];
+        return $this->createKey($private, $public);
+    }
+
+    public function getPublicKeyResource(string $publicKey)
+    {
+        return $this->getKeyResource($publicKey, self::PUBLIC_KEY);
+    }
+
+    public function getPrivateKeyResource(string $privateKey)
+    {
+        return $this->getKeyResource($privateKey, self::PRIVATE_KEY);
+    }
+
+    private function getKeyResource(string $key, string $type)
+    {
+        $keyResource = $type === self::PRIVATE_KEY ? openssl_pkey_get_private($key) : openssl_pkey_get_public($key);
+        if ($keyResource === false) {
+            $message = "Invalid {$type} key. ";
+            if ($openSslError = openssl_error_string()) {
+                $message .= "Error: {$openSslError}";
+            } else {
+                $message .= 'Invalid format';
+            }
+            throw new KeyGeneratorException($message, KeyGeneratorException::OPEN_SSL_ERROR_CODE);
+        }
+        return $keyResource;
+    }
+
+    private function getKeyConfig(): array
+    {
+        return [
+            'digest_alg' => $this->algorithm,
+            'private_key_bits' => $this->keyLength,
+            'private_key_type' => $this->keyType,
+        ];
+    }
+
     private function createKey(string $private, string $public): KeyPair
     {
         return new KeyPair(
@@ -116,7 +163,13 @@ class KeyGenerator
             $this->publicKeyName,
             $this->algorithm,
             $this->keyLength,
-            $this->keyType
+            $this->keyType,
+            $this->getKeyConfig()
         );
+    }
+
+    private function readKey(string $keyPath): string
+    {
+        return $this->fileSystem->readFile($keyPath);
     }
 }

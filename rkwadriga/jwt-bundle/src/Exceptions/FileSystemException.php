@@ -14,6 +14,7 @@ class FileSystemException extends BaseException
     public const FILE_NOT_WRITABLE =      9001247753;
     public const DIRECTORY_NOT_FOUND =    3699876012;
     public const FILE_NOT_FOUND =         9875625689;
+    public const READING_ERROR =          8320048963;
     public const WRITING_ERROR =          9632578965;
     public const DELETING_ERROR =         3258014755;
 }

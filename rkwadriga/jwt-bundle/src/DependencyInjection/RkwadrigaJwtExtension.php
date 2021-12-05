@@ -33,5 +33,7 @@ class RkwadrigaJwtExtension extends Extension
         $container->setParameter('rkwadriga.jwt.encoding_algorithm', $config['encoding_algorithm']);
         $container->setParameter('rkwadriga.jwt.private_key_length', $config['private_key_length']);
         $container->setParameter('rkwadriga.jwt.private_key_type', $config['private_key_type']);
+        $container->setParameter('rkwadriga.jwt.access_token_life_time', $config['access_token_life_time']);
+        $container->setParameter('rkwadriga.jwt.refresh_token_life_time', $config['refresh_token_life_time']);
     }
 }

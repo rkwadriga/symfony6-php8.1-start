@@ -6,13 +6,16 @@
 
 namespace Rkwadriga\JwtBundle\Entities;
 
-use DateTimeImmutable;
+use DateTime;
 
 class Token
 {
+    public const ACCESS = 'access_token';
+    public const REFRESH = 'refresh_token';
+
     public function __construct(
         private string $access,
         private string $refresh,
-        private DateTimeImmutable $expiredAt
+        private DateTime $expiredAt
     ) {}
 }

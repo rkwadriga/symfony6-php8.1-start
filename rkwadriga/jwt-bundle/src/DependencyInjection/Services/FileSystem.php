@@ -18,7 +18,9 @@ class FileSystem
 
     public function __construct(
         private string $baseDIr
-    ) {}
+    )
+    {
+    }
 
     public function write(string $file, string $data, bool $autoCreate = true): string
     {
@@ -46,6 +48,30 @@ class FileSystem
         }
 
         return $file;
+    }
+
+    public function readFile(string $file): string
+    {
+        $file = $this->getPath($file, false);
+        if (!file_exists($file)) {
+            throw new FileSystemException("File {$file} not found", FileSystemException::FILE_NOT_FOUND);
+        }
+        if (!is_readable($file)) {
+            throw new FileSystemException("File {$file} is not readable", FileSystemException::FILE_NOT_READABLE);
+        }
+
+        $content = file_get_contents($file);
+        if ($content === false) {
+            $message = "Can not read the file {$file}. ";
+            if ($php_errormsg) {
+                $message .= "Error: {$php_errormsg}";
+            } else {
+                $message .= 'Check the access rights to the file';
+            }
+            throw new FileSystemException($message, FileSystemException::READING_ERROR);
+        }
+
+        return $content;
     }
 
     public function getPath(string $path, bool $autoCrete = true): string

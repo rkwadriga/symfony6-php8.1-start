@@ -20,10 +20,12 @@ use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationExc
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
     public function __construct(
+        private TokenGenerator $tokenGenerator,
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface $serializer,
         private UserProviderInterface $userProvider,
@@ -64,7 +66,10 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        $json = $this->serializer->serialize($token->getUser(), 'json', [
+        $payload = $this->getPayload($token->getUser());
+        $token = $this->tokenGenerator->generate($payload);
+
+        $json = $this->serializer->serialize($token, 'json', [
             'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
         ]);
         return new JsonResponse($json, Response::HTTP_CREATED, [], true);
@@ -78,5 +83,18 @@ class LoginAuthenticator extends AbstractAuthenticator
         ];
 
         return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+    }
+
+    private function getPayload(UserInterface $user): array
+    {
+        $payload = ['timestamp' => time(), 'roles' => $user->getRoles()];
+
+        $identifier = $user->getUserIdentifier();
+        $getter = 'get' . ucfirst($identifier);
+        if (method_exists($user, $getter)) {
+            $payload[$identifier] = $user->$getter();
+        }
+
+        return $payload;
     }
 }
