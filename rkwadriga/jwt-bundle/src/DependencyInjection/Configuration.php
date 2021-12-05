@@ -8,6 +8,7 @@ namespace Rkwadriga\JwtBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\env;
 
 class Configuration implements ConfigurationInterface
 {
@@ -19,12 +20,8 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('login_url')->defaultValue('rkwadriga_jwt_auth_login')->end()
                 ->scalarNode('login_pram')->defaultValue('email')->end()
                 ->scalarNode('password_param')->defaultValue('password')->end()
-                ->scalarNode('keys_dir')->defaultValue('config/jwt')->end()
-                ->scalarNode('private_key_name')->defaultValue('private.pem')->end()
-                ->scalarNode('public_key_name')->defaultValue('public.pem')->end()
+                ->scalarNode('secret_key')->defaultValue('%env(SECRET_KEY)%')->end()
                 ->scalarNode('encoding_algorithm')->defaultValue('SHA256')->end()
-                ->scalarNode('private_key_length')->defaultValue(2048)->end()
-                ->integerNode('private_key_type')->defaultValue(0)->end()
                 ->integerNode('access_token_life_time')->defaultValue(3600)->end()
                 ->integerNode('refresh_token_life_time')->defaultValue(15552000)->end()
             ->end()

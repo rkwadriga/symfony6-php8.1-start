@@ -2,11 +2,7 @@ rkwadriga_jwt:
     login_url: rkwadriga_jwt_auth_login
     login_pram: email
     password_param: password
-    keys_dir: '%env(string::KEYS_DIR)%'
-    private_key_name: private.pem
-    public_key_name: public.pem
+    secret_key: '%env(string::SECRET_KEY)%'
     encoding_algorithm: SHA256
-    private_key_length: 2048
-    private_key_type: 0
     access_token_life_time: 3600
     refresh_token_life_time: 15552000

@@ -17,7 +17,6 @@ class TokenGenerator
 
     public function __construct(
         private Encoder $encoder,
-        private string $encodingAlgorithm,
         private int $accessTokenLifeTime,
         private int $refreshTokenLifeTime
     ) {}
@@ -43,6 +42,15 @@ class TokenGenerator
 
     private function generateToken(array &$payload, string $type): string
     {
+        $this->preparePayload($payload, $type);
+        $header = $this->createHeader($type);
+        $contentPart = TokenHelper::toContentPartString($header, $payload);
+
+        return TokenHelper::serialize($contentPart, $this->encoder->encode($contentPart));
+    }
+
+    private function preparePayload(array &$payload, string $type): void
+    {
         if (!isset($payload['exp'])) {
             $startTime = new DateTime();
             if (isset($payload['timestamp']) && is_numeric($payload['timestamp'])) {
@@ -51,9 +59,14 @@ class TokenGenerator
             $lifeTimeSeconds = $type === Token::ACCESS ? $this->accessTokenLifeTime : $this->refreshTokenLifeTime;
             $payload['exp'] = TimeHelper::addSeconds($lifeTimeSeconds, $startTime)->getTimestamp();
         }
-        $header = ['alg' => $this->encodingAlgorithm, 'typ' => self::TOKEN_TYPE, 'sub' => $type];
-        $contentPart = TokenHelper::toContentPartString($header, $payload);
+    }
 
-        return TokenHelper::serialize($contentPart, $this->encoder->encode($contentPart));
+    private function createHeader(string $type): array
+    {
+        return [
+            'alg' => $this->encoder->getAlgorithm(),
+            'typ' => self::TOKEN_TYPE,
+            'sub' => $type
+        ];
     }
 }
