@@ -13,7 +13,6 @@ use Rkwadriga\JwtBundle\Helpers\TokenHelper;
 
 class TokenGenerator
 {
-
     private const TOKEN_TYPE = 'JWT';
 
     public function __construct(

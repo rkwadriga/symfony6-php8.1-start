@@ -20,37 +20,7 @@ class Encoder
     public function encode(string $decoded): string
     {
         $keyPair = $this->getKeyPair();
-        $baseHash = hash($keyPair->getAlgorithm(), $decoded);
-        $publicKeyResource = $this->keyGenerator->getPublicKeyResource($keyPair->getPublic());
-
-        if (!openssl_public_encrypt($baseHash, $encrypted, $publicKeyResource)) {
-            $message = 'Ca encrypt the data. ';
-            if ($openSslError = openssl_error_string()) {
-                $message .= "Error: {$openSslError}";
-            } else {
-                $message .= 'Encryption Error';
-            }
-            throw new EncoderException($message, EncoderException::ENCRYPTION_ERROR);
-        }
-
-        return $encrypted;
-    }
-
-    public function decode(string $encoded): string
-    {
-        $keyPair = $this->getKeyPair();
-        $privateKey = $this->keyGenerator->getPrivateKeyResource($keyPair->getPrivate());
-        if (!openssl_private_decrypt($encoded, $decrypted, $privateKey)) {
-            $message = 'Ca not decrypt the data. ';
-            if ($openSslError = openssl_error_string()) {
-                $message .= "Error: {$openSslError}";
-            } else {
-                $message .= 'Decryption Error';
-            }
-            throw new EncoderException($message, EncoderException::DECRYPTION_ERROR);
-        }
-
-        return $decrypted;
+        return hash_hmac($keyPair->getAlgorithm(), $decoded, $keyPair->getPrivate());
     }
 
     private function getKeyPair(): KeyPair

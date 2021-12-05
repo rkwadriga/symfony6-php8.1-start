@@ -5,7 +5,7 @@ rkwadriga_jwt:
     keys_dir: '%env(string::KEYS_DIR)%'
     private_key_name: private.pem
     public_key_name: public.pem
-    encoding_algorithm: sha256
+    encoding_algorithm: SHA256
     private_key_length: 2048
     private_key_type: 0
     access_token_life_time: 3600
