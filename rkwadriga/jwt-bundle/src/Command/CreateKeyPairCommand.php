@@ -7,7 +7,6 @@
 namespace Rkwadriga\JwtBundle\Command;
 
 use Rkwadriga\JwtBundle\DependencyInjection\Services\Generator;
-use Rkwadriga\JwtBundle\DependencyInjection\Services\KeyPair;
 use Rkwadriga\JwtBundle\Exceptions\FileSystemException;
 use Rkwadriga\JwtBundle\Exceptions\KeyGeneratorException;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem;
@@ -43,17 +42,18 @@ class CreateKeyPairCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $defaultDirectory = KeyPair::DEFAULT_DIR;
+        $defaultDirectory = $this->generator->getKeysDir();
         $question = "Enter directory to hold the key pair (default: {$defaultDirectory}): ";
-        $dirName = $this->getFromParamOrAsk($input, $output, 'directory', $question, KeyPair::DEFAULT_DIR);
+        $dirName = $this->getFromParamOrAsk($input, $output, 'directory', $question, $defaultDirectory);
         $directory = $this->fileSystem->getDirectory($dirName);
         if (!is_writable($directory)) {
             $output->writeln("Directory {$directory} is not writable, check the access rights");
             return Command::FAILURE;
         }
+        $this->generator->setKeysDir($directory);
 
-        $privateKey = KeyPair::privateKeyPath($directory);
-        $publicKey = KeyPair::publicKeyPath($directory);
+        $privateKey = $this->generator->getPrivateKeyPath();
+        $publicKey = $this->generator->getPublicKeyPath();
         if (file_exists($privateKey) || file_exists($publicKey)) {
             $question = 'There are already key pair exist in target directory. '
                         . 'Do yo wand to rewrite them? (y/n, default y): ';

@@ -8,7 +8,6 @@ namespace Rkwadriga\JwtBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
-use Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 
@@ -25,8 +24,11 @@ class RkwadrigaJwtExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        $container->setParameter(LoginAuthenticator::LOGIN_URL_CONFIG_KEY, $config['login_url']);
-        $container->setParameter(LoginAuthenticator::LOGIN_PARAM_CONFIG_KEY, $config['login_pram']);
-        $container->setParameter(LoginAuthenticator::PASSWORD_PARAM_CONFIG_KEY, $config['password_param']);
+        $container->setParameter('rkwadriga.jwt._login_url', $config['login_url']);
+        $container->setParameter('rkwadriga.jwt.login_pram', $config['login_pram']);
+        $container->setParameter('rkwadriga.jwt.password_param', $config['password_param']);
+        $container->setParameter('rkwadriga.jwt.keys_dir', $config['keys_dir']);
+        $container->setParameter('rkwadriga.jwt.private_key_name', $config['private_key_name']);
+        $container->setParameter('rkwadriga.jwt.public_key_name', $config['public_key_name']);
     }
 }

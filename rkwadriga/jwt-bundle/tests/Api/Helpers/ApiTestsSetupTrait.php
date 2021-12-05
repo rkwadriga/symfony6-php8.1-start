@@ -31,9 +31,8 @@ trait ApiTestsSetupTrait
         $this->em = $container->get('doctrine')->getManager();
         $this->encoder = $container->get(PasswordHasherFactoryInterface::class);
         $this->router = $container->get(RouterInterface::class);
-
-        $this->loginUrl = $this->getConfigValue(LoginAuthenticator::LOGIN_URL_CONFIG_KEY);
-        $this->loginParam = $this->getConfigValue(LoginAuthenticator::LOGIN_PARAM_CONFIG_KEY);
-        $this->passwordParam = $this->getConfigValue(LoginAuthenticator::PASSWORD_PARAM_CONFIG_KEY);
+        $this->loginUrl = $container->getParameter('rkwadriga.jwt._login_url');
+        $this->loginParam = $container->getParameter('rkwadriga.jwt.login_pram');
+        $this->passwordParam = $container->getParameter('rkwadriga.jwt.password_param');
     }
 }

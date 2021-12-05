@@ -7,11 +7,38 @@
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
 use Rkwadriga\JwtBundle\Exceptions\KeyGeneratorException;
+use Rkwadriga\JwtBundle\Helpers\FileSystemHelper;
 
 class Generator
 {
     private const DEFAULT_LENGTH = 2048;
     private const DEFAULT_TYPE = OPENSSL_KEYTYPE_RSA;
+
+    public function __construct(
+        private string $keysDir,
+        private string $privateKeyName,
+        private string $publicKeyName
+    ) {}
+
+    public function setKeysDir(string $keysDir)
+    {
+        $this->keysDir = $keysDir;
+    }
+
+    public function getKeysDir(): string
+    {
+        return FileSystemHelper::normalizePath($this->keysDir);
+    }
+
+    public function getPrivateKeyPath(): string
+    {
+        return $this->getKeysDir() . DIRECTORY_SEPARATOR . $this->privateKeyName;
+    }
+
+    public function getPublicKeyPath(): string
+    {
+        return $this->getKeysDir() . DIRECTORY_SEPARATOR . $this->publicKeyName;
+    }
 
     public function generate(string $algorithm = Encoder::DEFAULT_ALGORITHM, int $length = self::DEFAULT_LENGTH, int $type = self::DEFAULT_TYPE): KeyPair
     {
@@ -51,6 +78,12 @@ class Generator
             throw new KeyGeneratorException($errorMessage, KeyGeneratorException::OPEN_SSL_ERROR_CODE);
         }
 
-        return new KeyPair($private, $public['key']);
+        return new KeyPair(
+            $private,
+            $public['key'],
+            $this->keysDir,
+            $this->privateKeyName,
+            $this->publicKeyName
+        );
     }
 }

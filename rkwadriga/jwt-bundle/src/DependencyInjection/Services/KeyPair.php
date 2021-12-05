@@ -10,13 +10,12 @@ use Rkwadriga\JwtBundle\Helpers\FileSystemHelper;
 
 class KeyPair
 {
-    public const DEFAULT_DIR = 'config/jwt';
-    public const PRIVATE_KEY_NAME = 'private.pem';
-    public const PUBLIC_KEY_NAME = 'public.pem';
-
     public function __construct(
         private string $private,
-        private string $public
+        private string $public,
+        private string $keysDir,
+        private string $privateKeyName,
+        private string $publicKeyName
     ) {}
 
     public function getPrivate(): string
@@ -29,13 +28,18 @@ class KeyPair
         return $this->public;
     }
 
-    public static function privateKeyPath(string $dirPath = self::DEFAULT_DIR): string
+    public function keysDir(): string
     {
-        return FileSystemHelper::normalizePath($dirPath) . DIRECTORY_SEPARATOR . self::PRIVATE_KEY_NAME;
+        return $this->keysDir;
     }
 
-    public static function publicKeyPath(string $dirPath = self::DEFAULT_DIR): string
+    public function privateKeyPath(): string
     {
-        return FileSystemHelper::normalizePath($dirPath) . DIRECTORY_SEPARATOR . self::PUBLIC_KEY_NAME;
+        return $this->keysDir() . DIRECTORY_SEPARATOR . $this->privateKeyName;
+    }
+
+    public function publicKeyPath(): string
+    {
+        return $this->keysDir() . DIRECTORY_SEPARATOR . $this->publicKeyName;
     }
 }

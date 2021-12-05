@@ -15,8 +15,9 @@ class FileSystem
     private const TYPE_FILE = 'file';
     private const TYPE_DIR = 'dir';
 
+
     public function __construct(
-        private KernelInterface $kernel
+        private string $baseDIr
     ) {}
 
     public function write(string $file, string $data, bool $autoCreate = true): string
@@ -63,7 +64,7 @@ class FileSystem
             return $path;
         }
 
-        $dir = $this->kernel->getProjectDir();
+        $dir = $this->baseDIr;
         $path = FileSystemHelper::normalizePath($path);
 
         foreach (explode(DIRECTORY_SEPARATOR, $path) as $subDir) {
@@ -74,7 +75,7 @@ class FileSystem
                     $message .= " (Error: {$php_errormsg})";
                 } else {
                     $parentDirectory = dirname($dir);
-                    $fullDir = $this->kernel->getProjectDir() . DIRECTORY_SEPARATOR . $path;
+                    $fullDir = $this->baseDIr . DIRECTORY_SEPARATOR . $path;
                     $message .= ". Check the access rights to the dir {$parentDirectory} "
                         . "or create the dir ({$fullDir}) by yourself";
                 }

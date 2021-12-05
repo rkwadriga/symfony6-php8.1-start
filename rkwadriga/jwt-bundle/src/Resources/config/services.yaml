@@ -1,7 +1,9 @@
 services:
+
     Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem:
+        autowire: true
         arguments:
-            $kernel: '@kernel'
+            $baseDIr: '%kernel.project_dir%'
     rkwadriga.jws.filesystem_service:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem
         public: true
@@ -11,7 +13,9 @@ services:
             $encoder: '@security.password_hasher_factory'
             $serializer: '@Symfony\Component\Serializer\SerializerInterface'
             $userProvider: '@security.user.provider.concrete.app_user_provider'
-            $kernel: '@kernel'
+            $loginUrl: '%rkwadriga.jwt._login_url%'
+            $loginParam: '%rkwadriga.jwt.login_pram%'
+            $passwordParam: '%rkwadriga.jwt.password_param%'
     rkwadriga.jws.login_authenticator:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator
         public: true
@@ -21,7 +25,11 @@ services:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator
         public: true
 
-    Rkwadriga\JwtBundle\DependencyInjection\Services\Generator: ~
+    Rkwadriga\JwtBundle\DependencyInjection\Services\Generator:
+        arguments:
+            $keysDir: '%rkwadriga.jwt.keys_dir%'
+            $privateKeyName: '%rkwadriga.jwt.private_key_name%'
+            $publicKeyName: '%rkwadriga.jwt.public_key_name%'
     rkwadriga.jws.jws_key_generator:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\Generator
         public: true

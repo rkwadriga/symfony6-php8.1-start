@@ -19,30 +19,18 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
-    public const LOGIN_URL_CONFIG_KEY = 'rkwadriga_jwt_configuration_login_url';
-    public const LOGIN_PARAM_CONFIG_KEY = 'rkwadriga_jwt_configuration_login_pram';
-    public const PASSWORD_PARAM_CONFIG_KEY = 'rkwadriga_jwt_configuration_password_param';
-
-    private string $loginUrl;
-    private string $loginParam;
-    private string $passwordParam;
-
     public function __construct(
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface $serializer,
         private UserProviderInterface $userProvider,
-        private KernelInterface $kernel
-    ) {
-        $container = $this->kernel->getContainer();
-        $this->loginUrl = $container->getParameter(self::LOGIN_URL_CONFIG_KEY);
-        $this->loginParam = $container->getParameter(self::LOGIN_PARAM_CONFIG_KEY);
-        $this->passwordParam = $container->getParameter(self::PASSWORD_PARAM_CONFIG_KEY);
-    }
+        private string $loginUrl,
+        private string $loginParam,
+        private string $passwordParam
+    ) {}
 
     public function supports(Request $request): ?bool
     {

@@ -14,11 +14,6 @@ use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 
 trait ApiTestsHelperMethodsTrait
 {
-    private function getConfigValue(string $key): mixed
-    {
-        return self::getContainer()->getParameter($key);
-    }
-
     private function request(string|array $route, array $params = []): HttpResponse
     {
         if (is_array($route)) {
