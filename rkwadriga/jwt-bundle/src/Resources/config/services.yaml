@@ -30,6 +30,9 @@ services:
             $keysDir: '%rkwadriga.jwt.keys_dir%'
             $privateKeyName: '%rkwadriga.jwt.private_key_name%'
             $publicKeyName: '%rkwadriga.jwt.public_key_name%'
+            $algorithm: '%rkwadriga.jwt.encoding_algorithm%'
+            $keyLength: '%rkwadriga.jwt.private_key_length%'
+            $keyType: '%rkwadriga.jwt.private_key_type%'
     rkwadriga.jws.jws_key_generator:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\Generator
         public: true

@@ -30,5 +30,8 @@ class RkwadrigaJwtExtension extends Extension
         $container->setParameter('rkwadriga.jwt.keys_dir', $config['keys_dir']);
         $container->setParameter('rkwadriga.jwt.private_key_name', $config['private_key_name']);
         $container->setParameter('rkwadriga.jwt.public_key_name', $config['public_key_name']);
+        $container->setParameter('rkwadriga.jwt.encoding_algorithm', $config['encoding_algorithm']);
+        $container->setParameter('rkwadriga.jwt.private_key_length', $config['private_key_length']);
+        $container->setParameter('rkwadriga.jwt.private_key_type', $config['private_key_type']);
     }
 }

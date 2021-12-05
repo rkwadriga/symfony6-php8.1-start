@@ -8,5 +8,5 @@ namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
 class Encoder
 {
-    public const DEFAULT_ALGORITHM = 'sha512';
+
 }

@@ -15,7 +15,10 @@ class KeyPair
         private string $public,
         private string $keysDir,
         private string $privateKeyName,
-        private string $publicKeyName
+        private string $publicKeyName,
+        private string $algorithm,
+        private int $keyLength,
+        private int $keyType
     ) {}
 
     public function getPrivate(): string
@@ -41,5 +44,20 @@ class KeyPair
     public function publicKeyPath(): string
     {
         return $this->keysDir() . DIRECTORY_SEPARATOR . $this->publicKeyName;
+    }
+
+    public function getAlgorithm(): string
+    {
+        return $this->algorithm;
+    }
+
+    public function getKeyLength(): int
+    {
+        return $this->keyLength;
+    }
+
+    public function getKeyType(): int
+    {
+        return $this->keyType;
     }
 }

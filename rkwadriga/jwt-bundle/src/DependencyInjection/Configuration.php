@@ -22,6 +22,9 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('keys_dir')->defaultValue('config/jwt')->end()
                 ->scalarNode('private_key_name')->defaultValue('private.pem')->end()
                 ->scalarNode('public_key_name')->defaultValue('public.pem')->end()
+                ->scalarNode('encoding_algorithm')->defaultValue('sha512')->end()
+                ->scalarNode('private_key_length')->defaultValue(2048)->end()
+                ->integerNode('private_key_type')->defaultValue(0)->end()
             ->end()
         ;
 
