@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Exceptions;
 
-class KeyException extends BaseException
+class ConfigurationException extends BaseException
 {
-    public const INVALID_KEY_FORMAT  = 7532010869;
+    public const INVALID_PARAM_VALUE  = 2656865104;
 }

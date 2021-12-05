@@ -6,3 +6,8 @@ rkwadriga_jwt:
     encoding_algorithm: SHA256
     access_token_life_time: 3600
     refresh_token_life_time: 15552000
+    access_token_location: http_header
+    access_token_param_name: Authorization
+    refresh_token_location: body
+    refresh_token_param_name: refresh_token
+    token_type: Bearer

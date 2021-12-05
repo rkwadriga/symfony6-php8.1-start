@@ -6,9 +6,9 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\env;
 
 class Configuration implements ConfigurationInterface
 {
@@ -24,6 +24,11 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('encoding_algorithm')->defaultValue('SHA256')->end()
                 ->integerNode('access_token_life_time')->defaultValue(3600)->end()
                 ->integerNode('refresh_token_life_time')->defaultValue(15552000)->end()
+                ->scalarNode('access_token_location')->defaultValue(TokenIdentifier::LOCATION_HEADER)->end()
+                ->scalarNode('access_token_param_name')->defaultValue('Authorization')->end()
+                ->scalarNode('refresh_token_location')->defaultValue(TokenIdentifier::LOCATION_BODY)->end()
+                ->scalarNode('refresh_token_param_name')->defaultValue('refresh_token')->end()
+                ->scalarNode('token_type')->defaultValue(TokenIdentifier::TYPE_BEARER)->end()
             ->end()
         ;
 
