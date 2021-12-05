@@ -4,9 +4,7 @@
  * Author Dmitry Kushneriov
  */
 
-namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
-
-use Rkwadriga\JwtBundle\Helpers\FileSystemHelper;
+namespace Rkwadriga\JwtBundle\Entities;
 
 class KeyPair
 {

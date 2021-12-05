@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Command;
 
-use Rkwadriga\JwtBundle\DependencyInjection\Services\Generator;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\KeyGenerator;
 use Rkwadriga\JwtBundle\Exceptions\FileSystemException;
 use Rkwadriga\JwtBundle\Exceptions\KeyGeneratorException;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\FileSystem;
@@ -23,7 +23,7 @@ class CreateKeyPairCommand extends Command
 
     public function __construct(
         private FileSystem $fileSystem,
-        private Generator $generator,
+        private KeyGenerator $generator,
         string $name = null
     ) {
         parent::__construct($name);

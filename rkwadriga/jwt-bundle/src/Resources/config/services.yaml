@@ -25,7 +25,7 @@ services:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator
         public: true
 
-    Rkwadriga\JwtBundle\DependencyInjection\Services\Generator:
+    Rkwadriga\JwtBundle\DependencyInjection\Services\KeyGenerator:
         arguments:
             $keysDir: '%rkwadriga.jwt.keys_dir%'
             $privateKeyName: '%rkwadriga.jwt.private_key_name%'
@@ -34,7 +34,7 @@ services:
             $keyLength: '%rkwadriga.jwt.private_key_length%'
             $keyType: '%rkwadriga.jwt.private_key_type%'
     rkwadriga.jws.jws_key_generator:
-        alias: Rkwadriga\JwtBundle\DependencyInjection\Services\Generator
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Services\KeyGenerator
         public: true
 
     Rkwadriga\JwtBundle\Command\CreateKeyPairCommand: ~

@@ -6,10 +6,11 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
+use Rkwadriga\JwtBundle\Entities\KeyPair;
 use Rkwadriga\JwtBundle\Exceptions\KeyGeneratorException;
 use Rkwadriga\JwtBundle\Helpers\FileSystemHelper;
 
-class Generator
+class KeyGenerator
 {
     private const DEFAULT_ALGORITHM = 'sha512';
     private const DEFAULT_LENGTH = 2048;
