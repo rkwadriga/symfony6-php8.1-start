@@ -18,6 +18,7 @@ class Configuration implements ConfigurationInterface
         $threeBuilder->getRootNode()
             ->children()
                 ->scalarNode('login_url')->defaultValue('rkwadriga_jwt_auth_login')->end()
+                ->scalarNode('refresh_url')->defaultValue('rkwadriga_jwt_refresh_token')->end()
                 ->scalarNode('login_pram')->defaultValue('email')->end()
                 ->scalarNode('password_param')->defaultValue('password')->end()
                 ->scalarNode('secret_key')->defaultValue('%env(SECRET_KEY)%')->end()

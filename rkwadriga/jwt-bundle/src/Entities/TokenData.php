@@ -8,7 +8,7 @@ namespace Rkwadriga\JwtBundle\Entities;
 
 use DateTime;
 
-class TokenData
+class TokenData implements TokenValidatableInterface
 {
     private ?string $alg = null;
     private ?string $typ = null;
@@ -37,12 +37,12 @@ class TokenData
 
     public function getType(): ?string
     {
-        return $this->typ;
+        return $this->sub;
     }
 
-    public function getAccessType(): ?string
+    public function getDataType(): ?string
     {
-        return $this->sub;
+        return $this->typ;
     }
 
     public function getCreatedAt(): ?DateTime

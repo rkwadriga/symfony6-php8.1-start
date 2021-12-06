@@ -1,5 +1,6 @@
 rkwadriga_jwt:
     login_url: rkwadriga_jwt_auth_login
+    refresh_url: rkwadriga_jwt_refresh_token
     login_pram: email
     password_param: password
     secret_key: '%env(string::SECRET_KEY)%'

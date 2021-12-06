@@ -1,4 +1,4 @@
-FROM php:8.0-apache
+FROM php:8.1-apache
 
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug \

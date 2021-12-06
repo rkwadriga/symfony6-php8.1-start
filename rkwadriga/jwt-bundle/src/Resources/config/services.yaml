@@ -28,6 +28,11 @@ services:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier
         public: true
 
+    Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator: ~
+    rkwadriga.jws.token_validator:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator
+        public: true
+
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator:
         arguments:
             $tokenGenerator: '@rkwadriga.jws.token_generator'
@@ -44,7 +49,11 @@ services:
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator:
         arguments:
             $identifier: '@rkwadriga.jws.token_identifier'
+            $validator: '@rkwadriga.jws.token_validator'
+            $userProvider: '@security.user.provider.concrete.app_user_provider'
             $loginUrl: '%rkwadriga.jwt._login_url%'
+            $refreshUrl: '%rkwadriga.jwt.refresh_url%'
+            $loginParam: '%rkwadriga.jwt.login_pram%'
     rkwadriga.jws.jws_authenticator:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator
         public: true

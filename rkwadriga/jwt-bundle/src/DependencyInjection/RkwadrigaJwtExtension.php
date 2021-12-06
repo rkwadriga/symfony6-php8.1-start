@@ -49,6 +49,7 @@ class RkwadrigaJwtExtension extends Extension
         }
 
         $container->setParameter('rkwadriga.jwt._login_url', $config['login_url']);
+        $container->setParameter('rkwadriga.jwt.refresh_url', $config['refresh_url']);
         $container->setParameter('rkwadriga.jwt.login_pram', $config['login_pram']);
         $container->setParameter('rkwadriga.jwt.password_param', $config['password_param']);
         $container->setParameter('rkwadriga.jwt.secret_key', $config['secret_key']);
