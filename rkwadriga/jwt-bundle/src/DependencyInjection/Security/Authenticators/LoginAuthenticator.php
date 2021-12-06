@@ -10,7 +10,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
@@ -24,11 +23,13 @@ use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
+    use AuthenticationTokenResponseTrait;
+
     public function __construct(
         private UserProviderInterface $userProvider,
-        private TokenGenerator $tokenGenerator,
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface $serializer,
+        private TokenGenerator $generator,
         private string $loginUrl,
         private string $loginParam,
         private string $passwordParam
@@ -64,17 +65,6 @@ class LoginAuthenticator extends AbstractAuthenticator
         return new SelfValidatingPassport($userBridge);
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
-    {
-        $payload = $this->getPayload($token->getUser());
-        $token = $this->tokenGenerator->generate($payload);
-
-        $json = $this->serializer->serialize($token, 'json', [
-            'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
-        ]);
-        return new JsonResponse($json, Response::HTTP_CREATED, [], true);
-    }
-
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         $data = [
@@ -83,18 +73,5 @@ class LoginAuthenticator extends AbstractAuthenticator
         ];
 
         return new JsonResponse($data, Response::HTTP_FORBIDDEN);
-    }
-
-    private function getPayload(UserInterface $user): array
-    {
-        $payload = ['timestamp' => time(), 'roles' => $user->getRoles()];
-
-        $identifier = $user->getUserIdentifier();
-        $getter = 'get' . ucfirst($identifier);
-        if (method_exists($user, $getter)) {
-            $payload[$identifier] = $user->$getter();
-        }
-
-        return $payload;
     }
 }

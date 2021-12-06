@@ -1,56 +1,62 @@
 <?php declare(strict_types=1);
 /**
- * Created 2021-12-03
+ * Created 2021-12-06
  * Author Dmitry Kushneriov
  */
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\Encoder;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
-use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
-use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use Symfony\Component\Serializer\SerializerInterface;
 
-class JwtAuthenticator extends AbstractAuthenticator
+class RefreshAuthenticator extends AbstractAuthenticator
 {
+    use AuthenticationTokenResponseTrait;
+
     public function __construct(
         private UserProviderInterface $userProvider,
         private TokenIdentifier $identifier,
+        private Encoder $encoder,
         private TokenValidator $validator,
-        private string $loginUrl,
+        private SerializerInterface $serializer,
+        private TokenGenerator $generator,
         private string $refreshUrl,
-        private string $loginParam,
+        private string $loginParam
     ) {}
 
     public function supports(Request $request): ?bool
     {
-        return !in_array($request->get('_route'), [$this->loginUrl, $this->refreshUrl]);
+        return $request->get('_route') === $this->refreshUrl;
     }
 
     public function authenticate(Request $request): Passport
     {
-        [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request);
-        // Refresh token allowed only in "refresh" request
-        if ($refreshTokenData !== null) {
-            throw new AuthenticationException('Refresh token is not allowed in this request');
-        }
+        // Refresh token is required for this request
+        [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request, AuthenticationException::class, true);
 
-        // Validate token
-        $this->validator->validateExpiredAt($accessTokenData, AuthenticationException::class);
-        $this->validator->validatePayload($accessTokenData, [$this->loginParam], AuthenticationException::class);
+        // Validate only refresh token expired at - it doesn't matter is the access token expired or not.
+        //  And payload of both tokens will be validated in "validateRefreshAndAccessTokensPayload" method
+        $this->validator->validateExpiredAt($refreshTokenData, AuthenticationException::class);
 
-        // Lod user by identifier from token payload
+        // Check is this refresh token can validate this access token
+        $this->validator->validateRefreshAndAccessTokensPayload($accessTokenData, $refreshTokenData, [$this->loginParam], AuthenticationException::class);
+
+        // Load user by identifier from token payload
         $userIdentifierValue = $accessTokenData->getPayload()[$this->loginParam];
         $userBridge = new UserBadge($this->loginParam, function () use ($userIdentifierValue): ?UserInterface {
             return $this->userProvider->loadUserByIdentifier($userIdentifierValue);
@@ -60,12 +66,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException('Invalid access token');
         }
 
-        return new SelfValidatingPassport($userBridge);
-    }
-
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
-    {
-        return null;
+        return new SelfValidatingPassport($userBridge);;
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
@@ -80,7 +81,18 @@ class JwtAuthenticator extends AbstractAuthenticator
             'message' => $message,
         ];
 
-        $resultCode = $exception->getCode() === TokenValidatorException::ACCESS_TOKEN_EXPIRED ? Response::HTTP_UNAUTHORIZED : Response::HTTP_FORBIDDEN;
+        if (in_array($data['code'], [
+                TokenValidatorException::ACCESS_TOKEN_EXPIRED,
+                TokenValidatorException::REFRESH_TOKEN_EXPIRED
+            ])
+        ) {
+            $resultCode = Response::HTTP_UNAUTHORIZED;
+        } else {
+            $resultCode = Response::HTTP_FORBIDDEN;
+        }
+
         return new JsonResponse($data, $resultCode);
     }
+
+
 }

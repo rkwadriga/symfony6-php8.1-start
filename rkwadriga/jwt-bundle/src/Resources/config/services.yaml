@@ -22,7 +22,7 @@ services:
             $accessTokenLocation: '%rkwadriga.jwt.access_token_location%'
             $accessTokenParamName: '%rkwadriga.jwt.access_token_param_name%'
             $refreshTokenLocation: '%rkwadriga.jwt.refresh_token_location%'
-            $refreshTokenParamName: '%rkwadriga.jwt.refresh_token_location%'
+            $refreshTokenParamName: '%rkwadriga.jwt.refresh_token_param_name%'
             $tokenType: '%rkwadriga.jwt.token_type%'
     rkwadriga.jws.token_identifier:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier
@@ -31,19 +31,6 @@ services:
     Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator: ~
     rkwadriga.jws.token_validator:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator
-        public: true
-
-    Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator:
-        arguments:
-            $userProvider: '@rkwadriga.jwt.user_provider'
-            $tokenGenerator: '@rkwadriga.jws.token_generator'
-            $encoder: '@security.password_hasher_factory'
-            $serializer: '@Symfony\Component\Serializer\SerializerInterface'
-            $loginUrl: '%rkwadriga.jwt.login_url%'
-            $loginParam: '%rkwadriga.jwt.login_pram%'
-            $passwordParam: '%rkwadriga.jwt.password_param%'
-    rkwadriga.jws.login_authenticator:
-        alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator
         public: true
 
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator:
@@ -56,4 +43,31 @@ services:
             $loginParam: '%rkwadriga.jwt.login_pram%'
     rkwadriga.jws.jws_authenticator:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator
+        public: true
+
+    Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\RefreshAuthenticator:
+        arguments:
+            $userProvider: '@rkwadriga.jwt.user_provider'
+            $identifier: '@rkwadriga.jws.token_identifier'
+            $encoder: '@rkwadriga.jws.encoder'
+            $validator: '@rkwadriga.jws.token_validator'
+            $serializer: '@Symfony\Component\Serializer\SerializerInterface'
+            $generator: '@rkwadriga.jws.token_generator'
+            $refreshUrl: '%rkwadriga.jwt.refresh_url%'
+            $loginParam: '%rkwadriga.jwt.login_pram%'
+    rkwadriga.jws.refresh_authenticator:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\RefreshAuthenticator
+        public: true
+
+    Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator:
+        arguments:
+            $userProvider: '@rkwadriga.jwt.user_provider'
+            $encoder: '@security.password_hasher_factory'
+            $serializer: '@Symfony\Component\Serializer\SerializerInterface'
+            $generator: '@rkwadriga.jws.token_generator'
+            $loginUrl: '%rkwadriga.jwt.login_url%'
+            $loginParam: '%rkwadriga.jwt.login_pram%'
+            $passwordParam: '%rkwadriga.jwt.password_param%'
+    rkwadriga.jws.login_authenticator:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator
         public: true

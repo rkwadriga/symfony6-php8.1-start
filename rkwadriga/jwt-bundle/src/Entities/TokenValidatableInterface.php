@@ -12,6 +12,8 @@ interface TokenValidatableInterface
 {
     public function getType(): ?string;
 
+    public function getCreatedAt(): ?DateTimeInterface;
+
     public function getExpiredAt(): ?DateTimeInterface;
 
     public function getPayload(): array;

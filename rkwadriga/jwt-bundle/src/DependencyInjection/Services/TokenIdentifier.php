@@ -11,6 +11,7 @@ use Rkwadriga\JwtBundle\Entities\TokenData;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Helpers\TokenHelper;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class TokenIdentifier
 {
@@ -42,17 +43,19 @@ class TokenIdentifier
 
     /**
      * @param Request $request
+     * @param string $exceptionClass
+     * @param bool $refreshTokenRequired
      *
-     * @throws TokenIdentifierException
+     * @throws TokenIdentifierException|AuthenticationException
      *
      * @return array<TokenData, ?TokenData>
      */
-    public function identify(Request $request): array
+    public function identify(Request $request, string $exceptionClass = TokenIdentifierException::class, bool $refreshTokenRequired = false): array
     {
-        $accessToken = $this->getToken($request, Token::ACCESS);
+        $accessToken = $this->getToken($request, Token::ACCESS,  $exceptionClass, true);
         $accessToken = new TokenData(...$accessToken);
 
-        $refreshToken = $this->getToken($request, Token::REFRESH);
+        $refreshToken = $this->getToken($request, Token::REFRESH, $exceptionClass, $refreshTokenRequired);
         if ($refreshToken !== null) {
             $refreshToken = new TokenData(...$refreshToken);
         }
@@ -60,7 +63,7 @@ class TokenIdentifier
         return [$accessToken, $refreshToken];
     }
 
-    private function getToken(Request $request, string $type): ?array
+    private function getToken(Request $request, string $type, string $exceptionClass, bool $tokenRequired): ?array
     {
         if ($type === Token::ACCESS) {
             $location = $this->accessTokenLocation;
@@ -71,15 +74,23 @@ class TokenIdentifier
         }
 
         $token = match ($location) {
-            self::LOCATION_HEADER => $this->getTokenFromHeader($request, $paramName),
+            self::LOCATION_HEADER => $this->getTokenFromHeader($request, $paramName, $exceptionClass),
             self::LOCATION_URI => $request->get($paramName),
             self::LOCATION_BODY => $this->getTokenFromBody($request, $paramName),
             default => null
         };
 
         if ($token === null) {
-            if ($type === Token::ACCESS) {
-                throw new TokenIdentifierException('No token', TokenIdentifierException::TOKEN_NOT_FOUND);
+            if ($tokenRequired) {
+                if ($type === Token::ACCESS) {
+                    $message = 'Missed access token';
+                    $code = TokenIdentifierException::ACCESS_TOKEN_MISSED;
+                } else {
+                    $message = 'Missed refresh token';
+                    $code = TokenIdentifierException::REFRESH_TOKEN_MISSED;
+                }
+                $selfException = $exceptionClass !== TokenIdentifierException::class ? new TokenIdentifierException($message, $code) : null;
+                throw new $exceptionClass($message, $code, $selfException);
             } else {
                 return null;
             }
@@ -91,13 +102,21 @@ class TokenIdentifier
         // Check token signature
         $contentPart = TokenHelper::toContentPartString($header, $payload);
         if ($signature !== $this->encoder->encode($contentPart)) {
-            throw new TokenIdentifierException('Invalid token', TokenIdentifierException::INVALID_TOKEN);
+            if ($type === Token::ACCESS) {
+                $message = 'Invalid access token';
+                $code = TokenIdentifierException::INVALID_ACCESS_TOKEN;
+            } else {
+                $message = 'Invalid refresh token';
+                $code = TokenIdentifierException::INVALID_REFRESH_TOKEN;
+            }
+            $selfException = $exceptionClass !== TokenIdentifierException::class ? new TokenIdentifierException($message, $code) : null;
+            throw new $exceptionClass($message, $code, $selfException);
         }
 
         return [$token, array_merge($header, $payload)];
     }
 
-    private function getTokenFromHeader(Request $request, string $paramName): ?string
+    private function getTokenFromHeader(Request $request, string $paramName, string $exceptionClass): ?string
     {
         $token = $request->headers->get($paramName);
         if ($token === null) {
@@ -105,7 +124,9 @@ class TokenIdentifier
         }
         if ($this->tokenType === self::TYPE_BEARER) {
             if (strpos($token, $this->tokenType . ' ') !== 0) {
-                throw new TokenIdentifierException('Invalid token', TokenIdentifierException::INVALID_TOKEN);
+                [$message, $code] = ['Missed access token', TokenIdentifierException::ACCESS_TOKEN_MISSED];
+                $selfException = $exceptionClass !== TokenIdentifierException::class ? new TokenIdentifierException($message, $code) : null;
+                throw new $exceptionClass($message, $code, $selfException);
             }
             $token = str_replace($this->tokenType . ' ', '', $token);
         }

@@ -8,6 +8,8 @@ namespace Rkwadriga\JwtBundle\Exceptions;
 
 class TokenIdentifierException extends BaseException
 {
-    public const TOKEN_NOT_FOUND = 3025698400;
-    public const INVALID_TOKEN   = 6566106736;
+    public const INVALID_ACCESS_TOKEN  = 6980114856;
+    public const INVALID_REFRESH_TOKEN = 7065896123;
+    public const ACCESS_TOKEN_MISSED   = 6705776321;
+    public const REFRESH_TOKEN_MISSED  = 7800360156;
 }

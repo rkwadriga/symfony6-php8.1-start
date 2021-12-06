@@ -72,4 +72,53 @@ class TokenValidator
             }
         }
     }
+
+    public function validateRefreshAndAccessTokensPayload(
+        TokenValidatableInterface $accessToken,
+        TokenValidatableInterface $refreshToken,
+        array $payloadCompareAttributes,
+        string $exceptionClass = TokenValidatorException::class
+    ): void {
+        // Check is "timestamp" set for both tokens
+        $this->validateCreatedAt($accessToken, $exceptionClass);
+        $this->validateCreatedAt($refreshToken, $exceptionClass);
+
+        // We don't know were the payload attributes validated or not...
+        $this->validatePayload($accessToken, $payloadCompareAttributes, $exceptionClass);
+        $this->validatePayload($refreshToken, $payloadCompareAttributes, $exceptionClass);
+
+        // Compare tokens payload attributes
+        foreach ($payloadCompareAttributes as $name => $attribute) {
+            if (!is_string($attribute)) {
+                $attribute = $name;
+            }
+            if ($accessToken->getPayload()[$attribute] !== $refreshToken->getPayload()[$attribute]) {
+                $message = 'Invalid refresh token';
+                $code = TokenValidatorException::INVALID_REFRESH_TOKEN;
+                $selfException = $exceptionClass !== TokenValidatorException::class ? new TokenValidatorException($message, $code) : null;
+
+                if ($accessToken->getCreatedAt()->getTimestamp() !== $refreshToken->getCreatedAt()->getTimestamp()) {
+                    throw new $exceptionClass($message, $code, $selfException);
+                }
+            }
+        }
+    }
+
+    private function validateCreatedAt(TokenValidatableInterface $token, string $exceptionClass): void
+    {
+        if ($token->getCreatedAt() !== null) {
+            return;
+        }
+
+        if ($token->getType() === Token::ACCESS) {
+            $message = 'Invalid access token';
+            $code = TokenValidatorException::INVALID_ACCESS_TOKEN;
+        } else {
+            $message = 'Invalid refresh token';
+            $code = TokenValidatorException::INVALID_REFRESH_TOKEN;
+        }
+
+        $selfException = $exceptionClass !== TokenValidatorException::class ? new TokenValidatorException($message, $code) : null;
+        throw new $exceptionClass($message, $code, $selfException);
+    }
 }

@@ -4,5 +4,6 @@ security:
             lazy: true
             provider: app_user_provider
             custom_authenticator:
-                - rkwadriga.jws.login_authenticator
                 - rkwadriga.jws.jws_authenticator
+                - rkwadriga.jws.refresh_authenticator
+                - rkwadriga.jws.login_authenticator

@@ -24,9 +24,11 @@ class TokenGenerator
     public function generate(array $payload): Token
     {
         $accessToken = $this->generateAccessToken($payload);
+        // Remember access token expiration timestamp and delete it from payload
+        // - generator will create a new one for access token
         $expiredAt = $payload['exp'];
+        unset($payload['exp']);
         $refreshToken = $this->generateRefreshToken($payload);
-
         return new Token($accessToken, TimeHelper::fromTimeStamp($expiredAt), $refreshToken);
     }
 
