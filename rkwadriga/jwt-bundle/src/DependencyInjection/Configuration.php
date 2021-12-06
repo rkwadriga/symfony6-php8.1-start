@@ -17,6 +17,7 @@ class Configuration implements ConfigurationInterface
         $threeBuilder = new TreeBuilder('rkwadriga_jwt');
         $threeBuilder->getRootNode()
             ->children()
+                ->scalarNode('provider')->defaultValue('app_user_provider')->end()
                 ->scalarNode('login_url')->defaultValue('rkwadriga_jwt_auth_login')->end()
                 ->scalarNode('refresh_url')->defaultValue('rkwadriga_jwt_refresh_token')->end()
                 ->scalarNode('login_pram')->defaultValue('email')->end()

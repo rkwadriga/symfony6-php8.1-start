@@ -35,11 +35,11 @@ services:
 
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator:
         arguments:
+            $userProvider: '@rkwadriga.jwt.user_provider'
             $tokenGenerator: '@rkwadriga.jws.token_generator'
             $encoder: '@security.password_hasher_factory'
             $serializer: '@Symfony\Component\Serializer\SerializerInterface'
-            $userProvider: '@security.user.provider.concrete.app_user_provider'
-            $loginUrl: '%rkwadriga.jwt._login_url%'
+            $loginUrl: '%rkwadriga.jwt.login_url%'
             $loginParam: '%rkwadriga.jwt.login_pram%'
             $passwordParam: '%rkwadriga.jwt.password_param%'
     rkwadriga.jws.login_authenticator:
@@ -48,10 +48,10 @@ services:
 
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator:
         arguments:
+            $userProvider: '@rkwadriga.jwt.user_provider'
             $identifier: '@rkwadriga.jws.token_identifier'
             $validator: '@rkwadriga.jws.token_validator'
-            $userProvider: '@security.user.provider.concrete.app_user_provider'
-            $loginUrl: '%rkwadriga.jwt._login_url%'
+            $loginUrl: '%rkwadriga.jwt.login_url%'
             $refreshUrl: '%rkwadriga.jwt.refresh_url%'
             $loginParam: '%rkwadriga.jwt.login_pram%'
     rkwadriga.jws.jws_authenticator:

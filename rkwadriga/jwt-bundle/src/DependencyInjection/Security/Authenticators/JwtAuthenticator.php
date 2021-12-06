@@ -24,9 +24,9 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 class JwtAuthenticator extends AbstractAuthenticator
 {
     public function __construct(
+        private UserProviderInterface $userProvider,
         private TokenIdentifier $identifier,
         private TokenValidator $validator,
-        private UserProviderInterface $userProvider,
         private string $loginUrl,
         private string $refreshUrl,
         private string $loginParam,
@@ -76,6 +76,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             'message' => $message,
         ];
 
-        return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        $resultCode = $exception->getCode() === TokenValidatorException::ACCESS_TOKEN_EXPIRED ? Response::HTTP_UNAUTHORIZED : Response::HTTP_FORBIDDEN;
+        return new JsonResponse($data, $resultCode);
     }
 }

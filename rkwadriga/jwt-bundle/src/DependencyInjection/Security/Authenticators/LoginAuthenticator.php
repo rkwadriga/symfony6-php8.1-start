@@ -25,10 +25,10 @@ use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
 class LoginAuthenticator extends AbstractAuthenticator
 {
     public function __construct(
+        private UserProviderInterface $userProvider,
         private TokenGenerator $tokenGenerator,
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface $serializer,
-        private UserProviderInterface $userProvider,
         private string $loginUrl,
         private string $loginParam,
         private string $passwordParam
