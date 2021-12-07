@@ -6,6 +6,8 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,6 +28,7 @@ class LoginAuthenticator extends AbstractAuthenticator
     use AuthenticationTokenResponseTrait;
 
     public function __construct(
+        private EventDispatcherInterface $eventsDispatcher,
         private UserProviderInterface $userProvider,
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface $serializer,
@@ -42,6 +45,8 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
+        $this->eventsDispatcher->dispatch(new AuthenticationStartedEvent($request));
+
         $params = json_decode($request->getContent(), true);
         if (!is_array($params)) {
             throw new CustomUserMessageAuthenticationException('Invalid request');

@@ -66,7 +66,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException('Invalid access token');
         }
 
-        return new SelfValidatingPassport($userBridge);;
+        return new SelfValidatingPassport($userBridge);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response

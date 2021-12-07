@@ -2,21 +2,21 @@
 
 namespace Rkwadriga\JwtBundle\Repository;
 
-use Rkwadriga\JwtBundle\Entity\RereshToken;
+use Rkwadriga\JwtBundle\Entity\RefreshToken;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method RereshToken|null find($id, $lockMode = null, $lockVersion = null)
- * @method RereshToken|null findOneBy(array $criteria, array $orderBy = null)
- * @method RereshToken[]    findAll()
- * @method RereshToken[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method RefreshToken|null find($id, $lockMode = null, $lockVersion = null)
+ * @method RefreshToken|null findOneBy(array $criteria, array $orderBy = null)
+ * @method RefreshToken[]    findAll()
+ * @method RefreshToken[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class RereshTokenRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, RereshToken::class);
+        parent::__construct($registry, RefreshToken::class);
     }
 
     // /**
