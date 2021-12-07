@@ -8,10 +8,12 @@ namespace Rkwadriga\JwtBundle;
 
 use Rkwadriga\JwtBundle\DependencyInjection\RkwadrigaJwtExtension;
 use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\EventDispatcher\DependencyInjection\AddEventAliasesPass;
+use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 
 class RkwadrigaJwtBundle extends Bundle
 {
@@ -22,6 +24,8 @@ class RkwadrigaJwtBundle extends Bundle
         $container->addCompilerPass(new AddEventAliasesPass([
             AuthenticationStartedEvent::class => AuthenticationStartedEvent::NAME,
         ]));
+
+        $container->addCompilerPass(new RegisterListenersPass(), PassConfig::TYPE_BEFORE_REMOVING);
     }
 
     public function getContainerExtension(): ?ExtensionInterface

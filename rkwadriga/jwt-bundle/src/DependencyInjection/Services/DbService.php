@@ -14,8 +14,6 @@ class DbService
         private int $tokensLimit
     ) {}
 
-
-
     public function isEnabled(): bool
     {
         return $this->isEnabled;

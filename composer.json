@@ -4,9 +4,10 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
-        "php": "^8.1.*",
+        "php": "8.1.*",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "ext-openssl": "*",
         "composer/package-versions-deprecated": "1.11.99.4",
         "doctrine/annotations": "^1.0",
         "doctrine/doctrine-bundle": "^2.5",
@@ -20,6 +21,7 @@
         "sensio/framework-extra-bundle": "^6.2",
         "symfony/console": "6.0.*",
         "symfony/dotenv": "6.0.*",
+        "symfony/event-dispatcher": "6.0.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "6.0.*",
         "symfony/http-client": "6.0.*",
@@ -31,8 +33,7 @@
         "symfony/runtime": "6.0.*",
         "symfony/security-bundle": "6.0.*",
         "symfony/serializer": "6.0.*",
-        "symfony/yaml": "6.0.*",
-        "ext-openssl": "*"
+        "symfony/yaml": "6.0.*"
     },
     "config": {
         "optimize-autoloader": true,

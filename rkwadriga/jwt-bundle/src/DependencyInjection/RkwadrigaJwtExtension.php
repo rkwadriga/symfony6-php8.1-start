@@ -6,12 +6,15 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection;
 
+use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
 use Rkwadriga\JwtBundle\Exceptions\ConfigurationException;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
 
 class RkwadrigaJwtExtension extends Extension
 {

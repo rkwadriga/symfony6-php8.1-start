@@ -1,4 +1,8 @@
 services:
+    rkwadriga.jwt.event_dispatcher:
+        class: Symfony\Component\EventDispatcher\EventDispatcher
+        public: true
+
     Rkwadriga\JwtBundle\DependencyInjection\Services\DbService:
         arguments:
             $isEnabled: '%rkwadriga.jwt.refresh_tokens_in_db%'
@@ -43,11 +47,9 @@ services:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator
         public: true
 
-    Rkwadriga\JwtBundle\DependencyInjection\EventSubscriber\AuthenticationEventSubscriber: ~
-    rkwadriga.jwt.authentication_event_subscriber
-
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator:
         arguments:
+            $eventsDispatcher: '@rkwadriga.jwt.event_dispatcher'
             $userProvider: '@rkwadriga.jwt.user_provider'
             $identifier: '@rkwadriga.jwt.token_identifier'
             $validator: '@rkwadriga.jwt.token_validator'
@@ -60,6 +62,7 @@ services:
 
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\RefreshAuthenticator:
         arguments:
+            $eventsDispatcher: '@rkwadriga.jwt.event_dispatcher'
             $userProvider: '@rkwadriga.jwt.user_provider'
             $identifier: '@rkwadriga.jwt.token_identifier'
             $encoder: '@rkwadriga.jwt.encoder'
@@ -74,7 +77,7 @@ services:
 
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\LoginAuthenticator:
         arguments:
-            $eventsDispatcher: '@debug.event_dispatcher'
+            $eventsDispatcher: '@rkwadriga.jwt.event_dispatcher'
             $userProvider: '@rkwadriga.jwt.user_provider'
             $encoder: '@security.password_hasher_factory'
             $serializer: '@Symfony\Component\Serializer\SerializerInterface'

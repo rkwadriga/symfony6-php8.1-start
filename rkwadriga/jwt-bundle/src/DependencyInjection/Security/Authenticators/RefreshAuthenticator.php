@@ -10,8 +10,11 @@ use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\Encoder;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
+use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,6 +32,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
     use AuthenticationTokenResponseTrait;
 
     public function __construct(
+        private EventDispatcherInterface $eventsDispatcher,
         private UserProviderInterface $userProvider,
         private TokenIdentifier $identifier,
         private Encoder $encoder,
@@ -37,7 +41,9 @@ class RefreshAuthenticator extends AbstractAuthenticator
         private TokenGenerator $generator,
         private string $refreshUrl,
         private string $loginParam
-    ) {}
+    ) {
+        $this->eventsDispatcher->addSubscriber(new AuthenticationEventSubscriber());
+    }
 
     public function supports(Request $request): ?bool
     {
@@ -71,6 +77,8 @@ class RefreshAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
+        $this->eventsDispatcher->dispatch(new AuthenticationFinishedUnsuccessfulEvent($request, $exception), AuthenticationFinishedUnsuccessfulEvent::NAME);
+
         $previous = $exception->getPrevious();
         $message = $previous instanceof TokenValidatorException || $previous instanceof TokenIdentifierException
             ? $exception->getMessage()
@@ -93,6 +101,4 @@ class RefreshAuthenticator extends AbstractAuthenticator
 
         return new JsonResponse($data, $resultCode);
     }
-
-
 }

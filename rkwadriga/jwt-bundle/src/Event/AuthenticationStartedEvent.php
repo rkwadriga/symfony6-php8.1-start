@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class AuthenticationStartedEvent extends AbstractEvent
 {
-    public const NAME = 'rkwadriga_jwt_authentication_started';
+    public const NAME = 'rkwadriga.jwt.authentication_started_event';
 
     public function __construct(
         private Request $request

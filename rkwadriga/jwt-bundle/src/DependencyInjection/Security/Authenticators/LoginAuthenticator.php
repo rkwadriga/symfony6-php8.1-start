@@ -6,7 +6,8 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
-use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
+use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,7 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
+use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
@@ -36,7 +38,9 @@ class LoginAuthenticator extends AbstractAuthenticator
         private string $loginUrl,
         private string $loginParam,
         private string $passwordParam
-    ) {}
+    ) {
+        $this->eventsDispatcher->addSubscriber(new AuthenticationEventSubscriber());
+    }
 
     public function supports(Request $request): ?bool
     {
@@ -45,7 +49,7 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
-        $this->eventsDispatcher->dispatch(new AuthenticationStartedEvent($request));
+        $this->eventsDispatcher->dispatch(new AuthenticationStartedEvent($request), AuthenticationStartedEvent::NAME);
 
         $params = json_decode($request->getContent(), true);
         if (!is_array($params)) {
@@ -72,6 +76,8 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
+        $this->eventsDispatcher->dispatch(new AuthenticationFinishedUnsuccessfulEvent($request, $exception), AuthenticationFinishedUnsuccessfulEvent::NAME);
+
         $data = [
             'code' => $exception->getCode(),
             'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),

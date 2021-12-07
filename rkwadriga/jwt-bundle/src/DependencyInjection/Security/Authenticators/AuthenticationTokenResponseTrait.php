@@ -7,6 +7,7 @@
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
 
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,6 +18,8 @@ trait AuthenticationTokenResponseTrait
 {
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        $this->eventsDispatcher->dispatch(new AuthenticationFinishedSuccessfulEvent($request, $token), AuthenticationFinishedSuccessfulEvent::NAME);
+
         $payload = $this->getPayload($token->getUser());
         $token = $this->generator->generate($payload);
 

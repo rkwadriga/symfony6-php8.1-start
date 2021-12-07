@@ -6,8 +6,12 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
+use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,13 +29,16 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 class JwtAuthenticator extends AbstractAuthenticator
 {
     public function __construct(
+        private EventDispatcherInterface $eventsDispatcher,
         private UserProviderInterface $userProvider,
         private TokenIdentifier $identifier,
         private TokenValidator $validator,
         private string $loginUrl,
         private string $refreshUrl,
         private string $loginParam,
-    ) {}
+    ) {
+        $this->eventsDispatcher->addSubscriber(new AuthenticationEventSubscriber());
+    }
 
     public function supports(Request $request): ?bool
     {
@@ -65,11 +72,14 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        $this->eventsDispatcher->dispatch(new AuthenticationFinishedSuccessfulEvent($request, $token), AuthenticationFinishedSuccessfulEvent::NAME);
         return null;
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
+        $this->eventsDispatcher->dispatch(new AuthenticationFinishedUnsuccessfulEvent($request, $exception), AuthenticationFinishedUnsuccessfulEvent::NAME);
+
         $previous = $exception->getPrevious();
         $message = $previous instanceof TokenValidatorException || $previous instanceof TokenIdentifierException
             ? $exception->getMessage()
