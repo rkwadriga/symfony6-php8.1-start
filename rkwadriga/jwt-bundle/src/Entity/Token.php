@@ -9,7 +9,7 @@ namespace Rkwadriga\JwtBundle\Entity;
 use DateTime;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class Token
+class Token implements TokenInterface
 {
     public const ACCESS = 'access_token';
     public const REFRESH = 'refresh_token';
@@ -36,5 +36,8 @@ class Token
         return $this->expiredAt;
     }
 
-
+    public function getUser(): ?UserInterface
+    {
+        return $this->user;
+    }
 }

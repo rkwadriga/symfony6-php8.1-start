@@ -8,29 +8,57 @@ namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
 use DateTime;
 use Rkwadriga\JwtBundle\Entity\Token;
+use Rkwadriga\JwtBundle\Entity\TokenInterface;
+use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessfulEvent;
+use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessfulEvent;
+use Rkwadriga\JwtBundle\Event\TokenCreatingStartedEvent;
+use Rkwadriga\JwtBundle\EventSubscriber\TokenCreateEventSubscriber;
 use Rkwadriga\JwtBundle\Helpers\TimeHelper;
 use Rkwadriga\JwtBundle\Helpers\TokenHelper;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class TokenGenerator
 {
     private const TOKEN_TYPE = 'JWT';
 
     public function __construct(
+        private EventDispatcherInterface $eventsDispatcher,
         private DbService $dbService,
         private Encoder $encoder,
         private int $accessTokenLifeTime,
         private int $refreshTokenLifeTime
-    ) {}
+    ) {
+        $this->eventsDispatcher->addSubscriber(new TokenCreateEventSubscriber());
+    }
 
-    public function generate(array $payload): Token
+    public function generate(array $payload): TokenInterface
     {
-        $accessToken = $this->generateAccessToken($payload);
-        // Remember access token expiration timestamp and delete it from payload
-        // - generator will create a new one for access token
-        $expiredAt = $payload['exp'];
-        unset($payload['exp']);
-        $refreshToken = $this->generateRefreshToken($payload);
-        return new Token($accessToken, TimeHelper::fromTimeStamp($expiredAt), $refreshToken);
+        // This event allows to change payload
+        $event = new TokenCreatingStartedEvent($payload);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+        $payload = $event->getPayload();
+
+        try {
+            $accessToken = $this->generateAccessToken($payload);
+            // Remember access token expiration timestamp and delete it from payload
+            // - generator will create a new one for access token
+            $expiredAt = $payload['exp'];
+            unset($payload['exp']);
+            $refreshToken = $this->generateRefreshToken($payload);
+            $token = new Token($accessToken, TimeHelper::fromTimeStamp($expiredAt), $refreshToken);
+
+            // This event allows to change the token
+            $event = new TokenCreatingFinishedSuccessfulEvent($token);
+            $this->eventsDispatcher->dispatch($event, $event::getName());
+
+            return $event->getToken();
+        } catch (\Exception $e) {
+            // This event allow to process token creation exceptions
+            $event = new TokenCreatingFinishedUnsuccessfulEvent($e);
+            $this->eventsDispatcher->dispatch($event, $event::getName());
+
+            throw $event->getException();
+        }
     }
 
     public function generateAccessToken(array &$payload): string

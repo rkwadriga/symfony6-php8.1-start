@@ -22,6 +22,7 @@ services:
 
     Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator:
         arguments:
+            $eventsDispatcher: '@rkwadriga.jwt.event_dispatcher'
             $dbService: '@kwadriga.jwt.db_service'
             $encoder: '@rkwadriga.jwt.encoder'
             $accessTokenLifeTime: '%rkwadriga.jwt.access_token_life_time%'

@@ -49,7 +49,12 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
-        $this->eventsDispatcher->dispatch(new AuthenticationStartedEvent($request), AuthenticationStartedEvent::NAME);
+        // This event can be used to change authentication process
+        $event = new AuthenticationStartedEvent($request);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+        if ($event->getPassport() !== null) {
+            return $event->getPassport();
+        }
 
         $params = json_decode($request->getContent(), true);
         if (!is_array($params)) {
@@ -76,13 +81,17 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        $this->eventsDispatcher->dispatch(new AuthenticationFinishedUnsuccessfulEvent($request, $exception), AuthenticationFinishedUnsuccessfulEvent::NAME);
-
         $data = [
             'code' => $exception->getCode(),
             'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),
         ];
 
-        return new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        $response = new JsonResponse($data, Response::HTTP_FORBIDDEN);
+
+        // This event can be used to change response
+        $event = new AuthenticationFinishedUnsuccessfulEvent($request, $exception, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
     }
 }

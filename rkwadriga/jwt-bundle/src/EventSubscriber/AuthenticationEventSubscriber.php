@@ -9,31 +9,30 @@ namespace Rkwadriga\JwtBundle\EventSubscriber;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class AuthenticationEventSubscriber implements EventSubscriberInterface
+class AuthenticationEventSubscriber extends AbstractEventSubscriber
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
-            AuthenticationStartedEvent::NAME => 'processAuthenticationStarted',
-            AuthenticationFinishedSuccessfulEvent::NAME => 'processAuthenticationFinishedSuccessful',
-            AuthenticationFinishedUnsuccessfulEvent::NAME => 'processAuthenticationFinishedUnsuccessful',
+            AuthenticationStartedEvent::getName() => 'processAuthenticationStarted',
+            AuthenticationFinishedSuccessfulEvent::getName() => 'processAuthenticationFinishedSuccessful',
+            AuthenticationFinishedUnsuccessfulEvent::getName() => 'processAuthenticationFinishedUnsuccessful',
         ];
     }
 
     public function processAuthenticationStarted(AuthenticationStartedEvent $event): void
     {
-        dd($event);
+        return;
     }
 
     public function processAuthenticationFinishedSuccessful(AuthenticationFinishedSuccessfulEvent $event): void
     {
-        dd($event);
+        return;
     }
 
     public function processAuthenticationFinishedUnsuccessful(AuthenticationFinishedUnsuccessfulEvent $event): void
     {
-        dd($event);
+        return;
     }
 }

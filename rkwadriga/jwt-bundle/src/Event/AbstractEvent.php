@@ -8,10 +8,10 @@ namespace Rkwadriga\JwtBundle\Event;
 
 abstract class AbstractEvent
 {
-    public const NAME = 'rkwadriga_jwt_abstract_event';
+    protected static string $name = 'rkwadriga.jwt.abstract_event';
 
     public static function getName(): string
     {
-        return static::NAME;
+        return static::$name;
     }
 }

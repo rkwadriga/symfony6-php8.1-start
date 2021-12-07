@@ -7,15 +7,17 @@
 namespace Rkwadriga\JwtBundle\Event;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class AuthenticationFinishedUnsuccessfulEvent extends AbstractEvent
 {
-    public const NAME = 'rkwadriga.jwt.authentication_finished_unsuccessful_event';
+    protected static string $name = 'rkwadriga.jwt.authentication_finished_unsuccessful_event';
 
     public function __construct(
         private Request $request,
-        private AuthenticationException $exception
+        private AuthenticationException $exception,
+        private ?Response $response = null
     ) {}
 
     public function getRequest(): Request
@@ -26,5 +28,15 @@ class AuthenticationFinishedUnsuccessfulEvent extends AbstractEvent
     public function getException(): AuthenticationException
     {
         return $this->exception;
+    }
+
+    public function setResponse(?Response $response): void
+    {
+        $this->response = $response;
+    }
+
+    public function getResponse(): ?Response
+    {
+        return $this->response;
     }
 }

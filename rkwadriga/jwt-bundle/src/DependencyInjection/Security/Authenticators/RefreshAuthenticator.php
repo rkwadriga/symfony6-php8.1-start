@@ -11,6 +11,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\Services\Encoder;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
 use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
@@ -52,6 +53,13 @@ class RefreshAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
+        // This event can be used to change authentication process
+        $event = new AuthenticationStartedEvent($request);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+        if ($event->getPassport() !== null) {
+            return $event->getPassport();
+        }
+
         // Refresh token is required for this request
         [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request, AuthenticationException::class, true);
 
@@ -77,8 +85,6 @@ class RefreshAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        $this->eventsDispatcher->dispatch(new AuthenticationFinishedUnsuccessfulEvent($request, $exception), AuthenticationFinishedUnsuccessfulEvent::NAME);
-
         $previous = $exception->getPrevious();
         $message = $previous instanceof TokenValidatorException || $previous instanceof TokenIdentifierException
             ? $exception->getMessage()
@@ -99,6 +105,12 @@ class RefreshAuthenticator extends AbstractAuthenticator
             $resultCode = Response::HTTP_FORBIDDEN;
         }
 
-        return new JsonResponse($data, $resultCode);
+        $response = new JsonResponse($data, $resultCode);
+
+        // This event can be used to change response
+        $event = new AuthenticationFinishedUnsuccessfulEvent($request, $exception, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
     }
 }

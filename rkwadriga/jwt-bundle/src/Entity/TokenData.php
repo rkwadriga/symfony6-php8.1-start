@@ -30,6 +30,11 @@ class TokenData implements TokenValidatableInterface
         $this->payload = $data;
     }
 
+    public function getToken(): string
+    {
+        return $this->token;
+    }
+
     public function getAlgorithm(): ?string
     {
         return $this->alg;

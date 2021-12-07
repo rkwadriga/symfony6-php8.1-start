@@ -6,7 +6,6 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
-
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,17 +15,21 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 trait AuthenticationTokenResponseTrait
 {
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    public function onAuthenticationSuccess(Request $request, TokenInterface $userToken, string $firewallName): ?Response
     {
-        $this->eventsDispatcher->dispatch(new AuthenticationFinishedSuccessfulEvent($request, $token), AuthenticationFinishedSuccessfulEvent::NAME);
-
-        $payload = $this->getPayload($token->getUser());
+        $payload = $this->getPayload($userToken->getUser());
         $token = $this->generator->generate($payload);
 
         $json = $this->serializer->serialize($token, 'json', [
             'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
         ]);
-        return new JsonResponse($json, Response::HTTP_CREATED, [], true);
+        $response = new JsonResponse($json, Response::HTTP_CREATED, [], true);
+
+        // This event can be used to change response
+        $event = new AuthenticationFinishedSuccessfulEvent($request, $userToken, $token, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
     }
 
     private function getPayload(UserInterface $user): array

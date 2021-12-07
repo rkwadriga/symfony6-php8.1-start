@@ -6,8 +6,10 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
 use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
@@ -15,7 +17,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface as UserTokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -24,10 +26,13 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
+use Rkwadriga\JwtBundle\Entity\TokenInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
 class JwtAuthenticator extends AbstractAuthenticator
 {
+    private TokenInterface $token;
+
     public function __construct(
         private EventDispatcherInterface $eventsDispatcher,
         private UserProviderInterface $userProvider,
@@ -47,6 +52,13 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): Passport
     {
+        // This event can be used to change authentication process
+        $event = new AuthenticationStartedEvent($request);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+        if ($event->getPassport() !== null) {
+            return $event->getPassport();
+        }
+
         [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request);
         // Refresh token allowed only in "refresh" request
         if ($refreshTokenData !== null) {
@@ -67,19 +79,28 @@ class JwtAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException('Invalid access token');
         }
 
+        // Remember the token for "authentication_finished_successful" event
+        $this->token = new Token(
+            $accessTokenData->getToken(),
+            $accessTokenData->getExpiredAt(),
+            null,
+            $userBridge->getUser()
+        );
+
         return new SelfValidatingPassport($userBridge);
     }
 
-    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
+    public function onAuthenticationSuccess(Request $request, UserTokenInterface $token, string $firewallName): ?Response
     {
-        $this->eventsDispatcher->dispatch(new AuthenticationFinishedSuccessfulEvent($request, $token), AuthenticationFinishedSuccessfulEvent::NAME);
-        return null;
+        // This event can be used to change response
+        $event = new AuthenticationFinishedSuccessfulEvent($request, $token, $this->token);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        $this->eventsDispatcher->dispatch(new AuthenticationFinishedUnsuccessfulEvent($request, $exception), AuthenticationFinishedUnsuccessfulEvent::NAME);
-
         $previous = $exception->getPrevious();
         $message = $previous instanceof TokenValidatorException || $previous instanceof TokenIdentifierException
             ? $exception->getMessage()
@@ -91,6 +112,12 @@ class JwtAuthenticator extends AbstractAuthenticator
         ];
 
         $resultCode = $exception->getCode() === TokenValidatorException::ACCESS_TOKEN_EXPIRED ? Response::HTTP_UNAUTHORIZED : Response::HTTP_FORBIDDEN;
-        return new JsonResponse($data, $resultCode);
+        $response =  new JsonResponse($data, $resultCode);
+
+        // This event can be used to change response
+        $event = new AuthenticationFinishedUnsuccessfulEvent($request, $exception, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
     }
 }
