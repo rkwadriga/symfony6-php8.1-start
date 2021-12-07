@@ -7,8 +7,8 @@
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
 use DateTime;
-use Rkwadriga\JwtBundle\Entities\TokenValidatableInterface;
-use Rkwadriga\JwtBundle\Entities\Token;
+use Rkwadriga\JwtBundle\Entity\TokenValidatableInterface;
+use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
 
 class TokenValidator

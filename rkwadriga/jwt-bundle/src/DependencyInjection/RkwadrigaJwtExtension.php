@@ -62,5 +62,8 @@ class RkwadrigaJwtExtension extends Extension
         $container->setParameter('rkwadriga.jwt.refresh_token_location', $config['refresh_token_location']);
         $container->setParameter('rkwadriga.jwt.refresh_token_param_name', $config['refresh_token_param_name']);
         $container->setParameter('rkwadriga.jwt.token_type', $config['token_type']);
+        $container->setParameter('rkwadriga.jwt.refresh_tokens_in_db', $config['refresh_tokens_in_db']);
+        $container->setParameter('rkwadriga.jwt.refresh_tokens_table', $config['refresh_tokens_table']);
+        $container->setParameter('rkwadriga.jwt.refresh_tokens_limit', $config['refresh_tokens_limit']);
     }
 }

@@ -6,8 +6,8 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
-use Rkwadriga\JwtBundle\Entities\Token;
-use Rkwadriga\JwtBundle\Entities\TokenData;
+use Rkwadriga\JwtBundle\Entity\Token;
+use Rkwadriga\JwtBundle\Entity\TokenData;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Helpers\TokenHelper;
 use Symfony\Component\HttpFoundation\Request;

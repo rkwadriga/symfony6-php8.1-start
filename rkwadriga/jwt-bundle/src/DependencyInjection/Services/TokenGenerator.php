@@ -7,7 +7,7 @@
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
 use DateTime;
-use Rkwadriga\JwtBundle\Entities\Token;
+use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Helpers\TimeHelper;
 use Rkwadriga\JwtBundle\Helpers\TokenHelper;
 
@@ -16,6 +16,7 @@ class TokenGenerator
     private const TOKEN_TYPE = 'JWT';
 
     public function __construct(
+        private DbService $dbService,
         private Encoder $encoder,
         private int $accessTokenLifeTime,
         private int $refreshTokenLifeTime

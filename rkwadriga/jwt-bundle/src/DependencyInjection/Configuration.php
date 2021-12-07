@@ -31,6 +31,9 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('refresh_token_location')->defaultValue(TokenIdentifier::LOCATION_BODY)->end()
                 ->scalarNode('refresh_token_param_name')->defaultValue('refresh_token')->end()
                 ->scalarNode('token_type')->defaultValue(TokenIdentifier::TYPE_BEARER)->end()
+                ->booleanNode('refresh_tokens_in_db')->defaultValue(true)->end()
+                ->scalarNode('refresh_tokens_table')->defaultValue('refresh_token')->end()
+                ->integerNode('refresh_tokens_limit')->defaultValue(3)->end()
             ->end()
         ;
 

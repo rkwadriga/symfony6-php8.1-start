@@ -4,7 +4,7 @@
  * Author Dmitry Kushneriov
  */
 
-namespace Rkwadriga\JwtBundle\Entities;
+namespace Rkwadriga\JwtBundle\Entity;
 
 use DateTime;
 use Symfony\Component\Security\Core\User\UserInterface;

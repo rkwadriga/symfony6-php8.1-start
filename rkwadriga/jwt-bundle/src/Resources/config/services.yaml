@@ -1,4 +1,13 @@
 services:
+    Rkwadriga\JwtBundle\DependencyInjection\Services\DbService:
+        arguments:
+            $isEnabled: '%rkwadriga.jwt.refresh_tokens_in_db%'
+            $table: '%rkwadriga.jwt.refresh_tokens_table%'
+            $tokensLimit: '%rkwadriga.jwt.refresh_tokens_limit%'
+    kwadriga.jwt.db_service:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Services\DbService
+        public: false
+
     Rkwadriga\JwtBundle\DependencyInjection\Services\Encoder:
         arguments:
             $algorithm: '%rkwadriga.jwt.encoding_algorithm%'
@@ -9,6 +18,7 @@ services:
 
     Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator:
         arguments:
+            $dbService: '@kwadriga.jwt.db_service'
             $encoder: '@rkwadriga.jws.encoder'
             $accessTokenLifeTime: '%rkwadriga.jwt.access_token_life_time%'
             $refreshTokenLifeTime: '%rkwadriga.jwt.refresh_token_life_time%'
