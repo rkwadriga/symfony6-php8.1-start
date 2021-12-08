@@ -16,3 +16,4 @@ rkwadriga_jwt:
     refresh_tokens_in_db: true
     refresh_tokens_table: refresh_token
     refresh_tokens_limit: 10
+    rewrite_on_limit_exceeded: true

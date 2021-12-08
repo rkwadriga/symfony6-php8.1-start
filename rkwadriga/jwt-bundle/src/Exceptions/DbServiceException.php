@@ -8,6 +8,10 @@ namespace Rkwadriga\JwtBundle\Exceptions;
 
 class DbServiceException extends BaseException
 {
-    public const TABLE_DOES_NOT_EXIST  = 4365079032;
-    public const CAN_NOT_CREATE_TABLE  = 4756361204;
+    public const INVALID_PAYLOAD        = 5831213564;
+    public const CAN_NOT_CREATE_TABLE   = 4756361204;
+    public const SQL_ERROR              = 4820123745;
+    public const TOKENS_COUNT_EXCEEDED  = 4565320076;
+    public const REFRESH_TOKEN_MISSED   = 5230815335''
+
 }

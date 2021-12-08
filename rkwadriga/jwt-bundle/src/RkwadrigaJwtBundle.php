@@ -14,7 +14,6 @@ use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\TokenCreatingStartedEvent;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
-use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\EventDispatcher\DependencyInjection\AddEventAliasesPass;
@@ -22,7 +21,7 @@ use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 
 class RkwadrigaJwtBundle extends Bundle
 {
-    public function build(ContainerBuilder $container)
+    public function build( $container)
     {
         parent::build($container);
 

@@ -13,7 +13,8 @@ class TokenCreatingFinishedSuccessfulEvent extends AbstractEvent
     protected static string $name = 'rkwadriga.jwt.token_creating_finished_successful_event';
 
     public function __construct(
-        private TokenInterface $token
+        private TokenInterface $token,
+        private array $payload
     ) {}
 
     public function getToken(): TokenInterface
@@ -24,5 +25,10 @@ class TokenCreatingFinishedSuccessfulEvent extends AbstractEvent
     public function setToken(TokenInterface $token): void
     {
         $this->token = $token;
+    }
+
+    public function getPayload(): array
+    {
+        return $this->payload;
     }
 }

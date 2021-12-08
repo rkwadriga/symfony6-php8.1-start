@@ -33,7 +33,8 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('token_type')->defaultValue(TokenIdentifier::TYPE_BEARER)->end()
                 ->booleanNode('refresh_tokens_in_db')->defaultValue(true)->end()
                 ->scalarNode('refresh_tokens_table')->defaultValue('refresh_token')->end()
-                ->integerNode('refresh_tokens_limit')->defaultValue(3)->end()
+                ->integerNode('refresh_tokens_limit')->defaultValue(10)->end()
+                ->booleanNode('rewrite_on_limit_exceeded')->defaultValue(true)->end()
             ->end()
         ;
 

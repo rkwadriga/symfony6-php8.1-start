@@ -6,12 +6,17 @@
 
 namespace Rkwadriga\JwtBundle\EventSubscriber;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Services\DbService;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\TokenCreatingStartedEvent;
 
 class TokenCreateEventSubscriber extends AbstractEventSubscriber
 {
+    public function __construct(
+        private DbService $dbService
+    ) {}
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -23,12 +28,12 @@ class TokenCreateEventSubscriber extends AbstractEventSubscriber
 
     public function processTokenCreatingStarted(TokenCreatingStartedEvent $event): void
     {
-        return;
+        $this->dbService->checkTokensLimit($event->getPayload());
     }
 
     public function processTokenCreatingFinishedSuccessful(TokenCreatingFinishedSuccessfulEvent $event): void
     {
-        return;
+        $this->dbService->writeToken($event->getToken(), $event->getPayload());
     }
 
     public function processTokenCreatingFinishedUnsuccessful(TokenCreatingFinishedUnsuccessfulEvent $event): void

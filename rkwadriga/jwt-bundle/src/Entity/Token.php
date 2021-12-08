@@ -11,29 +11,32 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class Token implements TokenInterface
 {
-    public const ACCESS = 'access_token';
-    public const REFRESH = 'refresh_token';
-
     public function __construct(
-        private string $access,
+        private DateTime $createdAt,
         private DateTime $expiredAt,
+        private string $access,
         private ?string $refresh = null,
         private ?UserInterface $user = null
     ) {}
+
+    public function getCreatedAt(): DateTime
+    {
+        return $this->createdAt;
+    }
+
+    public function getExpiredAt(): DateTime
+    {
+        return $this->expiredAt;
+    }
 
     public function getAccessToken(): string
     {
         return $this->access;
     }
 
-    public function getRefreshToken(): string
+    public function getRefreshToken(): ?string
     {
         return $this->refresh;
-    }
-
-    public function getExpiredAt(): DateTime
-    {
-        return $this->expiredAt;
     }
 
     public function getUser(): ?UserInterface

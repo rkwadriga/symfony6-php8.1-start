@@ -11,11 +11,16 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 interface TokenInterface
 {
-    public function getUser(): ?UserInterface;
+    public const ACCESS = 'access_token';
+    public const REFRESH = 'refresh_token';
+
+    public function getCreatedAt(): DateTime;
+
+    public function getExpiredAt(): DateTime;
 
     public function getAccessToken(): string;
 
-    public function getRefreshToken(): string;
+    public function getRefreshToken(): ?string;
 
-    public function getExpiredAt(): DateTime;
+    public function getUser(): ?UserInterface;
 }

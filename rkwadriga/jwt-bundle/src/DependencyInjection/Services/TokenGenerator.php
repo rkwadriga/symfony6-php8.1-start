@@ -28,7 +28,7 @@ class TokenGenerator
         private int $accessTokenLifeTime,
         private int $refreshTokenLifeTime
     ) {
-        $this->eventsDispatcher->addSubscriber(new TokenCreateEventSubscriber());
+        $this->eventsDispatcher->addSubscriber(new TokenCreateEventSubscriber($this->dbService));
     }
 
     public function generate(array $payload): TokenInterface
@@ -45,10 +45,15 @@ class TokenGenerator
             $expiredAt = $payload['exp'];
             unset($payload['exp']);
             $refreshToken = $this->generateRefreshToken($payload);
-            $token = new Token($accessToken, TimeHelper::fromTimeStamp($expiredAt), $refreshToken);
+            $token = new Token(
+                isset($payload['timestamp']) ? TimeHelper::fromTimeStamp($payload['timestamp']) : new DateTime(),
+                TimeHelper::fromTimeStamp($expiredAt),
+                $accessToken,
+                $refreshToken
+            );
 
             // This event allows to change the token
-            $event = new TokenCreatingFinishedSuccessfulEvent($token);
+            $event = new TokenCreatingFinishedSuccessfulEvent($token, $payload);
             $this->eventsDispatcher->dispatch($event, $event::getName());
 
             return $event->getToken();

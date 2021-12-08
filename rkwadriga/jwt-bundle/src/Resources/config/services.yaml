@@ -3,11 +3,18 @@ services:
         class: Symfony\Component\EventDispatcher\EventDispatcher
         public: true
 
+    Rkwadriga\JwtBundle\Repository\RefreshTokenRepository:
+        autowire: true
+        tags: [ 'doctrine.repository_service' ]
+
     Rkwadriga\JwtBundle\DependencyInjection\Services\DbService:
         arguments:
+            $em: '@doctrine.orm.entity_manager'
             $isEnabled: '%rkwadriga.jwt.refresh_tokens_in_db%'
             $table: '%rkwadriga.jwt.refresh_tokens_table%'
             $tokensLimit: '%rkwadriga.jwt.refresh_tokens_limit%'
+            $userIdentifier: '%rkwadriga.jwt.login_pram%'
+            $rewriteOnLimitExceeded: '%rkwadriga.jwt.rewrite_on_limit_exceeded%'
     kwadriga.jwt.db_service:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\DbService
         public: false

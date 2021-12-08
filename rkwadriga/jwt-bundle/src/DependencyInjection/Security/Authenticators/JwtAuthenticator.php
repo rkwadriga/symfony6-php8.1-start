@@ -81,8 +81,9 @@ class JwtAuthenticator extends AbstractAuthenticator
 
         // Remember the token for "authentication_finished_successful" event
         $this->token = new Token(
-            $accessTokenData->getToken(),
+            $accessTokenData->getCreatedAt(),
             $accessTokenData->getExpiredAt(),
+            $accessTokenData->getToken(),
             null,
             $userBridge->getUser()
         );
