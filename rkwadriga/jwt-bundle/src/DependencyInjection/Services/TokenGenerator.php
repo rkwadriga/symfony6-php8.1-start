@@ -6,7 +6,9 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Services;
 
+use Exception;
 use DateTime;
+use DateTimeImmutable;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Entity\TokenInterface;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessfulEvent;
@@ -39,30 +41,37 @@ class TokenGenerator
         $payload = $event->getPayload();
 
         try {
-            $accessToken = $this->generateAccessToken($payload);
-            // Remember access token expiration timestamp and delete it from payload
-            // - generator will create a new one for access token
-            $expiredAt = $payload['exp'];
-            unset($payload['exp']);
-            $refreshToken = $this->generateRefreshToken($payload);
-            $token = new Token(
-                isset($payload['timestamp']) ? TimeHelper::fromTimeStamp($payload['timestamp']) : new DateTime(),
-                TimeHelper::fromTimeStamp($expiredAt),
-                $accessToken,
-                $refreshToken
-            );
+            $token = $this->createToken($payload);
 
             // This event allows to change the token
             $event = new TokenCreatingFinishedSuccessfulEvent($token, $payload);
             $this->eventsDispatcher->dispatch($event, $event::getName());
 
             return $event->getToken();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // This event allow to process token creation exceptions
-            $event = new TokenCreatingFinishedUnsuccessfulEvent($e);
+            $event = new TokenCreatingFinishedUnsuccessfulEvent($e, $payload);
             $this->eventsDispatcher->dispatch($event, $event::getName());
             throw $event->getException();
         }
+    }
+
+    public function createToken(array $payload): Token
+    {
+        $accessToken = $this->generateAccessToken($payload);
+        // Remember access token expiration timestamp and delete it from payload
+        // - generator will create a new one for access token
+        $expiredAt = $payload['exp'];
+        unset($payload['exp']);
+        $refreshToken = $this->generateRefreshToken($payload);
+        return new Token(
+            isset($payload['timestamp'])
+                ? DateTimeImmutable::createFromMutable(TimeHelper::fromTimeStamp($payload['timestamp']))
+                : new DateTimeImmutable(),
+            DateTimeImmutable::createFromMutable(TimeHelper::fromTimeStamp($expiredAt)),
+            $accessToken,
+            $refreshToken
+        );
     }
 
     public function generateAccessToken(array &$payload): string

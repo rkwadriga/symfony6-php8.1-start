@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Entity;
 
-use DateTime;
+use DateTimeImmutable;
 
 class TokenData implements TokenValidatableInterface
 {
@@ -50,21 +50,21 @@ class TokenData implements TokenValidatableInterface
         return $this->typ;
     }
 
-    public function getCreatedAt(): ?DateTime
+    public function getCreatedAt(): ?DateTimeImmutable
     {
         if ($this->timestamp === null) {
             return null;
         }
-        $time = new DateTime();
+        $time = new DateTimeImmutable();
         return $time->setTimestamp($this->timestamp);
     }
 
-    public function getExpiredAt(): ?DateTime
+    public function getExpiredAt(): ?DateTimeImmutable
     {
         if ($this->exp === null) {
             return null;
         }
-        $time = new DateTime();
+        $time = new DateTimeImmutable();
         return $time->setTimestamp($this->exp);
     }
 

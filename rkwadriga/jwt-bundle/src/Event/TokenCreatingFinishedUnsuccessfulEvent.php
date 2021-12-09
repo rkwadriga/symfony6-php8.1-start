@@ -13,12 +13,18 @@ class TokenCreatingFinishedUnsuccessfulEvent extends AbstractEvent
     protected static string $name = 'rkwadriga.jwt.token_creating_finished_unsuccessful_event';
 
     public function __construct(
-        private Exception $exception
+        private Exception $exception,
+        private array $payload
     ) {}
 
     public function getException(): Exception
     {
         return $this->exception;
+    }
+
+    public function getPayload(): array
+    {
+        return $this->payload;
     }
 
     public function setException(Exception $exception): void

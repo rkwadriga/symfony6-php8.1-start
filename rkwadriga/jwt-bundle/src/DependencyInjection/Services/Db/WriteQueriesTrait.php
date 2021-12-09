@@ -15,7 +15,7 @@ trait WriteQueriesTrait
 {
     use BaseQueryTrait;
 
-    private function deleteOldestRecord(string|int $userID): void
+    private function deleteOldestRecord(string $userID): void
     {
         // Do not forget set a custom table name for entity
         $this->setTableName();
@@ -52,15 +52,28 @@ trait WriteQueriesTrait
         }
     }
 
-    private function addNewRecord(string|int $userID, string $refreshToken, DateTimeImmutable $createdAt): RefreshToken
+    private function addNewRecord(string $userID, string $refreshToken, DateTimeImmutable $createdAt): RefreshToken
     {
         // Do not forget set a custom table name for entity
         $this->setTableName();
 
-        $refreshToken = new RefreshToken((string) $userID, $refreshToken, $createdAt);
+        $refreshToken = new RefreshToken($userID, $refreshToken, $createdAt);
         $this->em->persist($refreshToken);
         $this->em->flush();
 
         return $refreshToken;
+    }
+
+    private function updateExistedRecord(RefreshToken $existedToken, string $newRefreshToken, DateTimeImmutable $newCreatedAt): void
+    {
+        // Do not forget set a custom table name for entity
+        $this->setTableName();
+
+        $existedToken
+            ->setRefreshToken($newRefreshToken)
+            ->setCreatedAt($newCreatedAt);
+
+        $this->em->persist($existedToken);
+        $this->em->flush();
     }
 }

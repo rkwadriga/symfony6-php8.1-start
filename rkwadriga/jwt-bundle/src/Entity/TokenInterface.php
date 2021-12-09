@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Entity;
 
-use DateTime;
+use DateTimeInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 interface TokenInterface
@@ -14,9 +14,9 @@ interface TokenInterface
     public const ACCESS = 'access_token';
     public const REFRESH = 'refresh_token';
 
-    public function getCreatedAt(): DateTime;
+    public function getCreatedAt(): DateTimeInterface;
 
-    public function getExpiredAt(): DateTime;
+    public function getExpiredAt(): DateTimeInterface;
 
     public function getAccessToken(): string;
 

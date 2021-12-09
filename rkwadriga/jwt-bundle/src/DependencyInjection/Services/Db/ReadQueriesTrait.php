@@ -13,7 +13,7 @@ trait ReadQueriesTrait
 {
     use BaseQueryTrait;
 
-    private function selectCountForUser(string|int $userID): int
+    private function selectCountForUser(string $userID): int
     {
         // Do not forget set a custom table name for entity
         $this->setTableName();
@@ -33,5 +33,13 @@ trait ReadQueriesTrait
                 $e
             );
         }
+    }
+
+    private function findRecordByPrimaryKey(string $userID, string $refreshToken): ?RefreshToken
+    {
+        // Do not forget set a custom table name for entity
+        $this->setTableName();
+
+        return $this->em->getRepository(RefreshToken::class)->findOneBy(['userId' => $userID, 'refreshToken' => $refreshToken]);
     }
 }

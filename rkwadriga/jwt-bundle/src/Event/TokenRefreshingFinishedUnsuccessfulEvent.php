@@ -13,7 +13,8 @@ class TokenRefreshingFinishedUnsuccessfulEvent extends AbstractEvent
     protected static string $name = 'rkwadriga.jwt.token_refreshing_finished_unsuccessful_event';
 
     public function __construct(
-        private Exception $exception
+        private Exception $exception,
+        private array $payload
     ) {}
 
     public function getException(): Exception
@@ -24,5 +25,10 @@ class TokenRefreshingFinishedUnsuccessfulEvent extends AbstractEvent
     public function setException(Exception $exception): void
     {
         $this->exception = $exception;
+    }
+
+    public function getPayload(): array
+    {
+        return $this->payload;
     }
 }

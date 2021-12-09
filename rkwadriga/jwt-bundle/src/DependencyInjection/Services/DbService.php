@@ -10,6 +10,7 @@ use DateTimeImmutable;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\Db\CreateTableTrait;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\Db\ReadQueriesTrait;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\Db\WriteQueriesTrait;
+use Rkwadriga\JwtBundle\Entity\RefreshToken;
 use Rkwadriga\JwtBundle\Exceptions\DbServiceException;
 use Rkwadriga\JwtBundle\Entity\TokenInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,6 +30,11 @@ class DbService
         private string $userIdentifier,
         private bool $rewriteOnLimitExceeded
     ) {}
+
+    public function isEnabled(): bool
+    {
+        return $this->isEnabled;
+    }
 
     public function checkTokensLimit(array $payload): void
     {
@@ -83,9 +89,31 @@ class DbService
         $this->addNewRecord($userID, end($payload), DateTimeImmutable::createFromInterface($token->getCreatedAt()));
     }
 
+    public function getRefreshToken(array $payload, string $refreshToken): ?RefreshToken
+    {
+        // User identifier (by default "email") is required in payload for working with refresh_token records
+        $userID = $this->getUserID($payload);
+
+        return $this->findRecordByPrimaryKey($userID, $refreshToken);
+    }
+
+    public function updateRefreshToken(RefreshToken $existedToken, TokenInterface $newToken): void
+    {
+        // Check if DB-module is enabled and create a table "refresh_token" if it doesn't exist
+        if (!$this->init()) {
+            return;
+        }
+
+        // Get refresh token signature and creation date
+        $tokenData = TokenHelper::parse($newToken->getRefreshToken(), TokenInterface::REFRESH);
+
+        // Update token record
+        $this->updateExistedRecord($existedToken, end($tokenData), DateTimeImmutable::createFromInterface($newToken->getCreatedAt()));
+    }
+
     private function init(): bool
     {
-        if (!$this->isEnabled) {
+        if (!$this->isEnabled()) {
             return false;
         }
 
@@ -94,7 +122,7 @@ class DbService
         return true;
     }
 
-    private function getUserID(array $payload): string|int
+    private function getUserID(array $payload): string
     {
         // The user identifier is required for payload
         if (!isset($payload[$this->userIdentifier])) {
@@ -110,6 +138,6 @@ class DbService
             $userID = hash('SHA256', $userID);
         }
 
-        return $userID;
+        return (string) $userID;
     }
 }

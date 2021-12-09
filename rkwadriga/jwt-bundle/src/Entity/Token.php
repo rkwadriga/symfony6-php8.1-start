@@ -6,25 +6,25 @@
 
 namespace Rkwadriga\JwtBundle\Entity;
 
-use DateTime;
+use DateTimeImmutable;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class Token implements TokenInterface
 {
     public function __construct(
-        private DateTime $createdAt,
-        private DateTime $expiredAt,
+        private DateTimeImmutable $createdAt,
+        private DateTimeImmutable $expiredAt,
         private string $access,
         private ?string $refresh = null,
         private ?UserInterface $user = null
     ) {}
 
-    public function getCreatedAt(): DateTime
+    public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function getExpiredAt(): DateTime
+    public function getExpiredAt(): DateTimeImmutable
     {
         return $this->expiredAt;
     }

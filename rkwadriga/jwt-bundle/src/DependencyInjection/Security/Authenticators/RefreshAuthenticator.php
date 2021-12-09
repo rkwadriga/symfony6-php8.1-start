@@ -13,6 +13,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\Services\Encoder;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenRefresher;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
+use Rkwadriga\JwtBundle\Entity\TokenData;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
@@ -38,6 +39,8 @@ class RefreshAuthenticator extends AbstractAuthenticator
     public const AUTHENTICATION_TYPE = AuthenticationType::REFRESH;
 
     use AuthenticationTokenPayloadTrait;
+
+    private TokenData $currentRefreshToken;
 
     public function __construct(
         private EventDispatcherInterface $eventsDispatcher,
@@ -69,6 +72,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
 
         // Refresh token is required for this request
         [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request, AuthenticationException::class, true);
+        $this->currentRefreshToken = $refreshTokenData;
 
         // Validate only refresh token expired at - it doesn't matter is the access token expired or not.
         //  And payload of both tokens will be validated in "validateRefreshAndAccessTokensPayload" method
@@ -93,7 +97,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $userToken, string $firewallName): ?Response
     {
         $payload = $this->getPayload($userToken->getUser());
-        $token = $this->refresher->refreshToken($payload);
+        $token = $this->refresher->refreshToken($payload, $this->currentRefreshToken);
 
         $json = $this->serializer->serialize($token, 'json', [
             'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,

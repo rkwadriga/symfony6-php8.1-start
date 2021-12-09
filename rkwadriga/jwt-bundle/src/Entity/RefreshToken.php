@@ -35,9 +35,23 @@ class RefreshToken
         return $this->userId;
     }
 
+    public function setRefreshToken(string $refreshToken): self
+    {
+        $this->refreshToken = $refreshToken;
+
+        return $this;
+    }
+
     public function getRefreshToken(): string
     {
         return $this->refreshToken;
+    }
+
+    public function setCreatedAt(DateTimeImmutable $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
     }
 
     public function getCreatedAt(): DateTimeImmutable
