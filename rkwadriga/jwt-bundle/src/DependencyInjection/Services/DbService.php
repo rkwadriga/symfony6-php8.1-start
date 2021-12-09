@@ -91,6 +91,11 @@ class DbService
 
     public function getRefreshToken(array $payload, string $refreshToken): ?RefreshToken
     {
+        // Check if DB-module is enabled and create a table "refresh_token" if it doesn't exist
+        if (!$this->init()) {
+            return null;
+        }
+
         // User identifier (by default "email") is required in payload for working with refresh_token records
         $userID = $this->getUserID($payload);
 

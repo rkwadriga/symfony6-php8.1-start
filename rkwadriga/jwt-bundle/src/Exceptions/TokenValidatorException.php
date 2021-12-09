@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Exceptions;
 
-class TokenValidatorException extends BaseException
+class TokenValidatorException extends BaseTokenException
 {
     public const ACCESS_TOKEN_EXPIRED    = 5692001476;
     public const REFRESH_TOKEN_EXPIRED   = 5703604489;

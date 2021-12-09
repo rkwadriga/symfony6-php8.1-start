@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Exceptions;
 
-class TokenException extends BaseException
+class TokenException extends BaseTokenException
 {
     public const INVALID_TOKEN_FORMAT   = 9002304891;
 }

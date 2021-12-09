@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Exceptions;
 
-class TokenIdentifierException extends BaseException
+class TokenIdentifierException extends BaseTokenException
 {
     public const INVALID_ACCESS_TOKEN  = 6980114856;
     public const INVALID_REFRESH_TOKEN = 7065896123;

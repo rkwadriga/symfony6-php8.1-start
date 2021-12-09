@@ -18,7 +18,9 @@ use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
 use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
+use Rkwadriga\JwtBundle\Exceptions\BaseTokenException;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
+use Rkwadriga\JwtBundle\Exceptions\TokenRefresherException;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -71,15 +73,21 @@ class RefreshAuthenticator extends AbstractAuthenticator
         }
 
         // Refresh token is required for this request
-        [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request, AuthenticationException::class, true);
+        try {
+            [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request, AuthenticationException::class, true);
+            // Validate only refresh token expired at - it doesn't matter is the access token expired or not.
+            //  And payload of both tokens will be validated in "validateRefreshAndAccessTokensPayload" method
+            $this->validator->validateExpiredAt($refreshTokenData, AuthenticationException::class);
+
+            // Check is this refresh token can validate this access token
+            $this->validator->validateRefreshAndAccessTokensPayload($accessTokenData, $refreshTokenData, [$this->loginParam], AuthenticationException::class);
+        } catch (\Exception $e) {
+            if (!($e instanceof BaseTokenException)) {
+                throw $e;
+            }
+            throw new AuthenticationException($e->getMessage(), Response::HTTP_FORBIDDEN, $e);
+        }
         $this->currentRefreshToken = $refreshTokenData;
-
-        // Validate only refresh token expired at - it doesn't matter is the access token expired or not.
-        //  And payload of both tokens will be validated in "validateRefreshAndAccessTokensPayload" method
-        $this->validator->validateExpiredAt($refreshTokenData, AuthenticationException::class);
-
-        // Check is this refresh token can validate this access token
-        $this->validator->validateRefreshAndAccessTokensPayload($accessTokenData, $refreshTokenData, [$this->loginParam], AuthenticationException::class);
 
         // Load user by identifier from token payload
         $userIdentifierValue = $accessTokenData->getPayload()[$this->loginParam];
@@ -97,7 +105,15 @@ class RefreshAuthenticator extends AbstractAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $userToken, string $firewallName): ?Response
     {
         $payload = $this->getPayload($userToken->getUser());
-        $token = $this->refresher->refreshToken($payload, $this->currentRefreshToken);
+        try {
+            $token = $this->refresher->refreshToken($payload, $this->currentRefreshToken);
+        } catch (\Exception $e) {
+            if (!($e instanceof BaseTokenException)) {
+                throw $e;
+            }
+            $exception = new AuthenticationException($e->getMessage(), Response::HTTP_FORBIDDEN, $e);
+            return $this->onAuthenticationFailure($request, $exception);
+        }
 
         $json = $this->serializer->serialize($token, 'json', [
             'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
@@ -114,7 +130,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         $previous = $exception->getPrevious();
-        $message = $previous instanceof TokenValidatorException || $previous instanceof TokenIdentifierException
+        $message = $previous instanceof BaseTokenException
             ? $exception->getMessage()
             : strtr($exception->getMessageKey(), $exception->getMessageData());
 

@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Exceptions;
 
-class TokenRefresherException extends BaseException
+class TokenRefresherException extends BaseTokenException
 {
     public const NOT_FOUND            = 2053652352;
     public const INVALID_CREATED_AT   = 2049502054;

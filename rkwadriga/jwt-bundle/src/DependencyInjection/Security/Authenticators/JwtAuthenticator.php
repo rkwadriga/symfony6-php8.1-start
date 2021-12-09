@@ -6,12 +6,14 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Exception;
 use Rkwadriga\JwtBundle\DependencyInjection\Security\AuthenticationType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
 use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
+use Rkwadriga\JwtBundle\Exceptions\BaseTokenException;
 use Rkwadriga\JwtBundle\Exceptions\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exceptions\TokenValidatorException;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -62,7 +64,14 @@ class JwtAuthenticator extends AbstractAuthenticator
             return $event->getPassport();
         }
 
-        [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request);
+        try {
+            [$accessTokenData, $refreshTokenData] = $this->identifier->identify($request);
+        } catch (\Exception $e) {
+            if (!($e instanceof BaseTokenException)) {
+                throw $e;
+            }
+            throw new AuthenticationException($e->getMessage(), Response::HTTP_FORBIDDEN, $e);
+        }
         // Refresh token allowed only in "refresh" request
         if ($refreshTokenData !== null) {
             throw new AuthenticationException('Refresh token is not allowed in this request');
@@ -106,7 +115,7 @@ class JwtAuthenticator extends AbstractAuthenticator
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         $previous = $exception->getPrevious();
-        $message = $previous instanceof TokenValidatorException || $previous instanceof TokenIdentifierException
+        $message = $previous instanceof BaseTokenException
             ? $exception->getMessage()
             : strtr($exception->getMessageKey(), $exception->getMessageData());
 
