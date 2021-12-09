@@ -6,10 +6,14 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Security\AuthenticationType;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\DbService;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\Encoder;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenIdentifier;
+use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenRefresher;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
 use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
@@ -19,6 +23,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -30,7 +35,9 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class RefreshAuthenticator extends AbstractAuthenticator
 {
-    use AuthenticationTokenResponseTrait;
+    public const AUTHENTICATION_TYPE = AuthenticationType::REFRESH;
+
+    use AuthenticationTokenPayloadTrait;
 
     public function __construct(
         private EventDispatcherInterface $eventsDispatcher,
@@ -39,7 +46,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
         private Encoder $encoder,
         private TokenValidator $validator,
         private SerializerInterface $serializer,
-        private TokenGenerator $generator,
+        private TokenRefresher $refresher,
         private string $refreshUrl,
         private string $loginParam
     ) {
@@ -54,7 +61,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         // This event can be used to change authentication process
-        $event = new AuthenticationStartedEvent($request);
+        $event = new AuthenticationStartedEvent(self::AUTHENTICATION_TYPE, $request);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         if ($event->getPassport() !== null) {
             return $event->getPassport();
@@ -83,6 +90,23 @@ class RefreshAuthenticator extends AbstractAuthenticator
         return new SelfValidatingPassport($userBridge);
     }
 
+    public function onAuthenticationSuccess(Request $request, TokenInterface $userToken, string $firewallName): ?Response
+    {
+        $payload = $this->getPayload($userToken->getUser());
+        $token = $this->refresher->refreshToken($payload);
+
+        $json = $this->serializer->serialize($token, 'json', [
+            'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
+        ]);
+        $response = new JsonResponse($json, Response::HTTP_CREATED, [], true);
+
+        // This event can be used to change response
+        $event = new AuthenticationFinishedSuccessfulEvent(self::AUTHENTICATION_TYPE, $request, $userToken, $token, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
+    }
+
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         $previous = $exception->getPrevious();
@@ -108,7 +132,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
         $response = new JsonResponse($data, $resultCode);
 
         // This event can be used to change response
-        $event = new AuthenticationFinishedUnsuccessfulEvent($request, $exception, $response);
+        $event = new AuthenticationFinishedUnsuccessfulEvent(self::AUTHENTICATION_TYPE, $request, $exception, $response);
         $this->eventsDispatcher->dispatch($event, $event::getName());
 
         return $event->getResponse();

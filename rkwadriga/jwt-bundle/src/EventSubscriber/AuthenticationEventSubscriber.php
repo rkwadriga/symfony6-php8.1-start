@@ -21,6 +21,11 @@ class AuthenticationEventSubscriber extends AbstractEventSubscriber
         ];
     }
 
+    /**
+     * Processing "refresh" authentication - checking is refresh_token presented in DB
+     *
+     * @param AuthenticationStartedEvent $event
+     */
     public function processAuthenticationStarted(AuthenticationStartedEvent $event): void
     {
         return;

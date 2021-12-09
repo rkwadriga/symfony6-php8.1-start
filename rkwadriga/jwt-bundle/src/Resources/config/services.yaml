@@ -55,6 +55,15 @@ services:
         alias: Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator
         public: true
 
+    Rkwadriga\JwtBundle\DependencyInjection\Services\TokenRefresher:
+        arguments:
+            $eventsDispatcher: '@rkwadriga.jwt.event_dispatcher'
+            $dbService: '@kwadriga.jwt.db_service'
+            $generator: '@rkwadriga.jwt.token_generator'
+    rkwadriga.jwt.token_refresher:
+        alias: Rkwadriga\JwtBundle\DependencyInjection\Services\TokenRefresher
+        public: true
+
     Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators\JwtAuthenticator:
         arguments:
             $eventsDispatcher: '@rkwadriga.jwt.event_dispatcher'
@@ -76,7 +85,7 @@ services:
             $encoder: '@rkwadriga.jwt.encoder'
             $validator: '@rkwadriga.jwt.token_validator'
             $serializer: '@Symfony\Component\Serializer\SerializerInterface'
-            $generator: '@rkwadriga.jwt.token_generator'
+            $refresher: '@rkwadriga.jwt.token_refresher'
             $refreshUrl: '%rkwadriga.jwt.refresh_url%'
             $loginParam: '%rkwadriga.jwt.login_pram%'
     rkwadriga.jwt.refresh_authenticator:

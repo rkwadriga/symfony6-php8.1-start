@@ -10,15 +10,18 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
-class AuthenticationFinishedUnsuccessfulEvent extends AbstractEvent
+class AuthenticationFinishedUnsuccessfulEvent extends AbstractAuthenticationEvent
 {
     protected static string $name = 'rkwadriga.jwt.authentication_finished_unsuccessful_event';
 
     public function __construct(
+        string $authenticationType,
         private Request $request,
         private AuthenticationException $exception,
         private ?Response $response = null
-    ) {}
+    ) {
+        parent::__construct($authenticationType);
+    }
 
     public function getRequest(): Request
     {

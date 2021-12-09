@@ -6,6 +6,8 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Security\AuthenticationType;
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
 use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -13,6 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
@@ -27,7 +30,9 @@ use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
-    use AuthenticationTokenResponseTrait;
+    public const AUTHENTICATION_TYPE = AuthenticationType::LOGIN;
+
+    use AuthenticationTokenPayloadTrait;
 
     public function __construct(
         private EventDispatcherInterface $eventsDispatcher,
@@ -50,7 +55,7 @@ class LoginAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         // This event can be used to change authentication process
-        $event = new AuthenticationStartedEvent($request);
+        $event = new AuthenticationStartedEvent(self::AUTHENTICATION_TYPE, $request);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         if ($event->getPassport() !== null) {
             return $event->getPassport();
@@ -79,6 +84,23 @@ class LoginAuthenticator extends AbstractAuthenticator
         return new SelfValidatingPassport($userBridge);
     }
 
+    public function onAuthenticationSuccess(Request $request, TokenInterface $userToken, string $firewallName): ?Response
+    {
+        $payload = $this->getPayload($userToken->getUser());
+        $token = $this->generator->generate($payload);
+
+        $json = $this->serializer->serialize($token, 'json', [
+            'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
+        ]);
+        $response = new JsonResponse($json, Response::HTTP_CREATED, [], true);
+
+        // This event can be used to change response
+        $event = new AuthenticationFinishedSuccessfulEvent(self::AUTHENTICATION_TYPE, $request, $userToken, $token, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
+    }
+
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
         $data = [
@@ -89,7 +111,7 @@ class LoginAuthenticator extends AbstractAuthenticator
         $response = new JsonResponse($data, Response::HTTP_FORBIDDEN);
 
         // This event can be used to change response
-        $event = new AuthenticationFinishedUnsuccessfulEvent($request, $exception, $response);
+        $event = new AuthenticationFinishedUnsuccessfulEvent(self::AUTHENTICATION_TYPE, $request, $exception, $response);
         $this->eventsDispatcher->dispatch($event, $event::getName());
 
         return $event->getResponse();

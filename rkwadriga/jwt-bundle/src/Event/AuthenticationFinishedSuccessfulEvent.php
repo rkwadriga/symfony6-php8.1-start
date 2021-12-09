@@ -11,16 +11,19 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface as UserT
 use Rkwadriga\JwtBundle\Entity\TokenInterface;
 use Symfony\Component\HttpFoundation\Response;
 
-class AuthenticationFinishedSuccessfulEvent extends AbstractEvent
+class AuthenticationFinishedSuccessfulEvent extends AbstractAuthenticationEvent
 {
     protected static string $name = 'rkwadriga.jwt.authentication_finished_successful_event';
 
     public function __construct(
+        string $authenticationType,
         private Request $request,
         private UserTokenInterface $userToken,
         private TokenInterface $token,
         private ?Response $response = null
-    ) {}
+    ) {
+        parent::__construct($authenticationType);
+    }
 
     public function getToken(): TokenInterface
     {

@@ -61,7 +61,6 @@ class TokenGenerator
             // This event allow to process token creation exceptions
             $event = new TokenCreatingFinishedUnsuccessfulEvent($e);
             $this->eventsDispatcher->dispatch($event, $event::getName());
-
             throw $event->getException();
         }
     }

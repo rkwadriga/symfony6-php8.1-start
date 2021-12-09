@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection\Security\Authenticators;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Security\AuthenticationType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
@@ -31,6 +32,8 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 class JwtAuthenticator extends AbstractAuthenticator
 {
+    public const AUTHENTICATION_TYPE = AuthenticationType::JWT;
+
     private TokenInterface $token;
 
     public function __construct(
@@ -53,7 +56,7 @@ class JwtAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         // This event can be used to change authentication process
-        $event = new AuthenticationStartedEvent($request);
+        $event = new AuthenticationStartedEvent(self::AUTHENTICATION_TYPE, $request);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         if ($event->getPassport() !== null) {
             return $event->getPassport();
@@ -94,7 +97,7 @@ class JwtAuthenticator extends AbstractAuthenticator
     public function onAuthenticationSuccess(Request $request, UserTokenInterface $token, string $firewallName): ?Response
     {
         // This event can be used to change response
-        $event = new AuthenticationFinishedSuccessfulEvent($request, $token, $this->token);
+        $event = new AuthenticationFinishedSuccessfulEvent(self::AUTHENTICATION_TYPE, $request, $token, $this->token);
         $this->eventsDispatcher->dispatch($event, $event::getName());
 
         return $event->getResponse();
@@ -116,7 +119,7 @@ class JwtAuthenticator extends AbstractAuthenticator
         $response =  new JsonResponse($data, $resultCode);
 
         // This event can be used to change response
-        $event = new AuthenticationFinishedUnsuccessfulEvent($request, $exception, $response);
+        $event = new AuthenticationFinishedUnsuccessfulEvent(self::AUTHENTICATION_TYPE, $request, $exception, $response);
         $this->eventsDispatcher->dispatch($event, $event::getName());
 
         return $event->getResponse();
