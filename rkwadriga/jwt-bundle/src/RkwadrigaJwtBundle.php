@@ -24,11 +24,11 @@ use Symfony\Component\EventDispatcher\DependencyInjection\RegisterListenersPass;
 
 class RkwadrigaJwtBundle extends Bundle
 {
-    public function build( $container)
+    public function build($container)
     {
         parent::build($container);
 
-        $container->addCompilerPass(new AddEventAliasesPass([
+        /*$container->addCompilerPass(new AddEventAliasesPass([
             AuthenticationStartedEvent::class => AuthenticationStartedEvent::getName(),
             AuthenticationFinishedSuccessfulEvent::class => AuthenticationFinishedSuccessfulEvent::getName(),
             AuthenticationFinishedUnsuccessfulEvent::class => AuthenticationFinishedUnsuccessfulEvent::getName(),
@@ -40,7 +40,7 @@ class RkwadrigaJwtBundle extends Bundle
             TokenRefreshingFinishedUnsuccessfulEvent::class => TokenRefreshingFinishedUnsuccessfulEvent::getName(),
         ]));
 
-        $container->addCompilerPass(new RegisterListenersPass(), PassConfig::TYPE_BEFORE_REMOVING);
+        $container->addCompilerPass(new RegisterListenersPass(), PassConfig::TYPE_BEFORE_REMOVING);*/
     }
 
     public function getContainerExtension(): ?ExtensionInterface

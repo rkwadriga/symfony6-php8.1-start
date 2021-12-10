@@ -6,7 +6,9 @@
 
 namespace Rkwadriga\JwtBundle\Event;
 
-abstract class AbstractEvent
+use Symfony\Contracts\EventDispatcher\Event;
+
+abstract class AbstractEvent extends Event
 {
     protected static string $name = 'rkwadriga.jwt.abstract_event';
 

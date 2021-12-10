@@ -26,3 +26,15 @@ services:
 
     App\Doctrine\Listeners\UserCreateOrUpdateListener:
         tags: [ 'doctrine.orm.entity_listener' ]
+
+    App\EventListener\HttptListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.request, method: processRequest }
+
+    App\EventListener\TokenCreatingStartedListener:
+        tags:
+            - { name: kernel.event_listener, event: rkwadriga.jwt.token_creating_started_event, method: onTokenCreatingStarted, priority: 100 }
+
+    App\EventListener\RkwadrigaJwtAuthenticationListener:
+        tags:
+            - { name: kernel.event_listener, event: rkwadriga.jwt.authentication_started_event, method: onAuthenticationStarted, priority: 100 }
