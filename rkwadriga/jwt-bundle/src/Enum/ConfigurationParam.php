@@ -8,7 +8,8 @@ namespace Rkwadriga\JwtBundle\Enum;
 
 enum ConfigurationParam: string
 {
-    case BASE = 'rkwadriga.jwt';
+    private const BASE_PATH = 'rkwadriga.jwt';
+
     case PROVIDER = 'provider';
     case LOGIN_URL = 'login_url';
     case REFRESH_URL = 'refresh_url';
@@ -36,6 +37,6 @@ enum ConfigurationParam: string
 
     public function value(): string
     {
-        return self::BASE->value . '.' . $this->value;
+        return self::BASE_PATH . '.' . $this->value;
     }
 }

@@ -6,13 +6,15 @@
 
 namespace Rkwadriga\JwtBundle\Event;
 
+use Rkwadriga\JwtBundle\Enum\AuthenticationType;
+
 class AbstractAuthenticationEvent extends AbstractEvent
 {
     public function __construct(
-        private string $authenticationType
+        private AuthenticationType $authenticationType
     ) {}
 
-    public function getAuthenticationType(): string
+    public function getAuthenticationType(): AuthenticationType
     {
         return $this->authenticationType;
     }

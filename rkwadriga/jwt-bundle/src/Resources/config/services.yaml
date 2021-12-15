@@ -1,14 +1,16 @@
 services:
-    Symfony\Component\DependencyInjection\Container: ~
-
     Rkwadriga\JwtBundle\Service\Config:
         arguments:
-            - '@Symfony\Component\DependencyInjection\Container'
+            - '@service_container'
         public: false
 
     Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'
+            - '@debug.event_dispatcher'
+            - '@rkwadriga.jwt.provider'
+            - '@security.password_hasher_factory'
+            - '@Symfony\Component\Serializer\SerializerInterface'
     rkwadriga.jwt.login_authenticator:
         alias: Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator
         public: true

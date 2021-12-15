@@ -10,6 +10,6 @@ class RkwadrigaJwtAuthenticationListener
 {
     public function onAuthenticationStarted($event)
     {
-        dd($event);
+        //dd($event);
     }
 }

@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Event;
 
+use Rkwadriga\JwtBundle\Enum\AuthenticationType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 
@@ -14,7 +15,7 @@ class AuthenticationStartedEvent extends AbstractAuthenticationEvent
     protected static string $name = 'rkwadriga.jwt.authentication_started_event';
 
     public function __construct(
-        string $authenticationType,
+        AuthenticationType $authenticationType,
         private Request $request,
         private ?Passport $passport = null
     ) {
