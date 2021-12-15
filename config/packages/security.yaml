@@ -20,9 +20,9 @@ security:
         main:
             lazy: true
             provider: app_user_provider
-            custom_authenticator:
-                - rkwadriga.jwt.jws_authenticator
-                - rkwadriga.jwt.refresh_authenticator
+            custom_authenticators:
+                #- rkwadriga.jwt.jws_authenticator
+                #- rkwadriga.jwt.refresh_authenticator
                 - rkwadriga.jwt.login_authenticator
 
             # activate different ways to authenticate

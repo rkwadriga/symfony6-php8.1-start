@@ -6,7 +6,6 @@ rkwadriga_jwt:
     password_param: password
     secret_key: '%env(string::SECRET_KEY)%'
     encoding_algorithm: SHA256
-    encoding_hashing_count: 3
     access_token_life_time: 3600
     refresh_token_life_time: 15552000
     access_token_location: http_header

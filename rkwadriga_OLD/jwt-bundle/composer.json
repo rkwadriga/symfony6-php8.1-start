@@ -1,0 +1,10 @@
+{
+    "name": "rkwadriga/jwt-authentication-bundle",
+    "type": "symfony-bundle",
+    "description": "This bundle provides JWT authentication for your Symfony REST API",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0.0",
+        "ext-openssl": "*"
+    }
+}
