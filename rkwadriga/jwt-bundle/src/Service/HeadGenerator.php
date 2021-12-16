@@ -9,15 +9,20 @@ namespace Rkwadriga\JwtBundle\Service;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 
 class HeadGenerator implements HeadGeneratorInterface
 {
     private const TOKEN_TYPE = 'JWT';
 
-    public function generate(array $payload, TokenType $type, Algorithm $algorithm): array
+    public function __construct(
+        private Config $config
+    ) {}
+
+    public function generate(array $payload, TokenType $type, ?Algorithm $algorithm = null): array
     {
         return [
-            'alg' => $algorithm->value,
+            'alg' => $algorithm?->value ?: $this->config->get(ConfigurationParam::ENCODING_ALGORITHM),
             'typ' => self::TOKEN_TYPE,
             'sub' => $type->value
         ];

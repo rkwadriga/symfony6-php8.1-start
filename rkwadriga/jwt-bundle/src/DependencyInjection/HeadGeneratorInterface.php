@@ -8,5 +8,5 @@ namespace Rkwadriga\JwtBundle\DependencyInjection;
 
 interface HeadGeneratorInterface
 {
-    public function generate(array $payload, TokenType $type, Algorithm $algorithm): array;
+    public function generate(array $payload, TokenType $type, ?Algorithm $algorithm = null): array;
 }

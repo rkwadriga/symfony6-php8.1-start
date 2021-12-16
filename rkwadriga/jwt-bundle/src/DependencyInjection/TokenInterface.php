@@ -10,6 +10,8 @@ use DateTimeInterface;
 
 interface TokenInterface
 {
+    public function getType(): TokenType;
+
     public function getToken(): string;
 
     public function getCreatedAt(): DateTimeInterface;

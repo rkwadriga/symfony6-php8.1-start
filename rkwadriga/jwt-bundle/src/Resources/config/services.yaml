@@ -9,22 +9,24 @@ services:
         alias: Rkwadriga\JwtBundle\Service\PayloadGenerator
         public: true
 
-    Rkwadriga\JwtBundle\Service\HeadGenerator: ~
+    Rkwadriga\JwtBundle\Service\HeadGenerator:
+        arguments:
+            - '@Rkwadriga\JwtBundle\Service\Config'
     Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface:
         alias: Rkwadriga\JwtBundle\Service\HeadGenerator
         public: true
 
-    Rkwadriga\JwtBundle\Service\Encoder:
+    Rkwadriga\JwtBundle\Service\Serializer:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'
-    Rkwadriga\JwtBundle\DependencyInjection\EncoderInterface:
-        alias: Rkwadriga\JwtBundle\Service\Encoder
+    Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface:
+        alias: Rkwadriga\JwtBundle\Service\Serializer
         public: true
 
     Rkwadriga\JwtBundle\Service\TokenGenerator:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'
-            - '@Rkwadriga\JwtBundle\DependencyInjection\EncoderInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface'
             - '@Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface'
     Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface:
         alias: Rkwadriga\JwtBundle\Service\TokenGenerator

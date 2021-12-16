@@ -8,14 +8,21 @@ namespace Rkwadriga\JwtBundle\Entity;
 
 use DateTimeImmutable;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 
 class Token implements TokenInterface
 {
     public function __construct(
+        private TokenType $type,
         private string $token,
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $expiredAt
     ) {}
+
+    public function getType(): TokenType
+    {
+        return $this->type;
+    }
 
     public function getToken(): string
     {

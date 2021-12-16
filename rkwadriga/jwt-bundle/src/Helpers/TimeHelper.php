@@ -7,11 +7,12 @@
 namespace Rkwadriga\JwtBundle\Helpers;
 
 use DateTime;
+use DateTimeInterface;
 use DateInterval;
 
 class TimeHelper
 {
-    public static function addSeconds(int $seconds, ?DateTime $time = null): DateTime
+    public static function addSeconds(int $seconds, ?DateTimeInterface $time = null): DateTimeInterface
     {
         if ($time === null) {
             $time = new DateTime();
@@ -19,7 +20,7 @@ class TimeHelper
         return $time->add(DateInterval::createFromDateString($seconds . ' seconds'));
     }
 
-    public static function fromTimeStamp(int $timestamp): DateTime
+    public static function fromTimeStamp(int $timestamp): DateTimeInterface
     {
         $time = new DateTime();
         $time->setTimestamp($timestamp);

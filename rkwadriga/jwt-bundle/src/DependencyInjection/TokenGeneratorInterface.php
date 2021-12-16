@@ -8,5 +8,7 @@ namespace Rkwadriga\JwtBundle\DependencyInjection;
 
 interface TokenGeneratorInterface
 {
-    public function generate(array $payload, TokenType $type): TokenInterface;
+    public function fromPayload(array $payload, TokenType $type): TokenInterface;
+
+    public function fromString(string $token, TokenType $type): TokenInterface;
 }

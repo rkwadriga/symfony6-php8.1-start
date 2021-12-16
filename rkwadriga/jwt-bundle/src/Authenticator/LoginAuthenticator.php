@@ -80,9 +80,11 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        // Generate payload and tokens
         $payload = $this->payloadLoader->generate($token, $request);
-        $accessToken = $this->tokenGenerator->generate($payload, TokenType::ACCESS);
-        dd($accessToken);
+        $accessToken = $this->tokenGenerator->fromPayload($payload, TokenType::ACCESS);
+        $refreshToken = $this->tokenGenerator->fromPayload($payload, TokenType::REFRESH);
+        dd($accessToken, $refreshToken);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
