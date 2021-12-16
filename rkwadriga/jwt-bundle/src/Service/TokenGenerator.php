@@ -95,7 +95,7 @@ class TokenGenerator implements TokenGeneratorInterface
             [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
         } catch (Exception $e) {
             // This event can be used to change the error handling
-            $event = new TokenParsingFinishedUnsuccessful($e, $token, $head, $payload);
+            $event = new TokenParsingFinishedUnsuccessful($e, $token, $type, $head, $payload);
             $this->eventsDispatcher->dispatch($event, $event::getName());
             throw $event->getException();
         }

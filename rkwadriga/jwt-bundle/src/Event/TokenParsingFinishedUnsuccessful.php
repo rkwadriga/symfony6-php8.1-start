@@ -7,6 +7,7 @@
 namespace Rkwadriga\JwtBundle\Event;
 
 use Exception;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 
 class TokenParsingFinishedUnsuccessful extends AbstractTokenParsingEvent
 {
@@ -15,6 +16,7 @@ class TokenParsingFinishedUnsuccessful extends AbstractTokenParsingEvent
     public function __construct(
         private Exception $exception,
         private string $token,
+        private TokenType $tokenType,
         private array $head,
         private array $payload
     ) {}
@@ -32,6 +34,11 @@ class TokenParsingFinishedUnsuccessful extends AbstractTokenParsingEvent
     public function getToken(): string
     {
         return $this->token;
+    }
+
+    public function getTokenType(): TokenType
+    {
+        return $this->tokenType;
     }
 
     public function getHead(): array
