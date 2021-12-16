@@ -10,10 +10,15 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Enum\AuthenticationType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessful;
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
+use Rkwadriga\JwtBundle\Event\TokenResponseCreated;
 use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
@@ -37,7 +42,8 @@ class LoginAuthenticator extends AbstractAuthenticator
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface            $serializer,
         private PayloadGeneratorInterface      $payloadLoader,
-        private TokenGeneratorInterface        $tokenGenerator
+        private TokenGeneratorInterface        $tokenGenerator,
+        private TokenResponseCreatorInterface  $tokenResponseCreator
     ) {}
 
     public function supports(Request $request): ?bool
@@ -84,11 +90,36 @@ class LoginAuthenticator extends AbstractAuthenticator
         $payload = $this->payloadLoader->generate($token, $request);
         $accessToken = $this->tokenGenerator->fromPayload($payload, TokenType::ACCESS);
         $refreshToken = $this->tokenGenerator->fromPayload($payload, TokenType::REFRESH);
-        dd($accessToken, $refreshToken);
+
+        $tokenResponse = $this->tokenResponseCreator->create($accessToken, $refreshToken);
+        // This event can be used to change the token response
+        $event = new TokenResponseCreated($tokenResponse);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        $json = $this->serializer->serialize($event->getTokenResponse(), 'json', [
+            'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
+        ]);
+        $response = new JsonResponse($json, Response::HTTP_CREATED, [], true);
+
+        // This event can be used to change response
+        $event = new AuthenticationFinishedSuccessful(AuthenticationType::LOGIN, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        dd($request, $exception);
+        $data = [
+            'code' => $exception->getCode(),
+            'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),
+        ];
+
+        $response = new JsonResponse($data, Response::HTTP_FORBIDDEN);
+        // This event can be used to change the error response
+        $event = new AuthenticationFinishedUnsuccessful(AuthenticationType::LOGIN, $request, $exception, $response);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+
+        return $event->getResponse();
     }
 }

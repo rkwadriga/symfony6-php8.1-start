@@ -33,6 +33,11 @@ services:
         alias: Rkwadriga\JwtBundle\Service\TokenGenerator
         public: true
 
+    Rkwadriga\JwtBundle\Service\TokenResponseCreator: ~
+    Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface:
+        alias: Rkwadriga\JwtBundle\Service\TokenResponseCreator
+        public: true
+
     Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'
@@ -42,6 +47,7 @@ services:
             - '@Symfony\Component\Serializer\SerializerInterface'
             - '@Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface'
             - '@Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface'
     rkwadriga.jwt.login_authenticator:
         alias: Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator
         public: true

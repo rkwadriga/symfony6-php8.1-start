@@ -30,6 +30,9 @@ services:
     #Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface:
     #    alias: App\Service\PayloadGenerator
 
+    #Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface:
+    #    alias: App\Service\TokenResponseCreator
+
     App\EventListener\TokenCreatingStartedListener:
         tags:
             - { name: kernel.event_listener, event: rkwadriga.jwt.token_creating_started, method: onTokenCreatingStarted, priority: 100 }
