@@ -7,6 +7,7 @@
 namespace Rkwadriga\JwtBundle\Service;
 
 use DateTimeImmutable;
+use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface;
@@ -25,36 +26,24 @@ class TokenGenerator implements TokenGeneratorInterface
         private HeadGeneratorInterface $headGenerator
     ) {}
 
-    public function fromPayload(array $payload, TokenType $type): TokenInterface
+    public function fromPayload(array $payload, TokenType $type, ?Algorithm $algorithm = null): TokenInterface
     {
         // Generate token signature and create token string
         $head = $this->headGenerator->generate($payload, $type);
         $content = $this->serializer->implode([$this->serializer->serialize($head), $this->serializer->serialize($payload)]);
-        $signature = $this->serializer->signature($content);
+        $signature = $this->serializer->signature($content, $algorithm);
         $token = $this->serializer->implode([$content, $signature]);
 
         // Get token life dates
-        [$cratedAt, $expiredAt] = $this->lifeDatesFromPayload($payload, $type);
+        [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
 
-        return new Token(
-            $type,
-            $token,
-            $cratedAt,
-            $expiredAt
-        );
+        return new Token($type, $token, $cratedAt, $expiredAt);
     }
 
     public function fromString(string $token, TokenType $type): TokenInterface
     {
-        // Get token parts
+        // Get token head, payload and signature
         [$headString, $payloadString, $signature] = $this->serializer->explode($token);
-        // Check token signature
-        $content = $this->serializer->implode([$headString, $payloadString]);
-        if ($signature !== $this->serializer->signature($content)) {
-            throw new TokenValidatorException('Invalid token', TokenValidatorException::INVALID_SIGNATURE);
-        }
-
-        // Get token head and payload
         [$head, $payload] = [$this->serializer->deserialiaze($headString), $this->serializer->deserialiaze($payloadString)];
 
         // Check token type
@@ -62,22 +51,25 @@ class TokenGenerator implements TokenGeneratorInterface
             throw new TokenValidatorException('Invalid token', TokenValidatorException::INVALID_TYPE);
         }
 
-        // Get token life dates
-        [$cratedAt, $expiredAt] = $this->lifeDatesFromPayload($payload, $type);
+        // Check token signature
+        $algorithm = isset($head['alg']) ? Algorithm::getByValue($head['alg']) : null;
+        $content = $this->serializer->implode([$headString, $payloadString]);
+        if ($signature !== $this->serializer->signature($content, $algorithm)) {
+            throw new TokenValidatorException('Invalid token', TokenValidatorException::INVALID_SIGNATURE);
+        }
 
-        return new Token(
-            $type,
-            $token,
-            $cratedAt,
-            $expiredAt
-        );
+        // Get token life dates
+        [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
+
+        return new Token($type, $token, $cratedAt, $expiredAt);
     }
 
     /**
      * @param array $payload
+     * @param TokenType $type
      * @return array<DateTimeImmutable>
      */
-    private function lifeDatesFromPayload(array $payload, TokenType $type): array
+    private function lifePeriodFromPayload(array $payload, TokenType $type): array
     {
         $timeStamp = $payload['timestamp'] ?? time();
         $lifeTime = $type === TokenType::ACCESS

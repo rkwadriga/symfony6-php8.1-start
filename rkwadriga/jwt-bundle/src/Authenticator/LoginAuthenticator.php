@@ -80,7 +80,7 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        // Generate payload and tokens
+        // Generate payload and create "access" and "refresh" tokens pair
         $payload = $this->payloadLoader->generate($token, $request);
         $accessToken = $this->tokenGenerator->fromPayload($payload, TokenType::ACCESS);
         $refreshToken = $this->tokenGenerator->fromPayload($payload, TokenType::REFRESH);
