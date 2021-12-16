@@ -19,7 +19,7 @@ class Serializer implements SerializerInterface
 
     public function encode(string $data): string
     {
-        return str_replace('==', '', base64_encode($data));
+        return str_replace('=', '', base64_encode($data));
     }
 
     public function serialize(array $data): string

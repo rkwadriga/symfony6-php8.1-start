@@ -37,7 +37,7 @@ class TokenGenerator implements TokenGeneratorInterface
         // Get token life dates
         [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
 
-        return new Token($type, $token, $cratedAt, $expiredAt);
+        return new Token($type, $token, $cratedAt, $expiredAt, $head, $payload);
     }
 
     public function fromString(string $token, TokenType $type): TokenInterface
@@ -61,7 +61,7 @@ class TokenGenerator implements TokenGeneratorInterface
         // Get token life dates
         [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
 
-        return new Token($type, $token, $cratedAt, $expiredAt);
+        return new Token($type, $token, $cratedAt, $expiredAt, $head, $payload);
     }
 
     /**

@@ -16,7 +16,9 @@ class Token implements TokenInterface
         private TokenType $type,
         private string $token,
         private DateTimeImmutable $createdAt,
-        private DateTimeImmutable $expiredAt
+        private DateTimeImmutable $expiredAt,
+        private array $head,
+        private array $payload
     ) {}
 
     public function getType(): TokenType
@@ -37,5 +39,15 @@ class Token implements TokenInterface
     public function getExpiredAt(): DateTimeImmutable
     {
         return $this->expiredAt;
+    }
+
+    public function getHead(): array
+    {
+        return $this->head;
+    }
+
+    public function getPayload(): array
+    {
+        return $this->payload;
     }
 }

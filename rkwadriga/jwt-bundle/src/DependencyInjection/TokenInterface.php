@@ -17,4 +17,8 @@ interface TokenInterface
     public function getCreatedAt(): DateTimeInterface;
 
     public function getExpiredAt(): DateTimeInterface;
+
+    public function getHead(): array;
+
+    public function getPayload(): array;
 }
