@@ -6,9 +6,13 @@
 
 namespace Rkwadriga\JwtBundle\Authenticator;
 
+use Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Enum\AuthenticationType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Rkwadriga\JwtBundle\Service\Config;
+use Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,18 +25,19 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
-use Rkwadriga\JwtBundle\Service\Config;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
     public function __construct(
-        private Config $config,
-        private EventDispatcherInterface $eventsDispatcher,
-        private UserProviderInterface $userProvider,
+        private Config                         $config,
+        private EventDispatcherInterface       $eventsDispatcher,
+        private UserProviderInterface          $userProvider,
         private PasswordHasherFactoryInterface $encoder,
-        private SerializerInterface $serializer,
+        private SerializerInterface            $serializer,
+        private PayloadGeneratorInterface      $payloadLoader,
+        private TokenGeneratorInterface        $tokenGenerator
     ) {}
 
     public function supports(Request $request): ?bool
@@ -75,7 +80,9 @@ class LoginAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        dd($request, $token, $firewallName);
+        $payload = $this->payloadLoader->generate($token, $request);
+        $accessToken = $this->tokenGenerator->generate($payload, TokenType::ACCESS);
+        dd($accessToken);
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response

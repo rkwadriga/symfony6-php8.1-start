@@ -4,6 +4,24 @@ services:
             - '@service_container'
         public: false
 
+    Rkwadriga\JwtBundle\Service\PayloadGenerator: ~
+    Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface:
+        alias: Rkwadriga\JwtBundle\Service\PayloadGenerator
+        public: true
+
+    Rkwadriga\JwtBundle\Service\HeadGenerator: ~
+    Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface:
+        alias: Rkwadriga\JwtBundle\Service\HeadGenerator
+        public: true
+
+    Rkwadriga\JwtBundle\Service\TokenGenerator:
+        arguments:
+            - '@Rkwadriga\JwtBundle\Service\Config'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface'
+    Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface:
+        alias: Rkwadriga\JwtBundle\Service\TokenGenerator
+        public: true
+
     Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'
@@ -11,6 +29,8 @@ services:
             - '@rkwadriga.jwt.provider'
             - '@security.password_hasher_factory'
             - '@Symfony\Component\Serializer\SerializerInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface'
     rkwadriga.jwt.login_authenticator:
         alias: Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator
         public: true

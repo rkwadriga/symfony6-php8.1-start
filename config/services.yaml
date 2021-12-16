@@ -27,6 +27,9 @@ services:
     App\Doctrine\Listeners\UserCreateOrUpdateListener:
         tags: [ 'doctrine.orm.entity_listener' ]
 
+    #Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface:
+    #    alias: App\Service\PayloadGenerator
+
     App\EventListener\HttptListener:
         tags:
             - { name: kernel.event_listener, event: kernel.request, method: processRequest }
