@@ -8,9 +8,9 @@ namespace Rkwadriga\JwtBundle\Event;
 
 use Exception;
 
-class TokenCreatingFinishedUnsuccessfulEvent extends AbstractEvent
+class TokenCreatingFinishedUnsuccessful extends AbstractTokenCreatingEvent
 {
-    protected static string $name = 'rkwadriga.jwt.token_creating_finished_unsuccessful_event';
+    protected static string $name = 'rkwadriga.jwt.token_creating_finished_unsuccessful';
 
     public function __construct(
         private Exception $exception,

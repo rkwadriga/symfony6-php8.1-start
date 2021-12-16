@@ -10,7 +10,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Enum\AuthenticationType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
-use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
 use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -48,7 +48,7 @@ class LoginAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         // This event can be used to change authentication process
-        $event = new AuthenticationStartedEvent(AuthenticationType::LOGIN, $request);
+        $event = new AuthenticationStarted(AuthenticationType::LOGIN, $request);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         if ($event->getPassport() !== null) {
             return $event->getPassport();

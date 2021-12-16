@@ -8,8 +8,8 @@ namespace Rkwadriga\JwtBundle\EventSubscriber;
 
 use Rkwadriga\JwtBundle\DependencyInjection\Services\DbService;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessfulEvent;
-use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessfulEvent;
-use Rkwadriga\JwtBundle\Event\TokenCreatingStartedEvent;
+use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessful;
+use Rkwadriga\JwtBundle\Event\TokenCreatingStarted;
 
 class TokenCreateEventSubscriber extends AbstractEventSubscriber
 {
@@ -20,13 +20,13 @@ class TokenCreateEventSubscriber extends AbstractEventSubscriber
     public static function getSubscribedEvents(): array
     {
         return [
-            TokenCreatingStartedEvent::getName() => 'processTokenCreatingStarted',
+            TokenCreatingStarted::getName() => 'processTokenCreatingStarted',
             TokenCreatingFinishedSuccessfulEvent::getName() => 'processTokenCreatingFinishedSuccessful',
-            TokenCreatingFinishedUnsuccessfulEvent::getName() => 'processTokenCreatingFinishedUnsuccessful'
+            TokenCreatingFinishedUnsuccessful::getName() => 'processTokenCreatingFinishedUnsuccessful'
         ];
     }
 
-    public function processTokenCreatingStarted(TokenCreatingStartedEvent $event): void
+    public function processTokenCreatingStarted(TokenCreatingStarted $event): void
     {
         $this->dbService->checkTokensLimit($event->getPayload());
     }
@@ -36,7 +36,7 @@ class TokenCreateEventSubscriber extends AbstractEventSubscriber
         $this->dbService->writeToken($event->getToken(), $event->getPayload());
     }
 
-    public function processTokenCreatingFinishedUnsuccessful(TokenCreatingFinishedUnsuccessfulEvent $event): void
+    public function processTokenCreatingFinishedUnsuccessful(TokenCreatingFinishedUnsuccessful $event): void
     {
         return;
     }

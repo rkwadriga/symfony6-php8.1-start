@@ -6,12 +6,12 @@
 
 namespace App\EventListener;
 
-use Rkwadriga\JwtBundle\Event\TokenCreatingStartedEvent;
+use Rkwadriga\JwtBundle\Event\TokenCreatingStarted;
 
 class TokenCreatingStartedListener
 {
-    public function onTokenCreatingStarted(TokenCreatingStartedEvent $event): void
+    public function onTokenCreatingStarted(TokenCreatingStarted $event): void
     {
-        dd($event);
+        //dd($event);
     }
 }

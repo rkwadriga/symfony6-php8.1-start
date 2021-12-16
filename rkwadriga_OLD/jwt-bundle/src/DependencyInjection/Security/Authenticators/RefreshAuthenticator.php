@@ -16,7 +16,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenValidator;
 use Rkwadriga\JwtBundle\Entity\TokenData;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
-use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
 use Rkwadriga\JwtBundle\EventSubscriber\AuthenticationEventSubscriber;
 use Rkwadriga\JwtBundle\Exception\BaseTokenException;
 use Rkwadriga\JwtBundle\Exception\TokenIdentifierException;
@@ -66,7 +66,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         // This event can be used to change authentication process
-        $event = new AuthenticationStartedEvent(self::AUTHENTICATION_TYPE, $request);
+        $event = new AuthenticationStarted(self::AUTHENTICATION_TYPE, $request);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         if ($event->getPassport() !== null) {
             return $event->getPassport();

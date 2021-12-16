@@ -12,8 +12,8 @@ use DateTimeImmutable;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Entity\TokenInterface;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessfulEvent;
-use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessfulEvent;
-use Rkwadriga\JwtBundle\Event\TokenCreatingStartedEvent;
+use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessful;
+use Rkwadriga\JwtBundle\Event\TokenCreatingStarted;
 use Rkwadriga\JwtBundle\EventSubscriber\TokenCreateEventSubscriber;
 use Rkwadriga\JwtBundle\Helpers\TimeHelper;
 use Rkwadriga\JwtBundle\Helpers\TokenHelper;
@@ -36,7 +36,7 @@ class TokenGenerator
     public function generate(array $payload): TokenInterface
     {
         // This event allows to change payload
-        $event = new TokenCreatingStartedEvent($payload);
+        $event = new TokenCreatingStarted($payload);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         $payload = $event->getPayload();
 
@@ -50,7 +50,7 @@ class TokenGenerator
             return $event->getToken();
         } catch (Exception $e) {
             // This event allow to process token creation exceptions
-            $event = new TokenCreatingFinishedUnsuccessfulEvent($e, $payload);
+            $event = new TokenCreatingFinishedUnsuccessful($e, $payload);
             $this->eventsDispatcher->dispatch($event, $event::getName());
             throw $event->getException();
         }

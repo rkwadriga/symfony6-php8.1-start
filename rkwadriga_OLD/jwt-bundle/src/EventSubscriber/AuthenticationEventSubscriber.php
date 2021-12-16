@@ -8,14 +8,14 @@ namespace Rkwadriga\JwtBundle\EventSubscriber;
 
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessfulEvent;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessfulEvent;
-use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
 
 class AuthenticationEventSubscriber extends AbstractEventSubscriber
 {
     public static function getSubscribedEvents(): array
     {
         return [
-            AuthenticationStartedEvent::getName() => 'processAuthenticationStarted',
+            AuthenticationStarted::getName() => 'processAuthenticationStarted',
             AuthenticationFinishedSuccessfulEvent::getName() => 'processAuthenticationFinishedSuccessful',
             AuthenticationFinishedUnsuccessfulEvent::getName() => 'processAuthenticationFinishedUnsuccessful',
         ];
@@ -24,9 +24,9 @@ class AuthenticationEventSubscriber extends AbstractEventSubscriber
     /**
      * Processing "refresh" authentication - checking is refresh_token presented in DB
      *
-     * @param AuthenticationStartedEvent $event
+     * @param AuthenticationStarted $event
      */
-    public function processAuthenticationStarted(AuthenticationStartedEvent $event): void
+    public function processAuthenticationStarted(AuthenticationStarted $event): void
     {
         return;
     }

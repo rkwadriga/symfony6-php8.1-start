@@ -26,7 +26,7 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\Services\TokenGenerator;
-use Rkwadriga\JwtBundle\Event\AuthenticationStartedEvent;
+use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
 
 class LoginAuthenticator extends AbstractAuthenticator
 {
@@ -55,7 +55,7 @@ class LoginAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         // This event can be used to change authentication process
-        $event = new AuthenticationStartedEvent(self::AUTHENTICATION_TYPE, $request);
+        $event = new AuthenticationStarted(self::AUTHENTICATION_TYPE, $request);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         if ($event->getPassport() !== null) {
             return $event->getPassport();

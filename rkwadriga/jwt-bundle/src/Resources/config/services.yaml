@@ -26,6 +26,7 @@ services:
     Rkwadriga\JwtBundle\Service\TokenGenerator:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'
+            - '@debug.event_dispatcher'
             - '@Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface'
             - '@Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface'
     Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface:
