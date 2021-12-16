@@ -41,6 +41,7 @@ class TokenGenerator implements TokenGeneratorInterface
         $event = new TokenCreatingStarted($payload, $type);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         $payload = $event->getPayload();
+        $head = [];
 
         try {
             // Generate token signature and create token string
@@ -53,7 +54,7 @@ class TokenGenerator implements TokenGeneratorInterface
             [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
         } catch (Exception $e) {
             // This event can be used to change the error handling
-            $event = new TokenCreatingFinishedUnsuccessful($e, $payload);
+            $event = new TokenCreatingFinishedUnsuccessful($e, $head, $payload, $type);
             $this->eventsDispatcher->dispatch($event, $event::getName());
             throw $event->getException();
         }

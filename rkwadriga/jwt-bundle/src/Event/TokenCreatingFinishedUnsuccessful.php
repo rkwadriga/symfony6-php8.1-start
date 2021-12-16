@@ -7,6 +7,7 @@
 namespace Rkwadriga\JwtBundle\Event;
 
 use Exception;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 
 class TokenCreatingFinishedUnsuccessful extends AbstractTokenCreatingEvent
 {
@@ -14,7 +15,9 @@ class TokenCreatingFinishedUnsuccessful extends AbstractTokenCreatingEvent
 
     public function __construct(
         private Exception $exception,
-        private array $payload
+        private array $head,
+        private array $payload,
+        private TokenType $tokenType
     ) {}
 
     public function getException(): Exception
@@ -27,8 +30,18 @@ class TokenCreatingFinishedUnsuccessful extends AbstractTokenCreatingEvent
         $this->exception = $exception;
     }
 
+    public function getHead(): array
+    {
+        return $this->head;
+    }
+
     public function getPayload(): array
     {
         return $this->payload;
+    }
+
+    public function getTokenType(): TokenType
+    {
+        return $this->tokenType;
     }
 }
