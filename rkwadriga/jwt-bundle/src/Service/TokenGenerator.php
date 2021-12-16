@@ -6,17 +6,19 @@
 
 namespace Rkwadriga\JwtBundle\Service;
 
-use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
-use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\EncoderInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 
 class TokenGenerator implements TokenGeneratorInterface
 {
     public function __construct(
         private Config $config,
+        private EncoderInterface $encoder,
         private HeadGeneratorInterface $headGenerator
     ) {}
 
@@ -24,6 +26,7 @@ class TokenGenerator implements TokenGeneratorInterface
     {
         $algorithm = Algorithm::getByValue($this->config->get(ConfigurationParam::ENCODING_ALGORITHM));
         $head = $this->headGenerator->generate($payload, $type, $algorithm);
-        dd($head, $payload, $type);
+        $signature = $this->encoder->encode($head, $payload, $algorithm);
+        dd($head, $payload, $signature);
     }
 }

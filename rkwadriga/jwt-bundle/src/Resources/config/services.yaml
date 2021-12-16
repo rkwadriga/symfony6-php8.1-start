@@ -14,9 +14,17 @@ services:
         alias: Rkwadriga\JwtBundle\Service\HeadGenerator
         public: true
 
+    Rkwadriga\JwtBundle\Service\Encoder:
+        arguments:
+            - '@Rkwadriga\JwtBundle\Service\Config'
+    Rkwadriga\JwtBundle\DependencyInjection\EncoderInterface:
+        alias: Rkwadriga\JwtBundle\Service\Encoder
+        public: true
+
     Rkwadriga\JwtBundle\Service\TokenGenerator:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\EncoderInterface'
             - '@Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface'
     Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface:
         alias: Rkwadriga\JwtBundle\Service\TokenGenerator
