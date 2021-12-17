@@ -55,7 +55,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
         private SerializerInterface             $serializer,
         private DbManagerInterface              $dbManager,
         private TokenResponseCreatorInterface   $responseCreator,
-        private JwtTokenInterface               $oldRefreshToken
+        private ?JwtTokenInterface              $oldRefreshToken = null
     ) {}
 
     public function supports(Request $request): ?bool
