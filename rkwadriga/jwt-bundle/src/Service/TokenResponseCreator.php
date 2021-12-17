@@ -8,6 +8,7 @@ namespace Rkwadriga\JwtBundle\Service;
 
 use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface;
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
 
 class TokenResponseCreator implements TokenResponseCreatorInterface
 {

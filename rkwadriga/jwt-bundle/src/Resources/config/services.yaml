@@ -64,6 +64,21 @@ services:
         alias: Rkwadriga\JwtBundle\Authenticator\JwtAuthenticator
         public: true
 
+    Rkwadriga\JwtBundle\Authenticator\RefreshAuthenticator:
+        arguments:
+            - '@Rkwadriga\JwtBundle\Service\Config'
+            - '@debug.event_dispatcher'
+            - '@rkwadriga.jwt.provider'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\TokenIdentifierInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\TokenValidatorInterface'
+            - '@Symfony\Component\Serializer\SerializerInterface'
+            - '@Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface'
+    rkwadriga.jwt.refresh_authenticator:
+        alias: Rkwadriga\JwtBundle\Authenticator\RefreshAuthenticator
+        public: true
+
     Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator:
         arguments:
             - '@Rkwadriga\JwtBundle\Service\Config'

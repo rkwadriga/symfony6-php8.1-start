@@ -8,17 +8,21 @@ namespace Rkwadriga\JwtBundle\Event;
 
 use Exception;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
 
 class TokenCreatingFinishedUnsuccessful extends AbstractTokenCreatingEvent
 {
     protected static string $name = 'rkwadriga.jwt.token_creating_finished_unsuccessful';
 
     public function __construct(
+        TokenCreationContext $creationContext,
         private Exception $exception,
         private array $head,
         private array $payload,
         private TokenType $tokenType
-    ) {}
+    ) {
+        parent::__construct($creationContext);
+    }
 
     public function getException(): Exception
     {

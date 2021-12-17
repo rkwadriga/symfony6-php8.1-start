@@ -22,7 +22,7 @@ security:
             provider: app_user_provider
             custom_authenticators:
                 - rkwadriga.jwt.jws_authenticator
-                #- rkwadriga.jwt.refresh_authenticator
+                - rkwadriga.jwt.refresh_authenticator
                 - rkwadriga.jwt.login_authenticator
 
             # activate different ways to authenticate

@@ -16,6 +16,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessful;
 use Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessful;
 use Rkwadriga\JwtBundle\Event\TokenCreatingStarted;
@@ -35,10 +36,10 @@ class TokenGenerator implements TokenGeneratorInterface
         private HeadGeneratorInterface      $headGenerator
     ) {}
 
-    public function fromPayload(array $payload, TokenType $type, ?Algorithm $algorithm = null): TokenInterface
+    public function fromPayload(array $payload, TokenType $type, TokenCreationContext $creationContext, ?Algorithm $algorithm = null): TokenInterface
     {
         // This event can be used to change the payload
-        $event = new TokenCreatingStarted($payload, $type);
+        $event = new TokenCreatingStarted($creationContext, $payload, $type);
         $this->eventsDispatcher->dispatch($event, $event::getName());
         $payload = $event->getPayload();
         $head = [];
@@ -54,14 +55,14 @@ class TokenGenerator implements TokenGeneratorInterface
             [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
         } catch (Exception $e) {
             // This event can be used to change the error handling
-            $event = new TokenCreatingFinishedUnsuccessful($e, $head, $payload, $type);
+            $event = new TokenCreatingFinishedUnsuccessful($creationContext, $e, $head, $payload, $type);
             $this->eventsDispatcher->dispatch($event, $event::getName());
             throw $event->getException();
         }
 
         $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload);
         // This event can be used to change the token
-        $event = new TokenCreatingFinishedSuccessful($token);
+        $event = new TokenCreatingFinishedSuccessful($creationContext, $token);
         $this->eventsDispatcher->dispatch($event, $event::getName());
 
         return $event->getToken();

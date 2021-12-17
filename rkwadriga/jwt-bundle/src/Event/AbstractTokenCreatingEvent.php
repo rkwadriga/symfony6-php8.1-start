@@ -6,7 +6,16 @@
 
 namespace Rkwadriga\JwtBundle\Event;
 
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
+
 abstract class AbstractTokenCreatingEvent extends AbstractTokenEvent
 {
+    public function __construct(
+        private TokenCreationContext $creationContext
+    ) {}
 
+    public function getCreationContext(): TokenCreationContext
+    {
+        return $this->creationContext;
+    }
 }

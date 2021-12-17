@@ -7,15 +7,19 @@
 namespace Rkwadriga\JwtBundle\Event;
 
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
 
 class TokenCreatingStarted extends AbstractTokenCreatingEvent
 {
     protected static string $name = 'rkwadriga.jwt.token_creating_started';
 
     public function __construct(
+        TokenCreationContext $creationContext,
         private array $payload,
         private TokenType $tokenType
-    ) {}
+    ) {
+        parent::__construct($creationContext);
+    }
 
     public function getPayload(): array
     {

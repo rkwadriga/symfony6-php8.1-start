@@ -13,7 +13,7 @@ interface TokenValidatorInterface
     /**
      * @throws TokenValidatorException
      */
-    public function validate(TokenInterface $token, TokenType $tokenType): void;
+    public function validate(TokenInterface $token, TokenType $tokenType, array $validationCases = [], array $validationCasesExcluding = []): void;
 
     /**
      * @throws TokenValidatorException

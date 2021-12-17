@@ -10,6 +10,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Enum\AuthenticationType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
@@ -41,9 +42,9 @@ class LoginAuthenticator extends AbstractAuthenticator
         private UserProviderInterface          $userProvider,
         private PasswordHasherFactoryInterface $encoder,
         private SerializerInterface            $serializer,
-        private PayloadGeneratorInterface      $payloadLoader,
-        private TokenGeneratorInterface        $tokenGenerator,
-        private TokenResponseCreatorInterface  $tokenResponseCreator
+        private PayloadGeneratorInterface      $payloadGenerator,
+        private TokenGeneratorInterface        $generator,
+        private TokenResponseCreatorInterface  $responseCreator
     ) {}
 
     public function supports(Request $request): ?bool
@@ -88,11 +89,11 @@ class LoginAuthenticator extends AbstractAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         // Generate payload and create "access" and "refresh" tokens pair
-        $payload = $this->payloadLoader->generate($token, $request);
-        $accessToken = $this->tokenGenerator->fromPayload($payload, TokenType::ACCESS);
-        $refreshToken = $this->tokenGenerator->fromPayload($payload, TokenType::REFRESH);
+        $payload = $this->payloadGenerator->generate($token, $request);
+        $accessToken = $this->generator->fromPayload($payload, TokenType::ACCESS, TokenCreationContext::LOGIN);
+        $refreshToken = $this->generator->fromPayload($payload, TokenType::REFRESH, TokenCreationContext::LOGIN);
 
-        $tokenResponse = $this->tokenResponseCreator->create($accessToken, $refreshToken);
+        $tokenResponse = $this->responseCreator->create($accessToken, $refreshToken);
         // This event can be used to change the token response
         $event = new TokenResponseCreated($tokenResponse);
         $this->eventsDispatcher->dispatch($event, $event::getName());
