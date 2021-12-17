@@ -6,11 +6,13 @@
 
 namespace Rkwadriga\JwtBundle\Authenticator;
 
+use Rkwadriga\JwtBundle\DependencyInjection\DbManagerInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Enum\AuthenticationType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
+use Rkwadriga\JwtBundle\Enum\TokenRefreshingContext;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
@@ -44,6 +46,7 @@ class LoginAuthenticator extends AbstractAuthenticator
         private SerializerInterface            $serializer,
         private PayloadGeneratorInterface      $payloadGenerator,
         private TokenGeneratorInterface        $generator,
+        private DbManagerInterface             $dbManager,
         private TokenResponseCreatorInterface  $responseCreator
     ) {}
 
@@ -92,6 +95,11 @@ class LoginAuthenticator extends AbstractAuthenticator
         $payload = $this->payloadGenerator->generate($token, $request);
         $accessToken = $this->generator->fromPayload($payload, TokenType::ACCESS, TokenCreationContext::LOGIN);
         $refreshToken = $this->generator->fromPayload($payload, TokenType::REFRESH, TokenCreationContext::LOGIN);
+
+        // Write refresh token to DB if needed
+        if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
+            $this->dbManager->writeRefreshToken($refreshToken, TokenRefreshingContext::LOGIN);
+        }
 
         $tokenResponse = $this->responseCreator->create($accessToken, $refreshToken);
         // This event can be used to change the token response

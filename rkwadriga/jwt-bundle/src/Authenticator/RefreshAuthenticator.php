@@ -21,8 +21,12 @@ use Rkwadriga\JwtBundle\Enum\TokenValidationCase;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
+use Rkwadriga\JwtBundle\Event\TokenRefreshingFinishedSuccessful;
+use Rkwadriga\JwtBundle\Event\TokenRefreshingFinishedUnsuccessful;
+use Rkwadriga\JwtBundle\Event\TokenRefreshingStarted;
 use Rkwadriga\JwtBundle\Event\TokenResponseCreated;
 use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
+use Rkwadriga\JwtBundle\DependencyInjection\DbManagerInterface;
 use Rkwadriga\JwtBundle\Service\Config;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -49,6 +53,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
         private TokenGeneratorInterface         $generator,
         private TokenValidatorInterface         $validator,
         private SerializerInterface             $serializer,
+        private DbManagerInterface              $dbManager,
         private TokenResponseCreatorInterface   $responseCreator,
         private JwtTokenInterface               $oldRefreshToken
     ) {}
@@ -81,6 +86,13 @@ class RefreshAuthenticator extends AbstractAuthenticator
             $this->validator->validate($refreshToken, TokenType::REFRESH);
             $this->validator->validateRefresh($refreshToken, $accessToken);
 
+            // Check is refresh token exist
+            if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
+                if (!$this->dbManager->isRefreshTokenExist($refreshToken)) {
+                    throw new TokenValidatorException('Refresh token does not exist', TokenValidatorException::INVALID_REFRESH_TOKEN);
+                }
+            }
+
             $this->oldRefreshToken = $refreshToken;
         } catch (Exception $e) {
             throw new AuthenticationException($e->getMessage(), $e->getCode(), $e);
@@ -106,6 +118,28 @@ class RefreshAuthenticator extends AbstractAuthenticator
         $payload = $this->payloadGenerator->generate($token, $request);
         $accessToken = $this->generator->fromPayload($payload, TokenType::ACCESS, TokenCreationContext::REFRESH);
         $refreshToken = $this->generator->fromPayload($payload, TokenType::REFRESH, TokenCreationContext::REFRESH);
+
+        // This event can be used to change the tokens
+        $event = new TokenRefreshingStarted($this->oldRefreshToken, $refreshToken, $accessToken);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+        [$this->oldRefreshToken, $refreshToken, $accessToken] = [$event->getOldRefreshToken(), $event->getNewRefreshToken(), $event->getAccessToken()];
+
+        // Update refresh token
+        if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
+            try {
+                $this->dbManager->updateRefreshToken($this->oldRefreshToken, $refreshToken);
+            } catch (Exception $e) {
+                // This event can be used to change the error processing
+                $event = new TokenRefreshingFinishedUnsuccessful($this->oldRefreshToken, $refreshToken, $accessToken, $e);
+                $this->eventsDispatcher->dispatch($event, $event::getName());
+                throw $event->getException();
+            }
+        }
+
+        // This event cen be used to change the new refresh and access token
+        $event = new TokenRefreshingFinishedSuccessful($this->oldRefreshToken, $refreshToken, $accessToken);
+        $this->eventsDispatcher->dispatch($event, $event::getName());
+        [$refreshToken, $accessToken] = [$event->getNewRefreshToken(), $event->getAccessToken()];
 
         $tokenResponse = $this->responseCreator->create($accessToken, $refreshToken);
         // This event can be used to change the token response
