@@ -13,6 +13,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenIdentifierInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenValidatorInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface as JwtTokenInterface;
 use Rkwadriga\JwtBundle\Enum\AuthenticationType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
@@ -48,7 +49,8 @@ class RefreshAuthenticator extends AbstractAuthenticator
         private TokenGeneratorInterface         $generator,
         private TokenValidatorInterface         $validator,
         private SerializerInterface             $serializer,
-        private TokenResponseCreatorInterface   $responseCreator
+        private TokenResponseCreatorInterface   $responseCreator,
+        private JwtTokenInterface               $oldRefreshToken
     ) {}
 
     public function supports(Request $request): ?bool
@@ -79,10 +81,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
             $this->validator->validate($refreshToken, TokenType::REFRESH);
             $this->validator->validateRefresh($refreshToken, $accessToken);
 
-            // Check refresh token in DB
-            if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
-                // @TODO Check refresh token in DB...
-            }
+            $this->oldRefreshToken = $refreshToken;
         } catch (Exception $e) {
             throw new AuthenticationException($e->getMessage(), $e->getCode(), $e);
         }
