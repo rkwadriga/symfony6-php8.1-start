@@ -18,7 +18,8 @@ class Token implements TokenInterface
         private DateTimeImmutable $createdAt,
         private DateTimeImmutable $expiredAt,
         private array $head,
-        private array $payload
+        private array $payload,
+        private string $signature
     ) {}
 
     public function getType(): TokenType
@@ -49,5 +50,10 @@ class Token implements TokenInterface
     public function getPayload(): array
     {
         return $this->payload;
+    }
+
+    public function getSignature(): string
+    {
+        return $this->signature;
     }
 }
