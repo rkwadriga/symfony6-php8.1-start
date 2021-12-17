@@ -15,12 +15,12 @@ class AuthenticationFinishedSuccessful extends AbstractAuthenticationEvent
 
     public function __construct(
         AuthenticationType $authenticationType,
-        private Response $response,
+        private ?Response $response = null,
     ) {
         parent::__construct($authenticationType);
     }
 
-    public function getResponse(): Response
+    public function getResponse(): ?Response
     {
         return $this->response;
     }

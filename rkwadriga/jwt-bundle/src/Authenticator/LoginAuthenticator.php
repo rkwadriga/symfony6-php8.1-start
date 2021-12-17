@@ -70,8 +70,9 @@ class LoginAuthenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException("Params \"{$loginParam}\" and \"{$passwordParam}\" are required");
         }
 
-        // Check username, password and get user
-        $userBridge = new UserBadge($loginParam, function () use ($params, $loginParam): ?UserInterface {
+        // Check username, password and get user by identifier
+        $userIdentifier = $this->config->get(ConfigurationParam::USER_IDENTIFIER);
+        $userBridge = new UserBadge($userIdentifier, function () use ($params, $loginParam): ?UserInterface {
             return $this->userProvider->loadUserByIdentifier($params[$loginParam]);
         });
         $user = $userBridge->getUser();

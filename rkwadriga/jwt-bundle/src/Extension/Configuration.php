@@ -22,6 +22,7 @@ class Configuration implements ConfigurationInterface
             ->scalarNode(ConfigurationParam::PROVIDER->shortValue())->defaultValue('app_user_provider')->end()
             ->scalarNode(ConfigurationParam::LOGIN_URL->shortValue())->defaultValue('rkwadriga_jwt_auth_login')->end()
             ->scalarNode(ConfigurationParam::REFRESH_URL->shortValue())->defaultValue('rkwadriga_jwt_refresh_token')->end()
+            ->scalarNode(ConfigurationParam::USER_IDENTIFIER->shortValue())->defaultValue('email')->end()
             ->scalarNode(ConfigurationParam::LOGIN_PARAM->shortValue())->defaultValue('email')->end()
             ->scalarNode(ConfigurationParam::PASSWORD_PARAM->shortValue())->defaultValue('password')->end()
             ->scalarNode(ConfigurationParam::SECRET_KEY->shortValue())->defaultValue('%env(SECRET_KEY)%')->end()

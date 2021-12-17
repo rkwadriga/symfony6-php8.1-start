@@ -13,6 +13,7 @@ enum ConfigurationParam: string
     case PROVIDER = 'provider';
     case LOGIN_URL = 'login_url';
     case REFRESH_URL = 'refresh_url';
+    case USER_IDENTIFIER = 'user_identifier';
     case LOGIN_PARAM = 'login_pram';
     case PASSWORD_PARAM = 'password_param';
     case SECRET_KEY = 'secret_key';
