@@ -12,6 +12,6 @@ class DbServiceException extends BaseException
     public const CAN_NOT_CREATE_TABLE   = 4756361204;
     public const SQL_ERROR              = 4820123745;
     public const TOKENS_COUNT_EXCEEDED  = 4565320076;
-    public const REFRESH_TOKEN_MISSED   = 5230815335''
+    public const REFRESH_TOKEN_MISSED   = 5230815335;
 
 }

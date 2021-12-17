@@ -4,7 +4,7 @@
  * Author Dmitry Kushneriov
  */
 
-namespace Rkwadriga\JwtBundle\DependencyInjection\Services\Db;
+namespace Rkwadriga\JwtBundle\Service\Db;
 
 use Rkwadriga\JwtBundle\Entity\RefreshToken;
 use Rkwadriga\JwtBundle\Exception\DbServiceException;

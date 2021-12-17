@@ -9,9 +9,16 @@ namespace Rkwadriga\JwtBundle\Service;
 use Rkwadriga\JwtBundle\DependencyInjection\DbManagerInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\Enum\TokenRefreshingContext;
+use Rkwadriga\JwtBundle\Service\Db\CreateTableTrait;
+use Rkwadriga\JwtBundle\Service\Db\ReadQueriesTrait;
+use Rkwadriga\JwtBundle\Service\Db\WriteQueriesTrait;
 
 class DbManager implements DbManagerInterface
 {
+    use CreateTableTrait;
+    use ReadQueriesTrait;
+    use WriteQueriesTrait;
+
     public function writeRefreshToken(TokenInterface $refreshToken, TokenRefreshingContext $refreshingContext): void
     {
         dd($refreshToken);

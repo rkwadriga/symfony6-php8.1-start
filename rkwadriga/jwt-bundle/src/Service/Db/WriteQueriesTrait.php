@@ -4,11 +4,12 @@
  * Author Dmitry Kushneriov
  */
 
-namespace Rkwadriga\JwtBundle\DependencyInjection\Services\Db;
+namespace Rkwadriga\JwtBundle\Service\Db;
 
 use Exception;
 use DateTimeImmutable;
-use Rkwadriga\JwtBundle\Entity\RefreshToken;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
+use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Exception\DbServiceException;
 
 trait WriteQueriesTrait
@@ -21,7 +22,7 @@ trait WriteQueriesTrait
         $this->setTableName();
 
         try {
-            $repository = $this->em->getRepository(RefreshToken::class);
+            $repository = $this->em->getRepository(Token::class);
             // Get the oldest created_at
             $qb = $repository->createQueryBuilder('rt');
             $miCreatedAt = $qb
@@ -37,7 +38,7 @@ trait WriteQueriesTrait
 
             // Delete the oldest record
             $qb = $repository->createQueryBuilder('rt');
-            $qb->delete(RefreshToken::class, 'rt')
+            $qb->delete(Token::class, 'rt')
                 ->where('rt.userId = :user_id AND rt.createdAt = :min_created_at')
                 ->setParameter(':user_id', $userID)
                 ->setParameter(':min_created_at', $miCreatedAt)
@@ -52,19 +53,19 @@ trait WriteQueriesTrait
         }
     }
 
-    private function addNewRecord(string $userID, string $refreshToken, DateTimeImmutable $createdAt): RefreshToken
+    private function addNewRecord(string $userID, string $refreshToken, DateTimeImmutable $createdAt): TokenInterface
     {
         // Do not forget set a custom table name for entity
         $this->setTableName();
 
-        $refreshToken = new RefreshToken($userID, $refreshToken, $createdAt);
+        $refreshToken = new Token($userID, $refreshToken, $createdAt);
         $this->em->persist($refreshToken);
         $this->em->flush();
 
         return $refreshToken;
     }
 
-    private function updateExistedRecord(RefreshToken $existedToken, string $newRefreshToken, DateTimeImmutable $newCreatedAt): void
+    private function updateExistedRecord(Token $existedToken, string $newRefreshToken, DateTimeImmutable $newCreatedAt): void
     {
         // Do not forget set a custom table name for entity
         $this->setTableName();
