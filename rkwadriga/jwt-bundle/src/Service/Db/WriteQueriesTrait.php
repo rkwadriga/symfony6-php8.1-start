@@ -25,23 +25,24 @@ trait WriteQueriesTrait
             $repository = $this->em->getRepository($this->getEntityClass());
             // Get the oldest created_at
             $qb = $repository->createQueryBuilder('rt');
-            $miCreatedAt = $qb
-                ->select($qb->expr()->min('rt.createdAt'))
+            $oldestRefreshToken = $qb
+                ->select('rt.refreshToken')
                 ->where('rt.userId = :user_id')
                 ->setParameter(':user_id', $userID)
+                ->orderBy('rt.createdAt', 'ASC')
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getSingleScalarResult();
-            if ($miCreatedAt === null) {
+            if ($oldestRefreshToken === null) {
                 return;
             }
 
             // Delete the oldest record
             $qb = $repository->createQueryBuilder('rt');
             $qb->delete($this->getEntityClass(), 'rt')
-                ->where('rt.userId = :user_id AND rt.createdAt = :min_created_at')
+                ->where('rt.userId = :user_id AND rt.refreshToken = :refresh_token')
                 ->setParameter(':user_id', $userID)
-                ->setParameter(':min_created_at', $miCreatedAt)
+                ->setParameter(':refresh_token', $oldestRefreshToken)
                 ->getQuery()
                 ->execute();
         } catch (Exception $e) {
