@@ -55,7 +55,7 @@ class ConfigServiceTest extends AbstractUnitTestCase
             } else {
                 $defaultValueString = "\"{$default}\"";
             }
-            $this->assertEquals($default, $actual, "Param \"{$param}\" must have value {$defaultValueString}");
+            $this->assertSame($default, $actual, "Param \"{$param}\" must have value {$defaultValueString}");
         }
     }
 }
