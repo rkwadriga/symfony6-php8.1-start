@@ -52,7 +52,20 @@ services:
         alias: Rkwadriga\JwtBundle\Service\TokenValidator
         public: true
 
-    Rkwadriga\JwtBundle\Service\DbManager: ~
+    Rkwadriga\JwtBundle\Repository\RefreshToken256Repository:
+        arguments:
+            - '@doctrine'
+        tags: ['doctrine.repository_service']
+
+    Rkwadriga\JwtBundle\Repository\RefreshToken512Repository:
+        arguments:
+            - '@doctrine'
+        tags: [ 'doctrine.repository_service' ]
+
+    Rkwadriga\JwtBundle\Service\DbManager:
+        arguments:
+            - '@Rkwadriga\JwtBundle\Service\Config'
+            - '@doctrine.orm.entity_manager'
     Rkwadriga\JwtBundle\DependencyInjection\DbManagerInterface:
         alias: Rkwadriga\JwtBundle\Service\DbManager
         public: true

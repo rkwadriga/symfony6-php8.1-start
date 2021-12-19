@@ -8,5 +8,6 @@ namespace Rkwadriga\JwtBundle\Exception;
 
 class TokenGeneratorException extends BaseTokenException
 {
+    public const INVALID_PAYLOAD   = 7831213564;
     public const INVALID_ALGORITHM = 7514021054;
 }

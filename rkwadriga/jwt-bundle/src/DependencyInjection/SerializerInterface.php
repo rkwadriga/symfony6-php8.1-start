@@ -10,6 +10,8 @@ interface SerializerInterface
 {
     public function encode(string $data): string;
 
+    public function decode(string $data): string;
+
     public function signature(string $data, ?Algorithm $algorithm = null): string;
 
     public function serialize(array $data): string;

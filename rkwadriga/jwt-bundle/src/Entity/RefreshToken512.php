@@ -1,15 +1,19 @@
-<?php
+<?php declare(strict_types=1);
+/**
+ * Created 2021-12-19
+ * Author Dmitry Kushneriov
+ */
 
 namespace Rkwadriga\JwtBundle\Entity;
 
 use DateTimeImmutable;
-use Rkwadriga\JwtBundle\Repository\RefreshTokenRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Rkwadriga\JwtBundle\Repository\RefreshToken512Repository;
 
 /**
- * @ORM\Entity(repositoryClass=RefreshTokenRepository::class)
+ * @ORM\Entity(repositoryClass=RefreshToken512Repository::class)
  */
-class RefreshToken
+class RefreshToken512 implements RefreshTokenEntityInterface
 {
     public function __construct(
         /**
@@ -20,7 +24,7 @@ class RefreshToken
 
         /**
          * @ORM\Id
-         * @ORM\Column(type="string", length=64)
+         * @ORM\Column(type="string", length=128)
          */
         private string $refreshToken,
 

@@ -10,7 +10,7 @@ use Rkwadriga\JwtBundle\Enum\TokenRefreshingContext;
 
 interface DbManagerInterface
 {
-    public function writeRefreshToken(TokenInterface $refreshToken, TokenRefreshingContext $refreshingContext): void;
+    public function writeRefreshToken(TokenInterface $refreshToken, string|int $userID, TokenRefreshingContext $refreshingContext): void;
 
     public function isRefreshTokenExist(TokenInterface $refreshToken): bool;
 

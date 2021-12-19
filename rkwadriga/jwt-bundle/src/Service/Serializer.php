@@ -22,6 +22,15 @@ class Serializer implements SerializerInterface
         return str_replace('=', '', base64_encode($data));
     }
 
+    public function decode(string $data): string
+    {
+        if (($decoded = base64_decode($data)) === false) {
+            throw new SerializerException("Invalid data \"{$data}\"", SerializerException::INVALID_BASE64_DATA);
+        }
+
+        return $decoded;
+    }
+
     public function serialize(array $data): string
     {
         return $this->encode(json_encode($data));
@@ -37,9 +46,7 @@ class Serializer implements SerializerInterface
 
     public function deserialiaze(string $data): array
     {
-        if (($jsonData = base64_decode($data)) === false) {
-            throw new SerializerException("Invalid data \"{$data}\"", SerializerException::INVALID_BASE64_DATA);
-        }
+        $jsonData = $this->decode($data);
         if (($deserialized = json_decode($jsonData, true)) === null) {
             $message = "Invalid data \"{$jsonData}\"";
             if ($jsonLastError = json_last_error_msg()) {

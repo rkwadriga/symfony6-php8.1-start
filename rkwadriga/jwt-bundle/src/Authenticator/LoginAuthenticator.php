@@ -17,6 +17,7 @@ use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessful;
 use Rkwadriga\JwtBundle\Event\AuthenticationStarted;
 use Rkwadriga\JwtBundle\Event\TokenResponseCreated;
+use Rkwadriga\JwtBundle\Exception\TokenGeneratorException;
 use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface;
@@ -98,7 +99,12 @@ class LoginAuthenticator extends AbstractAuthenticator
 
         // Write refresh token to DB if needed
         if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
-            $this->dbManager->writeRefreshToken($refreshToken, TokenRefreshingContext::LOGIN);
+            // Check user ID in payload
+            $userIdentifier = $this->config->get(ConfigurationParam::USER_IDENTIFIER);
+            if (!isset($accessToken->getPayload()[$userIdentifier])) {
+                throw new TokenGeneratorException("User identifier \"{$userIdentifier}\" missed in token's payload", TokenGeneratorException::INVALID_PAYLOAD);
+            }
+            $this->dbManager->writeRefreshToken($refreshToken, $accessToken->getPayload()[$userIdentifier], TokenRefreshingContext::LOGIN);
         }
 
         $tokenResponse = $this->responseCreator->create($accessToken, $refreshToken);

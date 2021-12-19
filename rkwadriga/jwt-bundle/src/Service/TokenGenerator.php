@@ -60,7 +60,7 @@ class TokenGenerator implements TokenGeneratorInterface
             throw $event->getException();
         }
 
-        $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $signature);
+        $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $this->serializer->decode($signature));
         // This event can be used to change the token
         $event = new TokenCreatingFinishedSuccessful($creationContext, $token);
         $this->eventsDispatcher->dispatch($event, $event::getName());
@@ -102,7 +102,7 @@ class TokenGenerator implements TokenGeneratorInterface
             throw $event->getException();
         }
 
-        $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $signature);
+        $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $this->serializer->decode($signature));
         // This event can be used to change the token
         $event = new TokenParsingFinishedSuccessful($token);
         $this->eventsDispatcher->dispatch($event, $event::getName());

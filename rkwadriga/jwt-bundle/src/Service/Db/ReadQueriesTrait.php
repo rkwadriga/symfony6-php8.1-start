@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Service\Db;
 
-use Rkwadriga\JwtBundle\Entity\RefreshToken;
+use Rkwadriga\JwtBundle\Entity\RefreshTokenEntityInterface;
 use Rkwadriga\JwtBundle\Exception\DbServiceException;
 
 trait ReadQueriesTrait
@@ -18,7 +18,7 @@ trait ReadQueriesTrait
         // Do not forget set a custom table name for entity
         $this->setTableName();
 
-        $qb = $this->em->getRepository(RefreshToken::class)->createQueryBuilder('rt');
+        $qb = $this->em->getRepository($this->getEntityClass())->createQueryBuilder('rt');
         try {
             return $qb
                 ->select($qb->expr()->count('rt'))
@@ -35,11 +35,11 @@ trait ReadQueriesTrait
         }
     }
 
-    private function findRecordByPrimaryKey(string $userID, string $refreshToken): ?RefreshToken
+    private function findRecordByPrimaryKey(string $userID, string $refreshToken): ?RefreshTokenEntityInterface
     {
         // Do not forget set a custom table name for entity
         $this->setTableName();
 
-        return $this->em->getRepository(RefreshToken::class)->findOneBy(['userId' => $userID, 'refreshToken' => $refreshToken]);
+        return $this->em->getRepository($this->getEntityClass())->findOneBy(['userId' => $userID, 'refreshToken' => $refreshToken]);
     }
 }
