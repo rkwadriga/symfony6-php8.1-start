@@ -14,4 +14,5 @@ class TokenValidatorException extends BaseTokenException
     public const INVALID_REFRESH_TOKEN   = 6981368745;
     public const INVALID_TYPE            = 6325698751;
     public const INVALID_SIGNATURE       = 6320145796;
+    public const INVALID_FORMAT          = 6018046145;
 }

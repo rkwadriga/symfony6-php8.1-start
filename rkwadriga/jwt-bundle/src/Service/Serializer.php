@@ -10,6 +10,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Exception\SerializerException;
+use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
 
 class Serializer implements SerializerInterface
 {
@@ -65,6 +66,11 @@ class Serializer implements SerializerInterface
 
     public function explode(string $data): array
     {
-        return explode('.', $data);
+        $result = explode('.', $data);
+        if (count($result) !== 3) {
+            throw new TokenValidatorException('Invalid token format', TokenValidatorException::INVALID_FORMAT);
+        }
+
+        return $result;
     }
 }

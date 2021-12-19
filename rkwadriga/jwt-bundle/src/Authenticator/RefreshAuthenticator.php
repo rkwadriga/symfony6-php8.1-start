@@ -55,7 +55,8 @@ class RefreshAuthenticator extends AbstractAuthenticator
         private SerializerInterface             $serializer,
         private DbManagerInterface              $dbManager,
         private TokenResponseCreatorInterface   $responseCreator,
-        private ?JwtTokenInterface              $oldRefreshToken = null
+        private ?JwtTokenInterface              $oldRefreshToken = null,
+        private mixed                           $userID = null
     ) {}
 
     public function supports(Request $request): ?bool
@@ -72,6 +73,8 @@ class RefreshAuthenticator extends AbstractAuthenticator
             return $event->getPassport();
         }
 
+
+
         try {
             // Get tokens from request
             $accessTokenString = $this->identifier->identify($request, TokenType::ACCESS);
@@ -86,9 +89,13 @@ class RefreshAuthenticator extends AbstractAuthenticator
             $this->validator->validate($refreshToken, TokenType::REFRESH);
             $this->validator->validateRefresh($refreshToken, $accessToken);
 
+            // Get user by identifier
+            $userIdentifier = $this->config->get(ConfigurationParam::USER_IDENTIFIER);
+            $this->userID = $accessToken->getPayload()[$userIdentifier];
+
             // Check is refresh token exist
             if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
-                if (!$this->dbManager->isRefreshTokenExist($refreshToken)) {
+                if ($this->dbManager->findRefreshToken($this->userID, $refreshToken) === null) {
                     throw new TokenValidatorException('Refresh token does not exist', TokenValidatorException::INVALID_REFRESH_TOKEN);
                 }
             }
@@ -98,11 +105,8 @@ class RefreshAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException($e->getMessage(), $e->getCode(), $e);
         }
 
-        // Get user by identifier
-        $userIdentifier = $this->config->get(ConfigurationParam::USER_IDENTIFIER);
-        $userIdentifierValue = $accessToken->getPayload()[$userIdentifier];
-        $userBridge = new UserBadge($userIdentifier, function () use ($userIdentifierValue): ?UserInterface {
-            return $this->userProvider->loadUserByIdentifier($userIdentifierValue);
+        $userBridge = new UserBadge($userIdentifier, function (): ?UserInterface {
+            return $this->userProvider->loadUserByIdentifier($this->userID);
         });
 
         if ($userBridge->getUser() === null) {
@@ -127,7 +131,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
         // Update refresh token
         if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
             try {
-                $this->dbManager->updateRefreshToken($this->oldRefreshToken, $refreshToken);
+                $this->dbManager->updateRefreshToken($this->userID, $this->oldRefreshToken, $refreshToken);
             } catch (Exception $e) {
                 // This event can be used to change the error processing
                 $event = new TokenRefreshingFinishedUnsuccessful($this->oldRefreshToken, $refreshToken, $accessToken, $e);

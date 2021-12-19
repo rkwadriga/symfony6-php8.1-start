@@ -104,7 +104,7 @@ class LoginAuthenticator extends AbstractAuthenticator
             if (!isset($accessToken->getPayload()[$userIdentifier])) {
                 throw new TokenGeneratorException("User identifier \"{$userIdentifier}\" missed in token's payload", TokenGeneratorException::INVALID_PAYLOAD);
             }
-            $this->dbManager->writeRefreshToken($refreshToken, $accessToken->getPayload()[$userIdentifier], TokenRefreshingContext::LOGIN);
+            $this->dbManager->writeRefreshToken($accessToken->getPayload()[$userIdentifier], $refreshToken, TokenRefreshingContext::LOGIN);
         }
 
         $tokenResponse = $this->responseCreator->create($accessToken, $refreshToken);

@@ -6,13 +6,14 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection;
 
+use Rkwadriga\JwtBundle\Entity\RefreshTokenEntityInterface;
 use Rkwadriga\JwtBundle\Enum\TokenRefreshingContext;
 
 interface DbManagerInterface
 {
-    public function writeRefreshToken(TokenInterface $refreshToken, string|int $userID, TokenRefreshingContext $refreshingContext): void;
+    public function writeRefreshToken(string|int $userID, TokenInterface $refreshToken, TokenRefreshingContext $refreshingContext): void;
 
-    public function isRefreshTokenExist(TokenInterface $refreshToken): bool;
+    public function findRefreshToken(string|int $userID, TokenInterface $refreshToken): ?RefreshTokenEntityInterface;
 
-    public function updateRefreshToken(TokenInterface $oldRefreshToken, TokenInterface $newRefreshToken): void;
+    public function updateRefreshToken(string|int $userID, TokenInterface $oldRefreshToken, TokenInterface $newRefreshToken): void;
 }

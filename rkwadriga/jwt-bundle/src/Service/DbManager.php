@@ -10,6 +10,7 @@ use Exception;
 use DateTimeImmutable;
 use Rkwadriga\JwtBundle\DependencyInjection\DbManagerInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
+use Rkwadriga\JwtBundle\Entity\RefreshTokenEntityInterface;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenRefreshingContext;
 use Rkwadriga\JwtBundle\Exception\DbServiceException;
@@ -22,7 +23,8 @@ class DbManager implements DbManagerInterface
 {
     public function __construct(
         private Config $config,
-        private EntityManagerInterface $em
+        private EntityManagerInterface $em,
+        private ?RefreshTokenEntityInterface $existedRefreshToken = null
     ) {
         try {
             $this->createTable();
@@ -36,7 +38,7 @@ class DbManager implements DbManagerInterface
     use ReadQueriesTrait;
     use WriteQueriesTrait;
 
-    public function writeRefreshToken(TokenInterface $refreshToken, string|int $userID, TokenRefreshingContext $refreshingContext): void
+    public function writeRefreshToken(string|int $userID, TokenInterface $refreshToken, TokenRefreshingContext $refreshingContext): void
     {
         // Check "refresh_token" records limit
         $recordsLimit = $this->config->get(ConfigurationParam::REFRESH_TOKENS_LIMIT);
@@ -67,14 +69,30 @@ class DbManager implements DbManagerInterface
         $this->addNewRecord($userID, $refreshToken->getSignature(), DateTimeImmutable::createFromInterface($refreshToken->getCreatedAt()));
     }
 
-    public function isRefreshTokenExist(TokenInterface $refreshToken): bool
+    public function findRefreshToken(string|int $userID, TokenInterface $refreshToken): ?RefreshTokenEntityInterface
     {
-        dd($refreshToken);
+        if ($this->existedRefreshToken !== null) {
+            return $this->existedRefreshToken;
+        }
+
+        try {
+            return $this->existedRefreshToken = $this->findRecordByPrimaryKey($userID, $refreshToken->getSignature());
+        } catch (Exception $e) {
+            $table = $this->getTableName();
+            throw new DbServiceException("Can not read data from table \"{$table}\": ". $e->getMessage(), DbServiceException::SQL_ERROR, $e);
+        }
     }
 
-    public function updateRefreshToken(TokenInterface $oldRefreshToken, TokenInterface $newRefreshToken): void
+    public function updateRefreshToken(string|int $userID, TokenInterface $oldRefreshToken, TokenInterface $newRefreshToken): void
     {
-        dd($oldRefreshToken, $newRefreshToken);
-    }
+        if (($existedRefreshToken = $this->findRefreshToken($userID, $oldRefreshToken)) === null) {
+            throw new DbServiceException('Refresh token not found', DbServiceException::REFRESH_TOKEN_MISSED);
+        }
 
+        try {
+            $this->updateExistedRecord($existedRefreshToken, $newRefreshToken->getSignature(), DateTimeImmutable::createFromInterface($newRefreshToken->getCreatedAt()));
+        } catch (Exception $e) {
+            throw new DbServiceException("Can not update refresh token: ". $e->getMessage(), DbServiceException::SQL_ERROR, $e);
+        }
+    }
 }

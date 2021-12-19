@@ -6,6 +6,8 @@
 
 namespace Rkwadriga\JwtBundle\DependencyInjection;
 
+use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
+
 interface SerializerInterface
 {
     public function encode(string $data): string;
@@ -20,5 +22,8 @@ interface SerializerInterface
 
     public function implode(array $data): string;
 
+    /**
+     * @throws TokenValidatorException
+     */
     public function explode(string $data): array;
 }
