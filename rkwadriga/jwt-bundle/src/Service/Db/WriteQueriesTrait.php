@@ -58,9 +58,8 @@ trait WriteQueriesTrait
         // Do not forget set a custom table name for entity
         $this->setTableName();
 
-        // If user ID length greater than max field length - hash it by "SHA256" or "SHA512" algorithm
-        $idMaxLength = $this->getAlgorithm() === Algorithm::SHA256 ? 64 : 128;
-        if (strlen($userID) > $idMaxLength) {
+        // If user ID length greater than max field length - hash it by "SHA256" algorithm
+        if (strlen($userID) > 64) {
             $userID = hash(Algorithm::SHA256->value, $userID);
         }
 
