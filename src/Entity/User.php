@@ -3,8 +3,8 @@
 namespace App\Entity;
 
 use App\Doctrine\Listeners\UserCreateOrUpdateListener;
+use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Rkwadriga\JwtBundle\Repository\UserRepository;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 

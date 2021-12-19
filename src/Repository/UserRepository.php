@@ -1,6 +1,6 @@
 <?php
 
-namespace Rkwadriga\JwtBundle\Repository;
+namespace App\Repository;
 
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
