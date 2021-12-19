@@ -8,6 +8,7 @@ namespace Rkwadriga\JwtBundle\Service\Db;
 
 use Exception;
 use DateTimeImmutable;
+use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\Entity\RefreshTokenEntityInterface;
 use Rkwadriga\JwtBundle\Exception\DbServiceException;
 
@@ -56,6 +57,12 @@ trait WriteQueriesTrait
     {
         // Do not forget set a custom table name for entity
         $this->setTableName();
+
+        // If user ID length greater than max field length - hash it by "SHA256" or "SHA512" algorithm
+        $idMaxLength = $this->getAlgorithm() === Algorithm::SHA256 ? 64 : 128;
+        if (strlen($userID) > $idMaxLength) {
+            $userID = hash(Algorithm::SHA256->value, $userID);
+        }
 
         $entityClass = $this->getEntityClass();
         $refreshToken = new $entityClass($userID, $refreshToken, $createdAt);
