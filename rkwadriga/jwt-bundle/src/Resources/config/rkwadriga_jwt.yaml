@@ -17,5 +17,5 @@ rkwadriga_jwt:
     token_type: Bearer
     refresh_tokens_in_db: true
     refresh_tokens_table: refresh_token
-    refresh_tokens_limit: 10
+    refresh_tokens_limit: 3
     rewrite_on_limit_exceeded: true

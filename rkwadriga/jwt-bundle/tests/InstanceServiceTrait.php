@@ -7,11 +7,20 @@
 namespace Rkwadriga\JwtBundle\Tests;
 
 use Rkwadriga\JwtBundle\Service\Config;
+use Rkwadriga\JwtBundle\Service\DbManager;
 
 trait InstanceServiceTrait
 {
-    public function getConfigService(): Config
+    protected function getConfigService(): Config
     {
         return new Config($this->container);
+    }
+
+    protected function getDbManager(?Config $configService = null): DbManager
+    {
+        return new DbManager(
+            $configService ?? $this->getConfigService(),
+            $this->container->get('doctrine.orm.entity_manager')
+        );
     }
 }
