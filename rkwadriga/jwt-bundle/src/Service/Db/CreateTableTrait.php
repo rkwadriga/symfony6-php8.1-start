@@ -21,18 +21,20 @@ trait CreateTableTrait
 {
     private function createTable(): void
     {
+        // Check if table exist
+        $schemaManager = $this->em->getConnection()->createSchemaManager();
+        $table = $this->getTableName();
+        if ($schemaManager->tablesExist([$table])) {
+            return;
+        }
+
         try {
             // Try to create table with specific table name
             $schemaTool = new SchemaTool($this->em);
             $metadata = $this->em->getMetadataFactory()->getMetadataFor($this->getEntityClass());
-            $metadata->setPrimaryTable(['name' => $this->getTableName()]);
+            $metadata->setPrimaryTable(['name' => $table]);
             $schemaTool->createSchema([$metadata]);
         } catch (\Exception $e) {
-            if ($e instanceof ToolsException) {
-                // Table already exist
-                return;
-            }
-
             throw new DbServiceException(
                 sprintf('Can not create table "%s": %s', $this->getTableName(), $e->getMessage()),
                 DbServiceException::CAN_NOT_CREATE_TABLE,

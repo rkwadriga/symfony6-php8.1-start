@@ -10,21 +10,24 @@ use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 
 trait ClearDatabaseTrait
 {
+    use DatabaseTrait;
     use RefreshTokenTrait;
 
     public function setUp(): void
     {
         parent::setUp();
-        $this->clearDatabase();
+        $this->clearRefreshTokenTables();
     }
 
-    protected function clearDatabase(): void
+    protected function clearRefreshTokenTables(): void
     {
         $connection = $this->entityManager->getConnection();
         $platform = $connection->getDatabasePlatform();
 
         foreach (Algorithm::cases() as $algorithm) {
-            $connection->executeStatement($platform->getTruncateTableSQL($this->getRefreshTokenTableName($algorithm)));
+            if ($this->isRefreshTokenTableExist($algorithm)) {
+                $connection->executeStatement($platform->getTruncateTableSQL($this->getRefreshTokenTableName($algorithm)));
+            }
         }
     }
 }

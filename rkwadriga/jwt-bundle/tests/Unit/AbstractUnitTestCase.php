@@ -11,6 +11,7 @@ use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Tests\InstanceTokenTrait;
 use Rkwadriga\JwtBundle\Tests\InstanceServiceTrait;
 use Rkwadriga\JwtBundle\Tests\MockServiceTrait;
+use Rkwadriga\JwtBundle\Tests\ReflectionTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -20,6 +21,7 @@ abstract class AbstractUnitTestCase extends AbstractTestCase
     use MockServiceTrait;
     use InstanceServiceTrait;
     use InstanceTokenTrait;
+    use ReflectionTrait;
 
     protected const USER_ID = 'test_user@gmail.com';
     protected const SECRET_KEY = 'Lm870sdfpOki78Yr6Tsdfkl09Iksdjf71sdfk';
