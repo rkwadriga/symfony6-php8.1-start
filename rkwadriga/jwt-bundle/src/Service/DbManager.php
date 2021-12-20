@@ -21,6 +21,10 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class DbManager implements DbManagerInterface
 {
+    use CreateTableTrait;
+    use ReadQueriesTrait;
+    use WriteQueriesTrait;
+
     public function __construct(
         private Config $config,
         private EntityManagerInterface $em,
@@ -33,10 +37,6 @@ class DbManager implements DbManagerInterface
             throw new DbServiceException("Can not create \"{$table}\" table: ". $e->getMessage(), DbServiceException::CAN_NOT_CREATE_TABLE, $e);
         }
     }
-
-    use CreateTableTrait;
-    use ReadQueriesTrait;
-    use WriteQueriesTrait;
 
     public function writeRefreshToken(string|int $userID, TokenInterface $refreshToken, TokenRefreshingContext $refreshingContext): void
     {
