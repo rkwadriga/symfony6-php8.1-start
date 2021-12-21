@@ -47,9 +47,9 @@ class TokenGenerator implements TokenGeneratorInterface
         try {
             // Generate token signature and create token string
             $head = $this->headGenerator->generate($payload, $type);
-            $content = $this->serializer->implode([$this->serializer->serialize($head), $this->serializer->serialize($payload)]);
+            $content = $this->serializer->implode($this->serializer->serialize($head), $this->serializer->serialize($payload));
             $signature = $this->serializer->signature($content, $algorithm);
-            $token = $this->serializer->implode([$content, $signature]);
+            $token = $this->serializer->implode($content, $this->serializer->encode($signature));
 
             // Get token life dates
             [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
@@ -60,7 +60,7 @@ class TokenGenerator implements TokenGeneratorInterface
             throw $event->getException();
         }
 
-        $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $this->serializer->decode($signature));
+        $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $signature);
         // This event can be used to change the token
         $event = new TokenCreatingFinishedSuccessful($creationContext, $token);
         $this->eventsDispatcher->dispatch($event, $event::getName());
@@ -88,8 +88,8 @@ class TokenGenerator implements TokenGeneratorInterface
 
             // Check token signature
             $algorithm = isset($head['alg']) ? Algorithm::getByValue($head['alg']) : null;
-            $content = $this->serializer->implode([$headString, $payloadString]);
-            if ($signature !== $this->serializer->signature($content, $algorithm)) {
+            $content = $this->serializer->implode($headString, $payloadString);
+            if ($this->serializer->decode($signature) !== $this->serializer->signature($content, $algorithm)) {
                 throw new TokenValidatorException('Invalid token', TokenValidatorException::INVALID_SIGNATURE);
             }
 

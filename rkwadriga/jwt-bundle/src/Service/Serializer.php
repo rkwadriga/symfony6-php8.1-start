@@ -46,7 +46,7 @@ class Serializer implements SerializerInterface
         $algo = $algorithm?->value ?: $this->config->get(ConfigurationParam::ENCODING_ALGORITHM);
         $secret = $this->config->get(ConfigurationParam::SECRET_KEY);
 
-        return $this->encode(hash_hmac($algo, $data, $secret));
+        return hash_hmac($algo, $data, $secret);
     }
 
     public function deserialiaze(string $data): array
@@ -63,9 +63,9 @@ class Serializer implements SerializerInterface
         return $deserialized;
     }
 
-    public function implode(array $data): string
+    public function implode(string ...$parts): string
     {
-        return implode('.', $data);
+        return implode('.', $parts);
     }
 
     public function explode(string $data): array

@@ -20,7 +20,7 @@ interface SerializerInterface
 
     public function deserialiaze(string $data): array;
 
-    public function implode(array $data): string;
+    public function implode(string ...$parts): string;
 
     /**
      * @throws TokenValidatorException

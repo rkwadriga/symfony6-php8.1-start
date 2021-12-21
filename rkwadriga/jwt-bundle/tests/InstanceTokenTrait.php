@@ -13,6 +13,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\Token;
+use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 
 trait InstanceTokenTrait
 {
@@ -22,10 +23,9 @@ trait InstanceTokenTrait
     protected function createTokensPair(
         Algorithm $algorithm,
         string $userID = self::USER_ID,
-        ?int $createdAt = null,
-        ?int $lifeTime = null
+        ?int $createdAt = null
     ): array {
-        $accessToken = $this->createToken($algorithm, TokenType::ACCESS, $userID, $createdAt, $lifeTime);
+        $accessToken = $this->createToken($algorithm, TokenType::ACCESS, $userID, $createdAt);
         return [
             $accessToken,
             $this->createToken($algorithm, TokenType::REFRESH, $userID, $accessToken->getPayload()['created']),
@@ -36,24 +36,19 @@ trait InstanceTokenTrait
         Algorithm $algorithm,
         TokenType $type,
         string $userID = self::USER_ID,
-        ?int $createdAt = null,
-        ?int $lifeTime = null,
+        ?int $createdAt = null
     ): TokenInterface {
         if ($createdAt === null) {
             $createdAt = time();
         }
-        if ($lifeTime === null) {
-            $lifeTime = $type === TokenType::ACCESS ? 3600 : 15552000;
-        }
-
-        [$createdAtDateTime, $expiredAtDateTime] = $this->getLifeTime($createdAt, $lifeTime);
-        [$head, $payload] = [$this->getHead($algorithm, $type), $this->getPayload($createdAt, $userID)];
-        [$headString, $payloadString] = [$this->encode($head), $this->encode($payload)];
-        $signature = $this->getSignature($algorithm, $head, $payload);
+        [$createdAtDateTime, $expiredAtDateTime] = $this->getRefreshTokenLifeTime($createdAt, $type);
+        [$head, $payload] = [$this->getRefreshTokenHead($algorithm, $type), $this->getRefreshTokenPayload($createdAt, $userID)];
+        [$headString, $payloadString] = [$this->encodeRefreshTokenData($head), $this->encodeRefreshTokenData($payload)];
+        $signature = $this->getRefreshTokenSignature($algorithm, $head, $payload);
 
         return new Token(
             $type,
-            $headString . '.' . $payloadString . '.' . $signature,
+            $this->implodeRefreshTokenParts($headString, $payloadString, $this->encodeRefreshTokenPart($signature)),
             $createdAtDateTime,
             $expiredAtDateTime,
             $head,
@@ -65,8 +60,11 @@ trait InstanceTokenTrait
     /**
      * @return array<DateTimeImmutable>
      */
-    protected function getLifeTime(int $createdAt, int $lifeTime): array
+    protected function getRefreshTokenLifeTime(int $createdAt, TokenType $tokenType): array
     {
+        $lifeTime = $tokenType === TokenType::ACCESS
+            ? $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_LIFE_TIME)
+            : $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);
         $createdAtDateTime = new DateTime();
         $createdAtDateTime->setTimestamp($createdAt);
         $expiredAtDateTime = clone $createdAtDateTime;
@@ -78,7 +76,7 @@ trait InstanceTokenTrait
         ];
     }
 
-    protected function getHead(Algorithm $algorithm, TokenType $type): array
+    protected function getRefreshTokenHead(Algorithm $algorithm, TokenType $type): array
     {
         return [
             'alg' => $algorithm->value,
@@ -87,7 +85,7 @@ trait InstanceTokenTrait
         ];
     }
 
-    protected function getPayload(int $createdAt, string $userID): array
+    protected function getRefreshTokenPayload(int $createdAt, string $userID): array
     {
         return [
             'created' => $createdAt,
@@ -95,16 +93,25 @@ trait InstanceTokenTrait
         ];
     }
 
-    protected function encode(array $data): string
+    protected function encodeRefreshTokenPart(string $data): string
     {
-        return str_replace('=', '', base64_encode(json_encode($data)));
+        return str_replace('=', '', base64_encode($data));
     }
 
-    protected function getSignature(Algorithm $algorithm, array $head, array $payload): string
+    protected function encodeRefreshTokenData(array $data): string
     {
-        [$headString, $payloadString] = [$this->encode($head), $this->encode($payload)];
-        $contentPart = $headString . '.' . $payloadString;
+        return $this->encodeRefreshTokenPart(json_encode($data));
+    }
+
+    protected function getRefreshTokenSignature(Algorithm $algorithm, array $head, array $payload): string
+    {
+        $contentPart = $this->implodeRefreshTokenParts($this->encodeRefreshTokenData($head), $this->encodeRefreshTokenData($payload));
 
         return hash_hmac($algorithm->value, $contentPart, self::SECRET_KEY);
+    }
+
+    protected function implodeRefreshTokenParts(string ...$parts): string
+    {
+        return implode('.', $parts);
     }
 }

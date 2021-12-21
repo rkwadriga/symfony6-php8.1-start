@@ -125,7 +125,7 @@ class SerializerTest extends AbstractUnitTestCase
         ];
         $serializer = $this->createSerializerInstance();
         foreach ($testCases as $result => $case) {
-            $this->assertSame($result, $serializer->implode($case));
+            $this->assertSame($result, $serializer->implode(...$case));
         }
     }
 
