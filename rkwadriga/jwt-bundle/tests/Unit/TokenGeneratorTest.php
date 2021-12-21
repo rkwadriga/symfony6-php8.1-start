@@ -11,6 +11,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
+use Rkwadriga\JwtBundle\Service\TokenGenerator;
 
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/Unit/TokenGeneratorTest.php
@@ -48,23 +49,38 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                 // ... HeadGeneratorService mock
                 $headGeneratorServiceMock = $this->mockHeadGeneratorService(['generate' => $head]);
 
-                // Create "TokenGenerator" service instance
-                $tokenGenerator = $this->createTokenGeneratorInstance($configServiceMock, $serializerServiceMock, $headGeneratorServiceMock);
+                // Create "TokenGenerator" service instances with mocked config value for algorithm and without it
+                /** @var array<TokenGenerator> $tokenGenerators */
+                $tokenGenerators = [
+                    'mocked_algorithm' => $this->createTokenGeneratorInstance($configServiceMock, $serializerServiceMock, $headGeneratorServiceMock),
+                    'given_algorithm' => $this->createTokenGeneratorInstance($this->mockConfigService(), $serializerServiceMock, $headGeneratorServiceMock)
+                ];
 
-                // For all token creation contexts
-                foreach (TokenCreationContext::cases() as $tokenCreationContext) {
-                    $testCaseBaseError = "Test case \"{$tokenType->value}_{$algorithm->value}_{$tokenCreationContext->value}\" failed: ";
-                    // Generate token and compare it with a control one
-                    $token = $tokenGenerator->fromPayload($payload, $tokenType, $tokenCreationContext, $algorithm);
-                    $this->assertInstanceOf(Token::class, $token, $testCaseBaseError . 'Token has an incorrect type :' . $token::class);
-                    $this->assertSame($tokenType, $token->getType(), $testCaseBaseError . "Token has an invalid type: {$token->getType()->value}");
-                    $this->assertSame($tokenString, $token->getToken(), $testCaseBaseError . 'Token has an invalid token');
-                    $this->assertEquals($createdAtDateTime, $token->getCreatedAt(), $testCaseBaseError . 'Token has an invalid "createdAt"');
-                    $this->assertEquals($expiredAtDateTime, $token->getExpiredAt(), $testCaseBaseError . 'Token has an invalid "expiredAt"');
-                    $this->assertSame($head, $token->getHead(), $testCaseBaseError . 'Token has an invalid head');
-                    $this->assertSame($payload, $token->getPayload(), $testCaseBaseError . 'Token has an invalid payload');
-                    $this->assertSame($signature, $token->getSignature(), $testCaseBaseError . 'Token has an invalid signature');
+                // Test both variants of configuring algorithm
+                foreach ($tokenGenerators as $algorithmGivenType => $tokenGenerator) {
+                    // For all token creation contexts...
+                    foreach (TokenCreationContext::cases() as $tokenCreationContext) {
+                        $testCaseBaseError = "Test case \"{$tokenType->value}_{$algorithm->value}_{$tokenCreationContext->value}\" failed: ";
+
+                        // Generate token
+                        if ($algorithmGivenType === 'mocked_algorithm') {
+                            $token = $tokenGenerator->fromPayload($payload, $tokenType, $tokenCreationContext);
+                        } else {
+                            $token = $tokenGenerator->fromPayload($payload, $tokenType, $tokenCreationContext, $algorithm);
+                        }
+
+                        // Check token params
+                        $this->assertInstanceOf(Token::class, $token, $testCaseBaseError . 'Token has an incorrect type :' . $token::class);
+                        $this->assertSame($tokenType, $token->getType(), $testCaseBaseError . "Token has an invalid type: {$token->getType()->value}");
+                        $this->assertSame($tokenString, $token->getToken(), $testCaseBaseError . 'Token has an invalid token');
+                        $this->assertEquals($createdAtDateTime, $token->getCreatedAt(), $testCaseBaseError . 'Token has an invalid "createdAt"');
+                        $this->assertEquals($expiredAtDateTime, $token->getExpiredAt(), $testCaseBaseError . 'Token has an invalid "expiredAt"');
+                        $this->assertSame($head, $token->getHead(), $testCaseBaseError . 'Token has an invalid head');
+                        $this->assertSame($payload, $token->getPayload(), $testCaseBaseError . 'Token has an invalid payload');
+                        $this->assertSame($signature, $token->getSignature(), $testCaseBaseError . 'Token has an invalid signature');
+                    }
                 }
+
             }
         }
     }
