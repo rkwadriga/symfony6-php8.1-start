@@ -6,10 +6,10 @@
 
 namespace Rkwadriga\JwtBundle\Tests;
 
-use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\Service\DbManager;
 use Rkwadriga\JwtBundle\Service\HeadGenerator;
+use Rkwadriga\JwtBundle\Service\PayloadGenerator;
 
 trait InstanceServiceTrait
 {
@@ -26,8 +26,13 @@ trait InstanceServiceTrait
         );
     }
 
-    protected function createHeadGeneratorInstance(?Config $configService = null): HeadGeneratorInterface
+    protected function createHeadGeneratorInstance(?Config $configService = null): HeadGenerator
     {
         return new HeadGenerator($configService ?? $this->createConfigServiceInstance());
+    }
+
+    protected function createPayloadGeneratorInstance(): PayloadGenerator
+    {
+        return new PayloadGenerator();
     }
 }

@@ -25,7 +25,7 @@ class HeadGeneratorTest extends AbstractUnitTestCase
                 $headGenerator = $this->createHeadGeneratorInstance($config);
                 // For different payloads...
                 for ($i = 1; $i <= 3; $i++) {
-                    $errorStartMsg = "Test case \"{$tokenType->value}_{$algorithm->value}_{$i}\": ";
+                    $errorStartMsg = "Test case \"{$tokenType->value}_{$algorithm->value}_{$i}\" failed: ";
 
                     $payload = [
                         "int_pram_{$i}" => $i,
