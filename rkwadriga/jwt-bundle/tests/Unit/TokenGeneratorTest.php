@@ -45,6 +45,7 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                     'signature' => $signature,
                     'encode' => ['__map' => [[$signature, $encodedSignature]]],
                 ]);
+                // ... HeadGeneratorService mock
                 $headGeneratorServiceMock = $this->mockHeadGeneratorService(['generate' => $head]);
 
                 // Create "TokenGenerator" service instance
