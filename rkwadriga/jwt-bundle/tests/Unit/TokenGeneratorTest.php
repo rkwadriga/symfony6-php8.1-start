@@ -107,7 +107,7 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                     'signature' => $controlToken->signature,
                 ]);
 
-                // Mock "TokenGenerator" service
+                // Create "TokenGenerator" service
                 $tokenGenerator = $this->createTokenGeneratorInstance(null, $serializerServiceMock);
 
                 $testCaseBaseError = "Test testFromString, case \"{$tokenType->value}_{$algorithm->value}\" failed: ";
