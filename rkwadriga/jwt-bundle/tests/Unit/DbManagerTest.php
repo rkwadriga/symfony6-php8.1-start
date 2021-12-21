@@ -34,7 +34,7 @@ class DbManagerTest extends AbstractUnitTestCase
             $configServiceMock = $this->mockConfigService($configValues);
 
             // Create new instance of DBManager - it's constructor should create a table
-            $this->getDbManager($configServiceMock);
+            $this->createDbManagerInstance($configServiceMock);
 
             // Check that table exist
             $this->assertTrue($this->isRefreshTokenTableExist($algorithm), "Table for algorithm \"{$algorithm->value}\" should exist");
@@ -51,7 +51,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 ConfigurationParam::REFRESH_TOKENS_LIMIT->value => 2,
             ];
             $configServiceMock = $this->mockConfigService($configValues);
-            $dbManager = $this->getDbManager($configServiceMock);
+            $dbManager = $this->createDbManagerInstance($configServiceMock);
             foreach (TokenRefreshingContext::cases() as $refreshContext) {
                 $userID = $algorithm->value . '_' .  $refreshContext->value;
                 $refreshToken = $this->createToken($algorithm, TokenType::REFRESH, $userID);
@@ -76,7 +76,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 ConfigurationParam::REWRITE_ON_LIMIT_EXCEEDED->value => false,
             ];
             $configServiceMock = $this->mockConfigService($configValues);
-            $dbManager = $this->getDbManager($configServiceMock);
+            $dbManager = $this->createDbManagerInstance($configServiceMock);
 
             $userID = 'test_user_' . $algorithm->value;
 
@@ -110,7 +110,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 ConfigurationParam::ENCODING_ALGORITHM->value => $algorithm->value
             ];
             $configServiceMock = $this->mockConfigService($configValues);
-            $dbManager = $this->getDbManager($configServiceMock);
+            $dbManager = $this->createDbManagerInstance($configServiceMock);
 
             $userID = 'test_user_' . $algorithm->value;
             $refreshToken = $this->createToken($algorithm, TokenType::REFRESH, $userID);
@@ -141,7 +141,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 ConfigurationParam::ENCODING_ALGORITHM->value => $algorithm->value,
             ];
             $configServiceMock = $this->mockConfigService($configValues);
-            $dbManager = $this->getDbManager($configServiceMock);
+            $dbManager = $this->createDbManagerInstance($configServiceMock);
 
             $userID = 'test_user_' . $algorithm->value;
             $createdAt = time();
@@ -180,7 +180,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 ConfigurationParam::REFRESH_TOKENS_LIMIT->value => 3
             ];
             $configServiceMock = $this->mockConfigService($configValues);
-            $dbManager = $this->getDbManager($configServiceMock);
+            $dbManager = $this->createDbManagerInstance($configServiceMock);
 
             $userID = 'test_user_' . $algorithm->value;
             $createdAt = time();
@@ -223,7 +223,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 ConfigurationParam::ENCODING_ALGORITHM->value => $algorithm->value,
             ];
             $configServiceMock = $this->mockConfigService($configValues);
-            $dbManager = $this->getDbManager($configServiceMock);
+            $dbManager = $this->createDbManagerInstance($configServiceMock);
 
             $userID = 'test_user_' . $algorithm->value;
 

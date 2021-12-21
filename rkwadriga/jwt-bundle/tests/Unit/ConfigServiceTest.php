@@ -18,7 +18,7 @@ class ConfigServiceTest extends AbstractUnitTestCase
 {
     public function testDefaults(): void
     {
-        $configService = $this->getConfigService();
+        $configService = $this->createConfigServiceInstance();
 
         foreach (ConfigurationParam::cases() as $case) {
             [$param, $default, $actual] = [$case->value, $this->getConfigDefault($case), $configService->get($case)];

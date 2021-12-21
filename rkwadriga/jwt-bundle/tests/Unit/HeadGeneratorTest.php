@@ -22,7 +22,7 @@ class HeadGeneratorTest extends AbstractUnitTestCase
             // For all algorithms
             foreach (Algorithm::cases() as $algorithm) {
                 $config = $this->mockConfigService([ConfigurationParam::ENCODING_ALGORITHM->value => $algorithm->value]);
-                $headGenerator = $this->getHeadGenerator($config);
+                $headGenerator = $this->createHeadGeneratorInstance($config);
                 // For different payloads...
                 for ($i = 1; $i <= 3; $i++) {
                     $errorStartMsg = "Test case \"{$tokenType->value}_{$algorithm->value}_{$i}\": ";

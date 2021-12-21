@@ -13,21 +13,21 @@ use Rkwadriga\JwtBundle\Service\HeadGenerator;
 
 trait InstanceServiceTrait
 {
-    protected function getConfigService(): Config
+    protected function createConfigServiceInstance(): Config
     {
         return new Config($this->container);
     }
 
-    protected function getDbManager(?Config $configService = null): DbManager
+    protected function createDbManagerInstance(?Config $configService = null): DbManager
     {
         return new DbManager(
-            $configService ?? $this->getConfigService(),
+            $configService ?? $this->createConfigServiceInstance(),
             $this->container->get('doctrine.orm.entity_manager')
         );
     }
 
-    protected function getHeadGenerator(?Config $configService = null): HeadGeneratorInterface
+    protected function createHeadGeneratorInstance(?Config $configService = null): HeadGeneratorInterface
     {
-        return new HeadGenerator($configService ?? $this->getConfigService());
+        return new HeadGenerator($configService ?? $this->createConfigServiceInstance());
     }
 }
