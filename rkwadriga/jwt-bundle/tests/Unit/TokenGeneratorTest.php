@@ -6,12 +6,15 @@
 
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
+use Exception;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
+use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
 use Rkwadriga\JwtBundle\Service\TokenGenerator;
+use Rkwadriga\JwtBundle\Tests\Entity\TokenTestPramsEntity;
 
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/Unit/TokenGeneratorTest.php
@@ -25,29 +28,23 @@ class TokenGeneratorTest extends AbstractUnitTestCase
             // For all algorithms...
             foreach (Algorithm::cases() as $algorithm) {
                 // Create control token params
-                $created = time();
-                $userID = $tokenType->value . '_' . $algorithm->value;
-                $head = ['alg' => $algorithm->value, 'typ' => 'JWT', 'sub' => $tokenType->value];
-                $payload = ['created' => $created, 'email' => $userID];
-                [$headString, $payloadString] = [$this->encodeRefreshTokenData($head), $this->encodeRefreshTokenData($payload)];
-                [$createdAtDateTime, $expiredAtDateTime] = $this->getRefreshTokenLifeTime($created, $tokenType);
-                $contentPart = $this->implodeRefreshTokenParts($headString, $payloadString);
-                $signature = $this->getRefreshTokenSignature($algorithm, $head, $payload);
-                $encodedSignature = $this->encodeRefreshTokenPart($signature);
-                $tokenString = $this->implodeRefreshTokenParts($contentPart, $encodedSignature);
+                $controlToken = $this->generateTestTokenParams($tokenType, $algorithm);
 
                 // Mock services...
                 // ... ConfigService mock
                 $configServiceMock = $this->mockConfigService([ConfigurationParam::ENCODING_ALGORITHM->value => $algorithm->value]);
                 // ... SerializerService mock
                 $serializerServiceMock = $this->mockSerializerService([
-                    'serialize' => ['__map' => [[$head, $headString], [$payload, $payloadString]]],
-                    'implode' => ['__map' => [[$headString, $payloadString, $contentPart], [$contentPart, $encodedSignature, $tokenString]]],
-                    'signature' => $signature,
-                    'encode' => ['__map' => [[$signature, $encodedSignature]]],
+                    'serialize' => ['__map' => [[$controlToken->head, $controlToken->headString], [$controlToken->payload, $controlToken->payloadString]]],
+                    'implode' => ['__map' => [
+                        [$controlToken->headString, $controlToken->payloadString, $controlToken->contentPart],
+                        [$controlToken->contentPart, $controlToken->encodedSignature, $controlToken->tokenString]
+                    ]],
+                    'signature' => $controlToken->signature,
+                    'encode' => $controlToken->encodedSignature,
                 ]);
                 // ... HeadGeneratorService mock
-                $headGeneratorServiceMock = $this->mockHeadGeneratorService(['generate' => $head]);
+                $headGeneratorServiceMock = $this->mockHeadGeneratorService(['generate' => $controlToken->head]);
 
                 // Create "TokenGenerator" service instances with mocked config value for algorithm and without it
                 /** @var array<TokenGenerator> $tokenGenerators */
@@ -60,28 +57,105 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                 foreach ($tokenGenerators as $algorithmGivenType => $tokenGenerator) {
                     // For all token creation contexts...
                     foreach (TokenCreationContext::cases() as $tokenCreationContext) {
-                        $testCaseBaseError = "Test case \"{$tokenType->value}_{$algorithm->value}_{$tokenCreationContext->value}\" failed: ";
+                        $testCaseBaseError = "Test testFromPayload, case \"{$tokenType->value}_{$algorithm->value}_{$tokenCreationContext->value}\" failed: ";
 
                         // Generate token
                         if ($algorithmGivenType === 'mocked_algorithm') {
-                            $token = $tokenGenerator->fromPayload($payload, $tokenType, $tokenCreationContext);
+                            $token = $tokenGenerator->fromPayload($controlToken->payload, $tokenType, $tokenCreationContext);
                         } else {
-                            $token = $tokenGenerator->fromPayload($payload, $tokenType, $tokenCreationContext, $algorithm);
+                            $token = $tokenGenerator->fromPayload($controlToken->payload, $tokenType, $tokenCreationContext, $algorithm);
                         }
 
                         // Check token params
-                        $this->assertInstanceOf(Token::class, $token, $testCaseBaseError . 'Token has an incorrect type :' . $token::class);
-                        $this->assertSame($tokenType, $token->getType(), $testCaseBaseError . "Token has an invalid type: {$token->getType()->value}");
-                        $this->assertSame($tokenString, $token->getToken(), $testCaseBaseError . 'Token has an invalid token');
-                        $this->assertEquals($createdAtDateTime, $token->getCreatedAt(), $testCaseBaseError . 'Token has an invalid "createdAt"');
-                        $this->assertEquals($expiredAtDateTime, $token->getExpiredAt(), $testCaseBaseError . 'Token has an invalid "expiredAt"');
-                        $this->assertSame($head, $token->getHead(), $testCaseBaseError . 'Token has an invalid head');
-                        $this->assertSame($payload, $token->getPayload(), $testCaseBaseError . 'Token has an invalid payload');
-                        $this->assertSame($signature, $token->getSignature(), $testCaseBaseError . 'Token has an invalid signature');
+                        $this->checkTokenParams($token, $controlToken, $tokenType, $testCaseBaseError);
                     }
                 }
-
             }
         }
+    }
+
+    public function testFromString(): void
+    {
+        // For all token types...
+        foreach (TokenType::cases() as $tokenType) {
+            // For all algorithms...
+            foreach (Algorithm::cases() as $algorithm) {
+                // Create control token params
+                $controlToken = $this->generateTestTokenParams($tokenType, $algorithm);
+                $invalidHead = array_merge($controlToken->head, ['sub' => $tokenType === TokenType::ACCESS ? TokenType::REFRESH->value : TokenType::ACCESS->value]);
+                $invalidSignature = $this->getRefreshTokenSignature($algorithm, $invalidHead, $controlToken->payload);
+                $tokenWithInvalidHead = $this->implodeRefreshTokenParts('__invalid_head', $controlToken->payloadString, $controlToken->encodedSignature);
+                $tokenWithInvalidSignature = $this->implodeRefreshTokenParts($controlToken->headString, $controlToken->payloadString, '__invalid_signature');
+
+                // ... SerializerService mock
+                $serializerServiceMock = $this->mockSerializerService([
+                    'explode' => ['__map' => [
+                        [$controlToken->tokenString, [$controlToken->headString, $controlToken->payloadString, $controlToken->encodedSignature]],
+                        [$tokenWithInvalidHead, ['__invalid_head', $controlToken->payloadString, $controlToken->encodedSignature]],
+                        [$tokenWithInvalidSignature, [$controlToken->headString, $controlToken->payloadString, '__invalid_signature']],
+                    ]],
+                    'deserialiaze' => ['__map' => [
+                        [$controlToken->headString, $controlToken->head],
+                        [$controlToken->payloadString, $controlToken->payload],
+                        ['__invalid_head', $invalidHead],
+                    ]],
+                    'implode' => $controlToken->contentPart,
+                    'decode' => ['__map' => [
+                        [$controlToken->encodedSignature, $controlToken->signature],
+                        ['__invalid_signature', $invalidSignature],
+                    ]],
+                    'signature' => $controlToken->signature,
+                ]);
+
+                // Mock "TokenGenerator" service
+                $tokenGenerator = $this->createTokenGeneratorInstance(null, $serializerServiceMock);
+
+                $testCaseBaseError = "Test testFromString, case \"{$tokenType->value}_{$algorithm->value}\" failed: ";
+
+                // Generate token
+                $token = $tokenGenerator->fromString($controlToken->tokenString, $tokenType);
+
+                // Check token params
+                $this->checkTokenParams($token, $controlToken, $tokenType, $testCaseBaseError);
+
+                // Test "Invalid token type" exception
+                $exceptionWasTrow = false;
+                try {
+                    $tokenGenerator->fromString($tokenWithInvalidHead, $tokenType);
+                } catch (Exception $e) {
+                    $exceptionWasTrow = true;
+                    $this->assertInstanceOf(TokenValidatorException::class, $e);
+                    $this->assertSame(TokenValidatorException::INVALID_TYPE, $e->getCode());
+                }
+                if (!$exceptionWasTrow) {
+                    $this->assertEquals(0 ,1, $testCaseBaseError . 'TokenValidatorException was not trow');
+                }
+
+                // Test "Invalid signature" exception
+                $exceptionWasTrow = false;
+                try {
+                    $tokenGenerator->fromString($tokenWithInvalidSignature, $tokenType);
+                } catch (Exception $e) {
+                    $exceptionWasTrow = true;
+                    $this->assertInstanceOf(TokenValidatorException::class, $e);
+                    $this->assertSame(TokenValidatorException::INVALID_SIGNATURE, $e->getCode());
+                }
+                if (!$exceptionWasTrow) {
+                    $this->assertEquals(0 ,1, $testCaseBaseError . 'TokenValidatorException was not trow');
+                }
+            }
+        }
+    }
+
+    private function checkTokenParams(Token $token, TokenTestPramsEntity $controlToken, TokenType $tokenType, string $testCaseBaseError): void
+    {
+        $this->assertInstanceOf(Token::class, $token, $testCaseBaseError . 'Token has an incorrect type :' . $token::class);
+        $this->assertSame($tokenType, $token->getType(), $testCaseBaseError . "Token has an invalid type: {$token->getType()->value}");
+        $this->assertSame($controlToken->tokenString, $token->getToken(), $testCaseBaseError . 'Token has an invalid token');
+        $this->assertEquals($controlToken->createdAt, $token->getCreatedAt(), $testCaseBaseError . 'Token has an invalid "createdAt"');
+        $this->assertEquals($controlToken->expiredAt, $token->getExpiredAt(), $testCaseBaseError . 'Token has an invalid "expiredAt"');
+        $this->assertSame($controlToken->head, $token->getHead(), $testCaseBaseError . 'Token has an invalid head');
+        $this->assertSame($controlToken->payload, $token->getPayload(), $testCaseBaseError . 'Token has an invalid payload');
+        $this->assertSame($controlToken->signature, $token->getSignature(), $testCaseBaseError . 'Token has an invalid signature');
     }
 }

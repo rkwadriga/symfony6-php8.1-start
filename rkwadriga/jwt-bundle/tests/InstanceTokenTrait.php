@@ -14,6 +14,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Tests\Entity\TokenTestPramsEntity;
 
 trait InstanceTokenTrait
 {
@@ -54,6 +55,39 @@ trait InstanceTokenTrait
             $head,
             $payload,
             $signature
+        );
+    }
+
+    protected function generateTestTokenParams(TokenType $tokenType, Algorithm $algorithm, ?int $created = null, ?string $userID = null): TokenTestPramsEntity
+    {
+        if ($created === null) {
+            $created = time();
+        }
+        if ($userID === null) {
+            $userID = $tokenType->value . '_' . $algorithm->value;
+        }
+        $head = ['alg' => $algorithm->value, 'typ' => 'JWT', 'sub' => $tokenType->value];
+        $payload = ['created' => $created, 'email' => $userID];
+        [$headString, $payloadString] = [$this->encodeRefreshTokenData($head), $this->encodeRefreshTokenData($payload)];
+        [$createdAtDateTime, $expiredAtDateTime] = $this->getRefreshTokenLifeTime($created, $tokenType);
+        $contentPart = $this->implodeRefreshTokenParts($headString, $payloadString);
+        $signature = $this->getRefreshTokenSignature($algorithm, $head, $payload);
+        $encodedSignature = $this->encodeRefreshTokenPart($signature);
+        $tokenString = $this->implodeRefreshTokenParts($contentPart, $encodedSignature);
+
+        return new TokenTestPramsEntity(
+            $created,
+            $userID,
+            $head,
+            $payload,
+            $headString,
+            $payloadString,
+            $createdAtDateTime,
+            $expiredAtDateTime,
+            $contentPart,
+            $signature,
+            $encodedSignature,
+            $tokenString
         );
     }
 
