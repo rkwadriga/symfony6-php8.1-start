@@ -6,8 +6,10 @@
 
 namespace Rkwadriga\JwtBundle\Tests;
 
+use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\Service\DbManager;
+use Rkwadriga\JwtBundle\Service\HeadGenerator;
 
 trait InstanceServiceTrait
 {
@@ -22,5 +24,10 @@ trait InstanceServiceTrait
             $configService ?? $this->getConfigService(),
             $this->container->get('doctrine.orm.entity_manager')
         );
+    }
+
+    protected function getHeadGenerator(?Config $configService = null): HeadGeneratorInterface
+    {
+        return new HeadGenerator($configService ?? $this->getConfigService());
     }
 }
