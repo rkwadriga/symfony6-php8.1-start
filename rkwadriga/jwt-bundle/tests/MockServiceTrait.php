@@ -19,10 +19,10 @@ trait MockServiceTrait
             $returnValuesMap[] = [$param, null, $returnValues[$param->value] ?? $this->getConfigDefault($param)];
         }
 
-        return $this->getMock(Config::class, ['get' => ['__map' => $returnValuesMap]]);
+        return $this->createMock(Config::class, ['get' => ['__map' => $returnValuesMap]]);
     }
 
-    protected function getMock(string $class, array $methodsMock = []): MockObject
+    protected function createMock(string $class, array $methodsMock = []): MockObject
     {
         $mock = $this->getMockBuilder($class)->disableOriginalConstructor()->getMock();
         foreach ($methodsMock as $method => $returnValue) {
