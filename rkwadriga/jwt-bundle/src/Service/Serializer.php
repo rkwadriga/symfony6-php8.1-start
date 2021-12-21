@@ -25,7 +25,11 @@ class Serializer implements SerializerInterface
 
     public function decode(string $data): string
     {
-        if (($decoded = base64_decode($data)) === false) {
+        if ($data === '') {
+            return '';
+        }
+
+        if (($decoded = base64_decode($data)) === false || $decoded === '') {
             throw new SerializerException("Invalid data \"{$data}\"", SerializerException::INVALID_BASE64_DATA);
         }
 

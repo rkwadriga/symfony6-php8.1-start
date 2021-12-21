@@ -1,4 +1,4 @@
 rkwadriga_jwt:
     #refresh_tokens_table: refresh_token_rk
     #refresh_tokens_limit: 3
-    #encoding_algorithm: SHA256
+    #encoding_algorithm: SHA512

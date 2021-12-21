@@ -10,6 +10,7 @@ use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\Service\DbManager;
 use Rkwadriga\JwtBundle\Service\HeadGenerator;
 use Rkwadriga\JwtBundle\Service\PayloadGenerator;
+use Rkwadriga\JwtBundle\Service\Serializer;
 
 trait InstanceServiceTrait
 {
@@ -34,5 +35,10 @@ trait InstanceServiceTrait
     protected function createPayloadGeneratorInstance(): PayloadGenerator
     {
         return new PayloadGenerator();
+    }
+
+    protected function createSerializerInstance(?Config $configService = null): Serializer
+    {
+        return new Serializer($configService ?? $this->createConfigServiceInstance());
     }
 }
