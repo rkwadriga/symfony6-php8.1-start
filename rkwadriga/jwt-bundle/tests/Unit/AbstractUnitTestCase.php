@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
-use Rkwadriga\JwtBundle\Tests\AbstractTestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Tests\InstanceTokenTrait;
 use Rkwadriga\JwtBundle\Tests\InstanceServiceTrait;
@@ -15,7 +15,7 @@ use Rkwadriga\JwtBundle\Tests\ReflectionTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 
-abstract class AbstractUnitTestCase extends AbstractTestCase
+abstract class AbstractUnitTestCase extends KernelTestCase
 {
     use ConfigDefaultsTrait;
     use MockServiceTrait;
