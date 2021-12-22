@@ -15,6 +15,7 @@ use Rkwadriga\JwtBundle\Service\PayloadGenerator;
 use Rkwadriga\JwtBundle\Service\Serializer;
 use Rkwadriga\JwtBundle\Service\TokenGenerator;
 use Rkwadriga\JwtBundle\Service\TokenIdentifier;
+use Rkwadriga\JwtBundle\Service\TokenResponseCreator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
@@ -51,6 +52,11 @@ trait InstanceServiceTrait
     protected function createTokenIdentifierInstance(?Config $configService = null): TokenIdentifier
     {
         return new TokenIdentifier($configService ?? $this->createConfigServiceInstance());
+    }
+
+    protected function createTokenResponseCreatorInstance(): TokenResponseCreator
+    {
+        return new TokenResponseCreator();
     }
 
     protected function createTokenGeneratorInstance(
