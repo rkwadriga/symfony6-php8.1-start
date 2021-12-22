@@ -104,7 +104,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 $this->assertSame(DbServiceException::TOKENS_COUNT_EXCEEDED, $e->getCode());
             }
             if (!$exceptionWasTrow) {
-                $this->assertEquals(0 ,1, $testCaseBaseError . '"Refresh tokens count exceeded" exception was not trow');
+                $this->assertEquals(0 ,1, $testCaseBaseError . '"Refresh tokens count exceeded" exception was not thrown');
             }
         }
     }
@@ -247,7 +247,7 @@ class DbManagerTest extends AbstractUnitTestCase
                 $this->assertSame(DbServiceException::REFRESH_TOKEN_MISSED, $e->getCode());
             }
             if (!$exceptionWasTrow) {
-                $this->assertEquals(0 ,1, $testCaseBaseError . '"Refresh tokens missed" exception was not trow');
+                $this->assertEquals(0 ,1, $testCaseBaseError . '"Refresh tokens missed" exception was not thrown');
             }
         }
     }

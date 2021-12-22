@@ -90,7 +90,7 @@ class TokenIdentifierTest extends AbstractUnitTestCase
                                 $this->assertSame($code, $e->getCode(), $testCaseBaseError . "\"Token not found\" exception has an invalid code: \"{$e->getCode()}\"");
                             }
                             if (!$exceptionWasTrow) {
-                                $this->assertEquals(0 ,1, $testCaseBaseError . '"Token not found" exception was not trow');
+                                $this->assertEquals(0 ,1, $testCaseBaseError . '"Token not found" exception was not thrown');
                             }
 
                             // Check "Invalid token" exception
@@ -118,7 +118,7 @@ class TokenIdentifierTest extends AbstractUnitTestCase
                             }
 
                             if ($tokenType === TokenType::ACCESS && $tokenParamLocation === TokenParamLocation::HEADER && !$exceptionWasTrow) {
-                                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token" exception was not trow');
+                                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token" exception was not thrown');
                             }
                         }
                     }

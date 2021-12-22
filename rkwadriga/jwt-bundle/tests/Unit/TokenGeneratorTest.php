@@ -128,7 +128,7 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                     $this->assertSame(TokenValidatorException::INVALID_TYPE, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token type" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token type" exception was not thrown');
                 }
 
                 // Test "Invalid signature" exception
@@ -141,7 +141,7 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                     $this->assertSame(TokenValidatorException::INVALID_SIGNATURE, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid signature" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid signature" exception was not thrown');
                 }
             }
         }

@@ -59,7 +59,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                     $this->assertSame($code, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Token expired" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Token expired" exception was not thrown');
                 }
 
                 // Check "Invalid token type" exception
@@ -74,7 +74,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                     $this->assertSame($code, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token type" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token type" exception was not thrown');
                 }
 
                 // Check "Invalid token payload" exception
@@ -91,7 +91,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                     $this->assertSame($code, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token payload" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token payload" exception was not thrown');
                 }
 
                 // Check "Invalid token head (token type not set)" exception
@@ -108,7 +108,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                     $this->assertSame($code, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (token type not set)" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (token type not set)" exception was not thrown');
                 }
 
                 // Check "Invalid token head (token type is null)" exception
@@ -124,7 +124,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                     $this->assertSame($code, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (token type is null)" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (token type is null)" exception was not thrown');
                 }
 
                 // Check "Invalid token head (invalid token type)" exception
@@ -140,7 +140,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                     $this->assertSame($code, $e->getCode());
                 }
                 if (!$exceptionWasTrow) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (invalid token type)" exception was not trow');
+                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (invalid token type)" exception was not thrown');
                 }
             }
         }
@@ -182,7 +182,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
             if (!$exceptionWasTrow) {
-                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID not set)" exception was not trow');
+                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID not set)" exception was not thrown');
             }
 
             // Check "Invalid refresh token payload (userID is null)" exception
@@ -197,7 +197,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
             if (!$exceptionWasTrow) {
-                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID is null)" exception was not trow');
+                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID is null)" exception was not thrown');
             }
 
             // Check "Invalid refresh token payload (userID is invalid)" exception
@@ -212,7 +212,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
             if (!$exceptionWasTrow) {
-                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID is invalid)" exception was not trow');
+                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID is invalid)" exception was not thrown');
             }
 
             // Check "Invalid refresh token payload ("created" is invalid)" exception
@@ -227,7 +227,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
             if (!$exceptionWasTrow) {
-                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload ("created" is invalid)" exception was not trow');
+                $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload ("created" is invalid)" exception was not thrown');
             }
         }
     }
