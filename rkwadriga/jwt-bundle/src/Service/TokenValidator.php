@@ -69,7 +69,7 @@ class TokenValidator implements TokenValidatorInterface
     public function validateRefresh(TokenInterface $refreshToken, TokenInterface $accessToken): void
     {
         $userIdentifier = $this->config->get(ConfigurationParam::USER_IDENTIFIER);
-        if ($refreshToken->getPayload()[$userIdentifier] !== $accessToken->getPayload()[$userIdentifier]) {
+        if (!isset($refreshToken->getPayload()[$userIdentifier]) || $refreshToken->getPayload()[$userIdentifier] !== $accessToken->getPayload()[$userIdentifier]) {
             throw new TokenValidatorException('Invalid refresh token payload', TokenValidatorException::INVALID_REFRESH_TOKEN);
         }
 
