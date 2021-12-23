@@ -10,12 +10,13 @@ use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 
 trait DatabaseTrait
 {
-    protected function isRefreshTokenTableExist(Algorithm $algorithm): bool
+    protected function isRefreshTokenTableExist(Algorithm|string $algorithm): bool
     {
         $connection = $this->entityManager->getConnection();
         $schemaManager = $connection->createSchemaManager();
+        $table = is_string($algorithm) ? $algorithm : $this->getRefreshTokenTableName($algorithm);
 
-        return $schemaManager->tablesExist([$this->getRefreshTokenTableName($algorithm)]);
+        return $schemaManager->tablesExist([$table]);
     }
 
     protected function dropRefreshTokenTables(): void

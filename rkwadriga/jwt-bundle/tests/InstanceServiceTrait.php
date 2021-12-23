@@ -90,13 +90,13 @@ trait InstanceServiceTrait
     }
 
     protected function createLoginAuthenticatorInstance(
+        ?UserProviderInterface $userProvider = null,
+        ?PasswordHasherFactoryInterface $hasherFactory = null,
         ?Config $configService = null,
         ?PayloadGenerator $payloadGenerator = null,
         ?TokenGenerator $tokenGenerator = null,
         ?DbManager $dbManager = null,
         ?TokenResponseCreator $tokenResponseCreator = null,
-        ?UserProviderInterface $userProvider = null,
-        ?PasswordHasherFactoryInterface $hasherFactory = null,
         ?EventDispatcherInterface $eventDispatcher = null,
     ): LoginAuthenticator {
         return new LoginAuthenticator(

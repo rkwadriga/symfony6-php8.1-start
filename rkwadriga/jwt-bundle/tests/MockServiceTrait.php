@@ -6,7 +6,9 @@
 
 namespace Rkwadriga\JwtBundle\Tests;
 
+use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
+use Rkwadriga\JwtBundle\Entity\User;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\Service\HeadGenerator;
@@ -16,6 +18,9 @@ use Rkwadriga\JwtBundle\Service\TokenGenerator;
 use Rkwadriga\JwtBundle\Service\TokenIdentifier;
 use Rkwadriga\JwtBundle\Service\TokenResponseCreator;
 use Rkwadriga\JwtBundle\Service\TokenValidator;
+use Symfony\Bridge\Doctrine\Security\User\EntityUserProvider;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactory;
+use Symfony\Component\PasswordHasher\Hasher\PlaintextPasswordHasher;
 
 trait MockServiceTrait
 {
@@ -64,12 +69,25 @@ trait MockServiceTrait
         return $this->createMock(TokenValidator::class, $methodsMock);
     }
 
+    protected function mockPasswordHasherFactory(string $hashingResult = '12345', bool $verifyingResult = true): PasswordHasherFactory
+    {
+        $hasherMock = $this->createMock(PlaintextPasswordHasher::class, ['hash' => $hashingResult, 'verify' => $verifyingResult]);
+        return $this->createMock(PasswordHasherFactory::class, ['getPasswordHasher' => $hasherMock]);
+    }
+
+    protected function mockUserProvider(User|Exception $user): EntityUserProvider
+    {
+        return $this->createMock(EntityUserProvider::class, ['loadUserByIdentifier' => $user]);
+    }
+
     protected function createMock(string $class, array $methodsMock = []): MockObject
     {
         $mock = $this->getMockBuilder($class)->disableOriginalConstructor()->getMock();
         foreach ($methodsMock as $method => $returnValue) {
             if (is_array($returnValue) && isset($returnValue['__map'])) {
                 $mock->method($method)->willReturnMap($returnValue['__map']);
+            } elseif ($returnValue instanceof Exception) {
+                $mock->method($method)->willThrowException($returnValue);
             } else {
                 $mock->method($method)->willReturn($returnValue);
             }

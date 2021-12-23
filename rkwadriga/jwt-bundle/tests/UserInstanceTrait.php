@@ -10,13 +10,33 @@ use Doctrine\ORM\Tools\SchemaTool;
 use Rkwadriga\JwtBundle\Entity\User;
 use Rkwadriga\JwtBundle\Exception\DbServiceException;
 
-trait CreateUserTableTrait
+trait UserInstanceTrait
 {
-    public function setUp(): void
+    protected static string $userID = 'test_user@mail.com';
+    protected static string $password = '12345';
+
+    protected function setUp(): void
     {
         parent::setUp();
 
         $this->createUserTable();
+        $this->clearUserTable();
+    }
+
+    protected function createUser(?string $email = null, ?string $password = null, array $roles = []): User
+    {
+        if ($email === null) {
+            $email = static::$userID;
+        }
+        if ($password === null) {
+            $password = static::$password;
+        }
+
+        $user = new User($email, $password, $roles);
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+
+        return $user;
     }
 
     private function createUserTable(): void
@@ -40,5 +60,12 @@ trait CreateUserTableTrait
                 $e
             );
         }
+    }
+
+    private function clearUserTable(): void
+    {
+        $connection = $this->entityManager->getConnection();
+        $platform = $connection->getDatabasePlatform();
+        $connection->executeStatement($platform->getTruncateTableSQL('user'));
     }
 }

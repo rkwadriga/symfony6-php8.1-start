@@ -29,7 +29,7 @@ abstract class AbstractUnitTestCase extends KernelTestCase
     protected ContainerInterface $container;
     protected EntityManagerInterface $entityManager;
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
         $kernel = self::bootKernel();
