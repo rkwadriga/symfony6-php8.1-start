@@ -6,8 +6,6 @@
 
 namespace Rkwadriga\JwtBundle\Tests\E2e;
 
-use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
-
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/E2e/LoginAuthenticatorTest.php
  */
@@ -15,6 +13,12 @@ class LoginAuthenticatorTest extends AbstractE2eTestCase
 {
     public function testSuccessfulLogin(): void
     {
-        dd($this->router->createRoute($this->getConfigDefault(ConfigurationParam::LOGIN_URL)));
+        $this->send($this->loginUrl, [
+            $this->loginParam => 'test_user@mail.com',
+            $this->passwordParam => 'test_passwd',
+        ]);
+
+        dd($this->getErrorResponseParams());
+        dd($this->getResponseStatusCode(), $this->getResponseParams());
     }
 }

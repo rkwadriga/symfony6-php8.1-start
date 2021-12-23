@@ -1,13 +1,13 @@
 services:
-    Rkwadriga\JwtBundle\Service\Router\Loader:
-        arguments:
-            - '@Rkwadriga\JwtBundle\Service\Config'
-        tags: [routing.loader]
-
     Rkwadriga\JwtBundle\Service\Config:
         arguments:
             - '@service_container'
         public: false
+
+    Rkwadriga\JwtBundle\Service\Router\Loader:
+        arguments:
+            - '@Rkwadriga\JwtBundle\Service\Config'
+        tags: [ routing.loader ]
 
     Rkwadriga\JwtBundle\Service\PayloadGenerator: ~
     Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface:
