@@ -11,6 +11,7 @@ use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Service\Router\Generator;
+use Rkwadriga\JwtBundle\Tests\CreateUserTableTrait;
 use Rkwadriga\JwtBundle\Tests\RequestParamsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -22,6 +23,7 @@ abstract class AbstractE2eTestCase extends WebTestCase
     use ConfigDefaultsTrait;
     use RequestParamsTrait;
     use AuthenticationTrait;
+    use CreateUserTableTrait;
 
     protected ?KernelBrowser $client = null;
     protected ContainerInterface $container;

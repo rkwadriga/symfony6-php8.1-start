@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Tests;
 
+use Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator;
 use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface;
 use Rkwadriga\JwtBundle\Service\Config;
@@ -19,6 +20,12 @@ use Rkwadriga\JwtBundle\Service\TokenResponseCreator;
 use Rkwadriga\JwtBundle\Service\TokenValidator;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Bridge\Doctrine\Security\User\EntityUserProvider;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactory;
+use Symfony\Component\Serializer\SerializerInterface as ResponseSerializerInterface;
+use Symfony\Component\Serializer\Serializer as ResponseSerializer;
 
 trait InstanceServiceTrait
 {
@@ -69,6 +76,7 @@ trait InstanceServiceTrait
         ?Config $configService = null,
         ?SerializerInterface $serializer = null,
         ?HeadGeneratorInterface $headGenerator = null,
+        ?ResponseSerializerInterface $responseSerializer = null,
         ?EventDispatcherInterface $eventDispatcher = null
     ): TokenGenerator {
         $configService = $configService ?? $this->createConfigServiceInstance();
@@ -78,6 +86,29 @@ trait InstanceServiceTrait
             $eventDispatcher ?? $this->createMock(EventDispatcher::class),
             $serializer ?? $this->createSerializerInstance($configService),
             $headGenerator ?? $this->createHeadGeneratorInstance($configService)
+        );
+    }
+
+    protected function createLoginAuthenticatorInstance(
+        ?Config $configService = null,
+        ?PayloadGenerator $payloadGenerator = null,
+        ?TokenGenerator $tokenGenerator = null,
+        ?DbManager $dbManager = null,
+        ?TokenResponseCreator $tokenResponseCreator = null,
+        ?UserProviderInterface $userProvider = null,
+        ?PasswordHasherFactoryInterface $hasherFactory = null,
+        ?EventDispatcherInterface $eventDispatcher = null,
+    ): LoginAuthenticator {
+        return new LoginAuthenticator(
+            $configService ?? $this->createConfigServiceInstance(),
+            $eventDispatcher ?? $this->createMock(EventDispatcher::class),
+            $userProvider ?? $this->createMock(EntityUserProvider::class),
+            $hasherFactory ?? $this->createMock(PasswordHasherFactory::class),
+            $responseSerializer ?? $this->createMock(ResponseSerializer::class),
+            $payloadGenerator ?? $this->createMock(PayloadGenerator::class),
+            $tokenGenerator ?? $this->createMock(TokenGenerator::class),
+            $dbManager ?? $this->createMock(DbManager::class),
+            $tokenResponseCreator ?? $this->createMock(TokenResponseCreator::class),
         );
     }
 }

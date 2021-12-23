@@ -6,7 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
-use Rkwadriga\JwtBundle\Tests\Entity\UserEntity;
+use Rkwadriga\JwtBundle\Entity\User;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken;
 
@@ -17,7 +17,7 @@ class PayloadGeneratorTest extends AbstractUnitTestCase
 {
     public function testGenerate(): void
     {
-        $user = new UserEntity('test_user@mail.com', 'passwd', ['TEST_ROLE']);
+        $user = new User('test_user@mail.com', 'passwd', ['TEST_ROLE']);
         $authToken = $this->createMock(PostAuthenticationToken::class, ['getUser' => $user, 'getUserIdentifier' => 'email']);
         $request = $this->createMock(Request::class);
 
