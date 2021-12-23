@@ -119,28 +119,28 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                 $this->checkTokenParams($token, $controlToken, $tokenType, $testCaseBaseError);
 
                 // Test "Invalid token type" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 try {
                     $tokenGenerator->fromString($tokenWithInvalidHead, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame(TokenValidatorException::INVALID_TYPE, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token type" exception was not thrown');
                 }
 
                 // Test "Invalid signature" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 try {
                     $tokenGenerator->fromString($tokenWithInvalidSignature, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame(TokenValidatorException::INVALID_SIGNATURE, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid signature" exception was not thrown');
                 }
             }

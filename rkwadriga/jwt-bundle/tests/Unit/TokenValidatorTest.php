@@ -45,7 +45,7 @@ class TokenValidatorTest extends AbstractUnitTestCase
                 $tokenValidatorService->validate($tokenMock, $tokenType);
 
                 // Check "Token expired" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 $lifeTime = $this->getConfigDefault($tokenType === TokenType::ACCESS ? ConfigurationParam::ACCESS_TOKEN_LIFE_TIME : ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);
                 $invalidExpiredAt = DateTime::createFromInterface($controlToken->getExpiredAt());
                 $invalidExpiredAt->add(DateInterval::createFromDateString("-{$lifeTime} seconds"));
@@ -53,93 +53,93 @@ class TokenValidatorTest extends AbstractUnitTestCase
                 try {
                     $tokenValidatorService->validate($invalidTokenMock, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::ACCESS_TOKEN_EXPIRED : TokenValidatorException::REFRESH_TOKEN_EXPIRED;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame($code, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Token expired" exception was not thrown');
                 }
 
                 // Check "Invalid token type" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 $invalidTokenMock = $this->createMock(Token::class, array_merge($tokenMethodsMock, ['getType' => $invalidTokenType]));
                 try {
                     $tokenValidatorService->validate($invalidTokenMock, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame($code, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token type" exception was not thrown');
                 }
 
                 // Check "Invalid token payload" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 $invalidPayload = $controlToken->getPayload();
                 unset($invalidPayload[$this->getConfigDefault(ConfigurationParam::USER_IDENTIFIER)]);
                 $invalidTokenMock = $this->createMock(Token::class, array_merge($tokenMethodsMock, ['getPayload' => $invalidPayload]));
                 try {
                     $tokenValidatorService->validate($invalidTokenMock, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame($code, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token payload" exception was not thrown');
                 }
 
                 // Check "Invalid token head (token type not set)" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 $invalidHead = $controlToken->getHead();
                 unset($invalidHead['sub']);
                 $invalidTokenMock = $this->createMock(Token::class, array_merge($tokenMethodsMock, ['getHead' => $invalidHead]));
                 try {
                     $tokenValidatorService->validate($invalidTokenMock, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame($code, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (token type not set)" exception was not thrown');
                 }
 
                 // Check "Invalid token head (token type is null)" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 $invalidHead = array_merge($controlToken->getHead(), ['sub' => null]);
                 $invalidTokenMock = $this->createMock(Token::class, array_merge($tokenMethodsMock, ['getHead' => $invalidHead]));
                 try {
                     $tokenValidatorService->validate($invalidTokenMock, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame($code, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (token type is null)" exception was not thrown');
                 }
 
                 // Check "Invalid token head (invalid token type)" exception
-                $exceptionWasTrow = false;
+                $exceptionWasThrown = false;
                 $invalidHead = array_merge($controlToken->getHead(), ['sub' => $invalidTokenType->value]);
                 $invalidTokenMock = $this->createMock(Token::class, array_merge($tokenMethodsMock, ['getHead' => $invalidHead]));
                 try {
                     $tokenValidatorService->validate($invalidTokenMock, $tokenType);
                 } catch (Exception $e) {
-                    $exceptionWasTrow = true;
+                    $exceptionWasThrown = true;
                     $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
                     $this->assertInstanceOf(TokenValidatorException::class, $e);
                     $this->assertSame($code, $e->getCode());
                 }
-                if (!$exceptionWasTrow) {
+                if (!$exceptionWasThrown) {
                     $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token head (invalid token type)" exception was not thrown');
                 }
             }
@@ -170,63 +170,63 @@ class TokenValidatorTest extends AbstractUnitTestCase
             $tokenValidatorService->validateRefresh($refreshTokenMock, $accessTokenMock);
 
             // Check "Invalid refresh token payload (userID not set)" exception
-            $exceptionWasTrow = false;
+            $exceptionWasThrown = false;
             $invalidPayload = $controlRefreshToken->getPayload();
             unset($invalidPayload[$userIdentifier]);
             $invalidRefreshTokenMethodsMock = $this->createMock(Token::class, array_merge($refreshTokenMethodsMock, ['getPayload' => $invalidPayload]));
             try {
                 $tokenValidatorService->validateRefresh($invalidRefreshTokenMethodsMock, $accessTokenMock);
             } catch (Exception $e) {
-                $exceptionWasTrow = true;
+                $exceptionWasThrown = true;
                 $this->assertInstanceOf(TokenValidatorException::class, $e);
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
-            if (!$exceptionWasTrow) {
+            if (!$exceptionWasThrown) {
                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID not set)" exception was not thrown');
             }
 
             // Check "Invalid refresh token payload (userID is null)" exception
-            $exceptionWasTrow = false;
+            $exceptionWasThrown = false;
             $invalidPayload = array_merge($controlRefreshToken->getPayload(), [$userIdentifier => null]);
             $invalidRefreshTokenMethodsMock = $this->createMock(Token::class, array_merge($refreshTokenMethodsMock, ['getPayload' => $invalidPayload]));
             try {
                 $tokenValidatorService->validateRefresh($invalidRefreshTokenMethodsMock, $accessTokenMock);
             } catch (Exception $e) {
-                $exceptionWasTrow = true;
+                $exceptionWasThrown = true;
                 $this->assertInstanceOf(TokenValidatorException::class, $e);
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
-            if (!$exceptionWasTrow) {
+            if (!$exceptionWasThrown) {
                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID is null)" exception was not thrown');
             }
 
             // Check "Invalid refresh token payload (userID is invalid)" exception
-            $exceptionWasTrow = false;
+            $exceptionWasThrown = false;
             $invalidPayload = array_merge($controlRefreshToken->getPayload(), [$userIdentifier => $userID . '_1']);
             $invalidRefreshTokenMethodsMock = $this->createMock(Token::class, array_merge($refreshTokenMethodsMock, ['getPayload' => $invalidPayload]));
             try {
                 $tokenValidatorService->validateRefresh($invalidRefreshTokenMethodsMock, $accessTokenMock);
             } catch (Exception $e) {
-                $exceptionWasTrow = true;
+                $exceptionWasThrown = true;
                 $this->assertInstanceOf(TokenValidatorException::class, $e);
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
-            if (!$exceptionWasTrow) {
+            if (!$exceptionWasThrown) {
                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload (userID is invalid)" exception was not thrown');
             }
 
             // Check "Invalid refresh token payload ("created" is invalid)" exception
-            $exceptionWasTrow = false;
+            $exceptionWasThrown = false;
             $invalidPayload = array_merge($controlRefreshToken->getPayload(), ['created' => $created + 1]);
             $invalidRefreshTokenMethodsMock = $this->createMock(Token::class, array_merge($refreshTokenMethodsMock, ['getPayload' => $invalidPayload]));
             try {
                 $tokenValidatorService->validateRefresh($invalidRefreshTokenMethodsMock, $accessTokenMock);
             } catch (Exception $e) {
-                $exceptionWasTrow = true;
+                $exceptionWasThrown = true;
                 $this->assertInstanceOf(TokenValidatorException::class, $e);
                 $this->assertSame(TokenValidatorException::INVALID_REFRESH_TOKEN, $e->getCode());
             }
-            if (!$exceptionWasTrow) {
+            if (!$exceptionWasThrown) {
                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid refresh token payload ("created" is invalid)" exception was not thrown');
             }
         }

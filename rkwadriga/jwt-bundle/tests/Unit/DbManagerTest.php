@@ -94,16 +94,16 @@ class DbManagerTest extends AbstractUnitTestCase
             $dbManager->writeRefreshToken($userID, $refreshToken, TokenRefreshingContext::LOGIN);
 
             // Create forth record - should fail
-            $exceptionWasTrow = false;
+            $exceptionWasThrown = false;
             $refreshToken = $this->createToken($algorithm, TokenType::REFRESH, $userID, time() + 3);
             try {
                 $dbManager->writeRefreshToken($userID, $refreshToken, TokenRefreshingContext::LOGIN);
             } catch (Exception $e) {
-                $exceptionWasTrow = true;
+                $exceptionWasThrown = true;
                 $this->assertInstanceOf(DbServiceException::class, $e);
                 $this->assertSame(DbServiceException::TOKENS_COUNT_EXCEEDED, $e->getCode());
             }
-            if (!$exceptionWasTrow) {
+            if (!$exceptionWasThrown) {
                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Refresh tokens count exceeded" exception was not thrown');
             }
         }
@@ -235,18 +235,18 @@ class DbManagerTest extends AbstractUnitTestCase
             $userID = 'test_user_' . $algorithm->value;
 
             // Create refresh "old" and "new" refresh tokens
-            $exceptionWasTrow = false;
+            $exceptionWasThrown = false;
             $oldRefreshToken = $this->createToken($algorithm, TokenType::REFRESH, $userID);
             $newRefreshToken = $this->createToken($algorithm, TokenType::REFRESH, $userID, time() + 1);
             try {
                 // Try to update the old token
                 $dbManager->updateRefreshToken($userID, $oldRefreshToken, $newRefreshToken);
             } catch (Exception $e) {
-                $exceptionWasTrow = true;
+                $exceptionWasThrown = true;
                 $this->assertInstanceOf(DbServiceException::class, $e);
                 $this->assertSame(DbServiceException::REFRESH_TOKEN_MISSED, $e->getCode());
             }
-            if (!$exceptionWasTrow) {
+            if (!$exceptionWasThrown) {
                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Refresh tokens missed" exception was not thrown');
             }
         }

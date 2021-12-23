@@ -80,16 +80,16 @@ class TokenIdentifierTest extends AbstractUnitTestCase
                             $request->headers = $this->createMock(HeaderBag::class, $invalidHeadersMethodsMock);
                             $identifierService = $this->createTokenIdentifierInstance($this->mockConfigService($configMethodsMock));
 
-                            $exceptionWasTrow = false;
+                            $exceptionWasThrown = false;
                             try {
                                 $identifierService->identify($request, $tokenType);
                             } catch (Exception $e) {
-                                $exceptionWasTrow = true;
+                                $exceptionWasThrown = true;
                                 $code = $tokenType === TokenType::ACCESS ? TokenIdentifierException::ACCESS_TOKEN_MISSED : TokenIdentifierException::REFRESH_TOKEN_MISSED;
                                 $this->assertInstanceOf(TokenIdentifierException::class, $e, $testCaseBaseError . '"Token not found" exception has an invalid type: ' . $e::class);
                                 $this->assertSame($code, $e->getCode(), $testCaseBaseError . "\"Token not found\" exception has an invalid code: \"{$e->getCode()}\"");
                             }
-                            if (!$exceptionWasTrow) {
+                            if (!$exceptionWasThrown) {
                                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Token not found" exception was not thrown');
                             }
 
@@ -104,20 +104,20 @@ class TokenIdentifierTest extends AbstractUnitTestCase
                             $request->headers = $this->createMock(HeaderBag::class, $invalidHeadersMethodsMock);
                             $identifierService = $this->createTokenIdentifierInstance($this->mockConfigService($configMethodsMock));
 
-                            $exceptionWasTrow = false;
+                            $exceptionWasThrown = false;
                             try {
                                 $identifierService->identify($request, $tokenType);
                             } catch (Exception $e) {
                                 if ($tokenType !== TokenType::ACCESS || $tokenParamLocation !== TokenParamLocation::HEADER) {
                                     throw $e;
                                 }
-                                $exceptionWasTrow = true;
+                                $exceptionWasThrown = true;
                                 $code = $tokenType === TokenType::ACCESS ? TokenIdentifierException::ACCESS_TOKEN_MISSED : TokenIdentifierException::REFRESH_TOKEN_MISSED;
                                 $this->assertInstanceOf(TokenIdentifierException::class, $e, $testCaseBaseError . '"Invalid token" exception has an invalid type: ' . $e::class);
                                 $this->assertSame($code, $e->getCode(), $testCaseBaseError . "\"Invalid token\" exception has an invalid code: \"{$e->getCode()}\"");
                             }
 
-                            if ($tokenType === TokenType::ACCESS && $tokenParamLocation === TokenParamLocation::HEADER && !$exceptionWasTrow) {
+                            if ($tokenType === TokenType::ACCESS && $tokenParamLocation === TokenParamLocation::HEADER && !$exceptionWasThrown) {
                                 $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token" exception was not thrown');
                             }
                         }

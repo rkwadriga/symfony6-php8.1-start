@@ -73,32 +73,32 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
             'empty password field' => [$loginParam => $user->getEmail(), $passwordParam => null],
         ];
         foreach ($testCases as $errorKey => $requestBody) {
-            $exceptionWasTrow = false;
+            $exceptionWasThrown = false;
             $concreteTestCaseError = $testCaseBaseError . "\"Invalid request ({$errorKey}\" failed: ";
             $requestMock = $this->createLoginRequestMock($user, $requestBody);
             try {
                 $authenticator->authenticate($requestMock);
             } catch (Exception $e) {
-                $exceptionWasTrow = true;
+                $exceptionWasThrown = true;
                 $this->assertInstanceOf(CustomUserMessageAuthenticationException::class, $e, $concreteTestCaseError . 'Exception has an invalid type: ' . $e::class);
             }
-            if (!$exceptionWasTrow) {
+            if (!$exceptionWasThrown) {
                 $this->assertEquals(0 ,1, $concreteTestCaseError . 'exception was not thrown');
             }
         }
 
         // Check "User not found" exception
-        $exceptionWasTrow = false;
+        $exceptionWasThrown = false;
         // Create authenticator instance with exception on trying to identify the user
         $authenticator = $this->createAuthenticatorService(new UserNotFoundException(sprintf('User "%s" not found.', $loginParam)));
         $requestMock = $this->createLoginRequestMock($user);
         try {
             $authenticator->authenticate($requestMock);
         } catch (Exception $e) {
-            $exceptionWasTrow = true;
+            $exceptionWasThrown = true;
             $this->assertInstanceOf(UserNotFoundException::class, $e, $testCaseBaseError . '"User not found" exception has an invalid type: ' . $e::class);
         }
-        if (!$exceptionWasTrow) {
+        if (!$exceptionWasThrown) {
             $this->assertEquals(0 ,1, $testCaseBaseError . '"User not found" exception was not thrown');
         }
     }
