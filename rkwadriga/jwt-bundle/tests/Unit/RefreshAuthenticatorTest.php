@@ -6,10 +6,28 @@
 
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
+use Exception;
+use Rkwadriga\JwtBundle\Authenticator\RefreshAuthenticator;
+use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\Entity\RefreshToken256;
+use Rkwadriga\JwtBundle\Entity\RefreshToken512;
+use Rkwadriga\JwtBundle\Entity\Token;
+use Rkwadriga\JwtBundle\Entity\User;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Exception\SerializerException;
+use Rkwadriga\JwtBundle\Exception\TokenIdentifierException;
+use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
+use Rkwadriga\JwtBundle\Service\Config;
+use Rkwadriga\JwtBundle\Service\DbManager;
+use Rkwadriga\JwtBundle\Service\TokenGenerator;
+use Rkwadriga\JwtBundle\Service\TokenIdentifier;
+use Rkwadriga\JwtBundle\Service\TokenValidator;
 use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\UserInstanceTrait;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/Unit/RefreshAuthenticatorTest.php
@@ -39,5 +57,312 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
 
         $requestMock = $this->createMock(Request::class, ['get' => $this->getConfigDefault(ConfigurationParam::LOGIN_URL)]);
         $this->assertFalse($authenticator->supports($requestMock));
+    }
+
+    public function testAuthenticate(): void
+    {
+        // Create user
+        $user = $this->createUser();
+
+        // Mock request
+        $requestMock = $this->createMock(Request::class);
+
+        // For all token types...
+        foreach (Algorithm::cases() as $algorithm) {
+            $time = time();
+            $userID = $algorithm->value . '_test_user';
+            $testCaseBaseError = "Test testAuthenticate case \"{$algorithm->value}\" failed: ";
+
+            // Create token pair
+            [$accessToken, $refreshToken] = $this->createTokensPair($algorithm, $userID, $time);
+
+            // Check for both cases - when refresh_token_in_db is enabled and not
+            $testCases = ['refresh_token_in_db Enabled' => true, 'refresh_token_in_db Disabled' => false];
+            foreach ($testCases as $testCaseName => $isDbServiceEnabled) {
+                $testCaseBaseError = "Test testOnAuthenticationSuccess case \"{$testCaseName}\" failed: ";
+
+                // Mock "Config" service
+                $configMock = $this->mockConfigService([ConfigurationParam::REFRESH_TOKEN_IN_DB->value => $isDbServiceEnabled]);
+
+                // Create authenticator instance
+                $authenticator = $this->createAuthenticatorService(
+                    $algorithm,
+                    $user,
+                    $accessToken,
+                    $refreshToken,
+                    $configMock,
+                    $requestMock
+                );
+
+                // Check successful authentication
+                $result = $authenticator->authenticate($requestMock);
+                $this->assertInstanceOf(SelfValidatingPassport::class, $result);
+                $this->assertSame($user, $result->getUser());
+
+                // Check token identifier exceptions
+                $testCases = [
+                    [
+                        new AuthenticationException('Invalid access token type', TokenIdentifierException::INVALID_ACCESS_TOKEN),
+                        new TokenIdentifierException('Invalid access token type', TokenIdentifierException::INVALID_ACCESS_TOKEN)
+                    ],
+                    [
+                        new AuthenticationException('Access token missed', TokenIdentifierException::ACCESS_TOKEN_MISSED),
+                        new TokenIdentifierException('Access token missed', TokenIdentifierException::ACCESS_TOKEN_MISSED)
+                    ],
+                    [
+                        new AuthenticationException('Refresh token missed', TokenIdentifierException::REFRESH_TOKEN_MISSED),
+                        new TokenIdentifierException('Refresh token missed', TokenIdentifierException::REFRESH_TOKEN_MISSED)
+                    ],
+                ];
+                foreach ($testCases as $exceptions) {
+                    [$expected, $previous] = $exceptions;
+                    $error = $expected->getMessage();
+                    $subTestCaseBaseError = $testCaseBaseError . "identify ({$error}): ";
+                    $tokenIdentifier = $this->mockTokenIdentifierService(['identify' => $previous]);
+                    $authenticator = $this->createAuthenticatorService(
+                        $algorithm,
+                        $user,
+                        $accessToken,
+                        $refreshToken,
+                        $configMock,
+                        $requestMock,
+                        $tokenIdentifier,
+                    );
+                    $exceptionWasThrown = false;
+                    try {
+                        $authenticator->authenticate($requestMock);
+                    } catch (\Exception $e) {
+                        $exceptionWasThrown = true;
+                        $this->compareExceptions($subTestCaseBaseError, $e, $expected, $previous);
+                    }
+                    if (!$exceptionWasThrown) {
+                        $this->assertEquals(0 ,1, $testCaseBaseError . "\"{$error}\" exception was not thrown");
+                    }
+                }
+
+                // Check token generator exceptions
+                /** @var array<Exception> $testCases */
+                $testCases = [
+                    [
+                        new AuthenticationException('Invalid token format', TokenValidatorException::INVALID_FORMAT),
+                        new TokenValidatorException('Invalid token format', TokenValidatorException::INVALID_FORMAT)
+                    ],
+                    [
+                        new AuthenticationException('Invalid token json', SerializerException::INVALID_JSON_DATA),
+                        new SerializerException('Invalid token json', SerializerException::INVALID_JSON_DATA)
+                    ],
+                    [
+                        new AuthenticationException('Invalid token header ("sub" param)', TokenValidatorException::INVALID_TYPE),
+                        new TokenValidatorException('Invalid token header ("sub" param)', TokenValidatorException::INVALID_TYPE)
+                    ],
+                    [
+                        new AuthenticationException('Invalid token signature', TokenValidatorException::INVALID_SIGNATURE),
+                        new TokenValidatorException('Invalid token signature', TokenValidatorException::INVALID_SIGNATURE)
+                    ],
+                    [
+                        new AuthenticationException('Invalid base64 data', SerializerException::INVALID_BASE64_DATA),
+                        new SerializerException('Invalid base64 data', SerializerException::INVALID_BASE64_DATA)
+                    ],
+                ];
+                foreach ($testCases as $exceptions) {
+                    [$expected, $previous] = $exceptions;
+                    $error = $expected->getMessage();
+                    $subTestCaseBaseError = $testCaseBaseError . "generate ({$error}): ";
+                    $tokenGenerator = $this->mockTokenGeneratorService(['fromString' => $previous]);
+                    $authenticator = $this->createAuthenticatorService(
+                        $algorithm,
+                        $user,
+                        $accessToken,
+                        $refreshToken,
+                        $configMock,
+                        $requestMock,
+                        null,
+                        $tokenGenerator
+                    );
+                    $exceptionWasThrown = false;
+                    try {
+                        $authenticator->authenticate($requestMock);
+                    } catch (\Exception $e) {
+                        $exceptionWasThrown = true;
+                        $this->compareExceptions($subTestCaseBaseError, $e, $expected, $previous);
+                    }
+                    if (!$exceptionWasThrown) {
+                        $this->assertEquals(0 ,1, $testCaseBaseError . "\"{$error}\" exception was not thrown");
+                    }
+                }
+
+                // Check token validator exceptions
+                $testCases = [
+                    [
+                        new AuthenticationException('Access token expired', TokenValidatorException::ACCESS_TOKEN_EXPIRED),
+                        new TokenValidatorException('Access token expired', TokenValidatorException::ACCESS_TOKEN_EXPIRED)
+                    ],
+                    [
+                        new AuthenticationException('Refresh token expired', TokenValidatorException::REFRESH_TOKEN_EXPIRED),
+                        new TokenValidatorException('Refresh token expired', TokenValidatorException::REFRESH_TOKEN_EXPIRED)
+                    ],
+                    [
+                        new AuthenticationException('Invalid access token', TokenValidatorException::INVALID_ACCESS_TOKEN),
+                        new TokenValidatorException('Invalid access token', TokenValidatorException::INVALID_ACCESS_TOKEN)
+                    ],
+                    [
+                        new AuthenticationException('Invalid refresh token', TokenValidatorException::INVALID_REFRESH_TOKEN),
+                        new TokenValidatorException('Invalid refresh token', TokenValidatorException::INVALID_REFRESH_TOKEN)
+                    ],
+                ];
+                foreach ($testCases as $exceptions) {
+                    [$expected, $previous] = $exceptions;
+                    $error = $expected->getMessage();
+                    $subTestCaseBaseError = $testCaseBaseError . "validate ({$error}): ";
+                    $tokenValidator = $this->mockTokenValidatorService(['validate' => $previous]);
+                    $authenticator = $this->createAuthenticatorService(
+                        $algorithm,
+                        $user,
+                        $accessToken,
+                        $refreshToken,
+                        $configMock,
+                        $requestMock,
+                        null,
+                        null,
+                        $tokenValidator,
+                    );
+                    $exceptionWasThrown = false;
+                    try {
+                        $authenticator->authenticate($requestMock);
+                    } catch (\Exception $e) {
+                        $exceptionWasThrown = true;
+                        $this->compareExceptions($subTestCaseBaseError, $e, $expected, $previous);
+                    }
+                    if (!$exceptionWasThrown) {
+                        $this->assertEquals(0 ,1, $testCaseBaseError . "\"{$error}\" exception was not thrown");
+                    }
+                }
+
+                // Check "Validate refresh" exceptions
+                $testCases = [
+                    [
+                        new AuthenticationException('Access token expired', TokenValidatorException::ACCESS_TOKEN_EXPIRED),
+                        new TokenValidatorException('Access token expired', TokenValidatorException::ACCESS_TOKEN_EXPIRED)
+                    ],
+                ];
+                foreach ($testCases as $exceptions) {
+                    [$expected, $previous] = $exceptions;
+                    $error = $expected->getMessage();
+                    $subTestCaseBaseError = $testCaseBaseError . "Validate refresh ({$error}): ";
+                    $tokenValidator = $this->mockTokenValidatorService(['validateRefresh' => $previous]);
+                    $authenticator = $this->createAuthenticatorService(
+                        $algorithm,
+                        $user,
+                        $accessToken,
+                        $refreshToken,
+                        $configMock,
+                        $requestMock,
+                        null,
+                        null,
+                        $tokenValidator,
+                    );
+                    $exceptionWasThrown = false;
+                    try {
+                        $authenticator->authenticate($requestMock);
+                    } catch (\Exception $e) {
+                        $exceptionWasThrown = true;
+                        $this->compareExceptions($subTestCaseBaseError, $e, $expected, $previous);
+                    }
+                    if (!$exceptionWasThrown) {
+                        $this->assertEquals(0 ,1, $testCaseBaseError . "\"{$error}\" exception was not thrown");
+                    }
+                }
+            }
+        }
+    }
+
+    private function compareExceptions(string $baseMessage, Exception $actual, Exception $expected, ?Exception $previous = null): void
+    {
+        $this->assertInstanceOf($expected::class, $actual,
+            $baseMessage . 'Exception has an invalid type: ' . $actual::class
+        );
+        $this->assertSame($expected->getMessage(), $actual->getMessage(),
+            $baseMessage . 'Exception has an invalid message: ' . $actual->getMessage()
+        );
+        $this->assertSame($expected->getCode(), $actual->getCode(),
+            $baseMessage . 'Exception has an invalid code: ' . $actual->getCode()
+        );
+        if ($previous !== null) {
+            $this->assertNotNull($actual->getPrevious(),
+                $baseMessage . 'Exception has no previous exception'
+            );
+            $this->assertInstanceOf($previous::class, $actual->getPrevious(),
+                $baseMessage . 'Exception previous has an invalid type: ' . $actual->getPrevious()::class
+            );
+        }
+    }
+
+    private function createAuthenticatorService(
+        Algorithm $algorithm,
+        User $user,
+        Token $accessToken,
+        Token $refreshToken,
+        ?Config $config = null,
+        ?Request $request = null,
+        ?TokenIdentifier $tokenIdentifier = null,
+        ?TokenGenerator $tokenGenerator = null,
+        ?TokenValidator $tokenValidator = null,
+        ?DbManager $dbManager = null,
+    ): RefreshAuthenticator {
+        // Mock Request
+        if ($request === null) {
+            $request = $this->createMock(Request::class);
+        }
+
+        // Mock "Config" service
+        if ($config === null) {
+            $config = $this->mockConfigService();
+        }
+
+        // Mock "DbManager" service
+        if ($dbManager === null) {
+            $dbManager = $this->mockDbManagerService([
+                'findRefreshToken' => $this->createMock($this->getRefreshTokenEntityClass($algorithm)),
+            ]);
+        }
+
+        // Mock UserProvider
+        $userProviderMock = $this->mockUserProvider($user);
+
+        // Mock "TokenIdentifier" service
+        if ($tokenIdentifier === null) {
+            $tokenIdentifier = $this->mockTokenIdentifierService(['identify' => ['__map' => [
+                [$request, TokenType::ACCESS, $accessToken->getToken()],
+                [$request, TokenType::REFRESH, $refreshToken->getToken()],
+            ]]]);
+        }
+
+        // Mock "TokenGenerator" service
+        if ($tokenGenerator === null) {
+            $tokenGenerator = $this->mockTokenGeneratorService(['fromString' => ['__map' => [
+                [$accessToken->getToken(), TokenType::ACCESS, $accessToken],
+                [$refreshToken->getToken(), TokenType::REFRESH, $refreshToken],
+            ]]]);
+        }
+
+        // Mock "TokenValidator" service
+        if ($tokenValidator === null) {
+            $tokenValidator = $this->mockTokenValidatorService();
+        }
+
+        // Create authenticator instance
+        return $this->createRefreshAuthenticatorInstance(
+            $userProviderMock,
+            $tokenIdentifier,
+            $tokenGenerator,
+            $tokenValidator,
+            $config,
+            $dbManager
+        );
+    }
+
+    private function getRefreshTokenEntityClass(Algorithm $algorithm): string
+    {
+        return $algorithm === Algorithm::SHA256 ? RefreshToken256::class : RefreshToken512::class;
     }
 }

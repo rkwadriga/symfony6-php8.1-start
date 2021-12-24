@@ -117,11 +117,11 @@ trait InstanceServiceTrait
     protected function createRefreshAuthenticatorInstance(
         ?UserProviderInterface $userProvider = null,
         ?TokenIdentifier $identifier = null,
-        ?PayloadGenerator $payloadGenerator = null,
         ?TokenGenerator $tokenGenerator = null,
         ?TokenValidator $tokenValidator = null,
         ?Config $configService = null,
         ?DbManager $dbManager = null,
+        ?PayloadGenerator $payloadGenerator = null,
         ?TokenResponseCreator $tokenResponseCreator = null,
         ?ResponseSerializerInterface $responseSerializer = null,
         ?EventDispatcherInterface $eventDispatcher = null,

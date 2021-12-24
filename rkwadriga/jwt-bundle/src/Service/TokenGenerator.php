@@ -95,6 +95,9 @@ class TokenGenerator implements TokenGeneratorInterface
 
             // Get token life dates
             [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
+
+            // Create token
+            $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $this->serializer->decode($signature));
         } catch (Exception $e) {
             // This event can be used to change the error handling
             $event = new TokenParsingFinishedUnsuccessful($e, $token, $type, $head, $payload);
@@ -102,7 +105,7 @@ class TokenGenerator implements TokenGeneratorInterface
             throw $event->getException();
         }
 
-        $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $this->serializer->decode($signature));
+
         // This event can be used to change the token
         $event = new TokenParsingFinishedSuccessful($token);
         $this->eventsDispatcher->dispatch($event, $event::getName());

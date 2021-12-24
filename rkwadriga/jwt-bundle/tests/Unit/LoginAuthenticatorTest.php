@@ -7,8 +7,10 @@
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
 use Exception;
+use Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\Entity\User;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
 use Rkwadriga\JwtBundle\Exception\TokenGeneratorException;
@@ -272,5 +274,29 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
                 $testCaseBaseError . 'Invalid response content: ' . $result->getContent()
             );
         }
+    }
+
+    private function createLoginRequestMock(User $user, array|string $bodyParams = []): Request
+    {
+        if (is_string($bodyParams)) {
+            $body = $bodyParams;
+        } else {
+            if (empty($bodyParams)) {
+                [$loginParam, $passwordParam] = [$this->getConfigDefault(ConfigurationParam::LOGIN_PARAM), $this->getConfigDefault(ConfigurationParam::PASSWORD_PARAM)];
+                $bodyParams = [$loginParam => $user->getEmail(), $passwordParam => $user->getPassword()];
+            }
+            $body = json_encode($bodyParams);
+        }
+
+        return $this->createMock(Request::class, ['getContent' => $body]);
+    }
+
+    private function createAuthenticatorService(User $user, bool $passwordVerifyingResult = true, ?Exception $exception = null): LoginAuthenticator
+    {
+        // Mock password hasher and UserProvider
+        $hasherFactoryMock = $this->mockPasswordHasherFactory($user->getPassword(), $passwordVerifyingResult);
+        $userProviderMock = $this->mockUserProvider($exception ?? $user);
+
+        return $this->createLoginAuthenticatorInstance($userProviderMock, $hasherFactoryMock);
     }
 }

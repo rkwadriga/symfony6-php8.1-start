@@ -73,8 +73,6 @@ class RefreshAuthenticator extends AbstractAuthenticator
             return $event->getPassport();
         }
 
-
-
         try {
             // Get tokens from request
             $accessTokenString = $this->identifier->identify($request, TokenType::ACCESS);
@@ -108,10 +106,6 @@ class RefreshAuthenticator extends AbstractAuthenticator
         $userBridge = new UserBadge($userIdentifier, function (): ?UserInterface {
             return $this->userProvider->loadUserByIdentifier($this->userID);
         });
-
-        if ($userBridge->getUser() === null) {
-            throw new AuthenticationException('Invalid access token');
-        }
 
         return new SelfValidatingPassport($userBridge);
     }
