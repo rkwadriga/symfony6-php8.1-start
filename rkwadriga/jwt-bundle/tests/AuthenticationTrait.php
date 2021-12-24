@@ -11,6 +11,9 @@ use Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator;
 use Rkwadriga\JwtBundle\Entity\User;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 trait AuthenticationTrait
 {
@@ -37,15 +40,11 @@ trait AuthenticationTrait
         return $this->token;
     }
 
-    protected function createAuthenticatorService(User|Exception $user, bool $passwordVerifyingResult = true): LoginAuthenticator
+    protected function createAuthenticatorService(User $user, bool $passwordVerifyingResult = true, ?Exception $exception = null): LoginAuthenticator
     {
         // Mock password hasher and UserProvider
-        if ($user instanceof Exception) {
-            $hasherFactoryMock = $this->mockPasswordHasherFactory('INVALID_ERROR', false);
-        } else {
-            $hasherFactoryMock = $this->mockPasswordHasherFactory($user->getPassword(), $passwordVerifyingResult);
-        }
-        $userProviderMock = $this->mockUserProvider($user);
+        $hasherFactoryMock = $this->mockPasswordHasherFactory($user->getPassword(), $passwordVerifyingResult);
+        $userProviderMock = $this->mockUserProvider($exception ?? $user);
 
         return $this->createLoginAuthenticatorInstance($userProviderMock, $hasherFactoryMock);
     }

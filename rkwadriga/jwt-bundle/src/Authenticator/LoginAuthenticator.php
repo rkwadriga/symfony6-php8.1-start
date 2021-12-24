@@ -28,7 +28,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
@@ -43,7 +45,7 @@ class LoginAuthenticator extends AbstractAuthenticator
         private Config                         $config,
         private EventDispatcherInterface       $eventsDispatcher,
         private UserProviderInterface          $userProvider,
-        private PasswordHasherFactoryInterface $encoder,
+        private PasswordHasherFactoryInterface $encoderFactory,
         private SerializerInterface            $serializer,
         private PayloadGeneratorInterface      $payloadGenerator,
         private TokenGeneratorInterface        $generator,
@@ -80,11 +82,13 @@ class LoginAuthenticator extends AbstractAuthenticator
         $userBridge = new UserBadge($userIdentifier, function () use ($params, $loginParam): ?UserInterface {
             return $this->userProvider->loadUserByIdentifier($params[$loginParam]);
         });
+        // Try to find the user to throw an exception if it's not found
         $user = $userBridge->getUser();
-        if ($user === null ||
-            !$this->encoder->getPasswordHasher($user)->verify($user->getPassword(), $params[$passwordParam])
+        // Check user's password
+        if ($user instanceof PasswordAuthenticatedUserInterface
+            && !$this->encoderFactory->getPasswordHasher($user)->verify($user->getPassword(), $params[$passwordParam])
         ) {
-            throw new CustomUserMessageAuthenticationException("Invalid \"{$loginParam}\" or \"{$passwordParam}\"");
+            throw new BadCredentialsException('Invalid credentials');
         }
 
         return new SelfValidatingPassport($userBridge);

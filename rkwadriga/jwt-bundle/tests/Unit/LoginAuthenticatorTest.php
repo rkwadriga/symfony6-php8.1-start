@@ -11,6 +11,7 @@ use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\UserInstanceTrait;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
@@ -90,16 +91,33 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
         // Check "User not found" exception
         $exceptionWasThrown = false;
         // Create authenticator instance with exception on trying to identify the user
-        $authenticator = $this->createAuthenticatorService(new UserNotFoundException(sprintf('User "%s" not found.', $loginParam)));
+        $userNotFoundException = new UserNotFoundException(sprintf('User "%s" not found.', $loginParam));
+        $authenticator = $this->createAuthenticatorService($user, true, $userNotFoundException);
         $requestMock = $this->createLoginRequestMock($user);
         try {
             $authenticator->authenticate($requestMock);
         } catch (Exception $e) {
             $exceptionWasThrown = true;
-            $this->assertInstanceOf(UserNotFoundException::class, $e, $testCaseBaseError . '"User not found" exception has an invalid type: ' . $e::class);
+            $message = $testCaseBaseError . '"User not found" exception has an invalid type: ' . $e::class;
+            $this->assertInstanceOf(UserNotFoundException::class, $e, $message);
         }
         if (!$exceptionWasThrown) {
             $this->assertEquals(0 ,1, $testCaseBaseError . '"User not found" exception was not thrown');
+        }
+
+        // Check "invalid password" exception
+        $exceptionWasThrown = false;
+        $authenticator = $this->createAuthenticatorService($user, false);
+        $requestMock = $this->createLoginRequestMock($user);
+        try {
+            $authenticator->authenticate($requestMock);
+        } catch (Exception $e) {
+            $exceptionWasThrown = true;
+            $message = $testCaseBaseError . '"Invalid password" exception has an invalid type: ' . $e::class;
+            $this->assertInstanceOf(BadCredentialsException::class, $e, $message);
+        }
+        if (!$exceptionWasThrown) {
+            $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid password" exception was not thrown');
         }
     }
 }
