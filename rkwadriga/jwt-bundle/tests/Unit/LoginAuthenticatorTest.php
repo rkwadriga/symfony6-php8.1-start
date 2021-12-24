@@ -31,7 +31,7 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
     use UserInstanceTrait;
     use AuthenticationTrait;
 
-    public function AtestSupports(): void
+    public function testSupports(): void
     {
         $authenticator = $this->createLoginAuthenticatorInstance();
 
@@ -53,7 +53,7 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
         $this->assertFalse($authenticator->supports($requestMock));
     }
 
-    public function AtestAuthenticate(): void
+    public function testAuthenticate(): void
     {
         $testCaseBaseError = 'Test testAuthenticate failed: ';
         [$loginParam, $passwordParam] = [$this->getConfigDefault(ConfigurationParam::LOGIN_PARAM), $this->getConfigDefault(ConfigurationParam::PASSWORD_PARAM)];
@@ -128,7 +128,7 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
         }
     }
 
-    public function AtestOnAuthenticationSuccess(): void
+    public function testOnAuthenticationSuccess(): void
     {
         foreach (Algorithm::cases() as $algorithm) {
             $userID = $algorithm->value . '_test_user';

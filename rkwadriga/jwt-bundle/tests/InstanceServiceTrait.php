@@ -7,6 +7,7 @@
 namespace Rkwadriga\JwtBundle\Tests;
 
 use Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator;
+use Rkwadriga\JwtBundle\Authenticator\RefreshAuthenticator;
 use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface;
 use Rkwadriga\JwtBundle\Service\Config;
@@ -108,6 +109,32 @@ trait InstanceServiceTrait
             $responseSerializer ?? $this->createMock(ResponseSerializer::class),
             $payloadGenerator ?? $this->createMock(PayloadGenerator::class),
             $tokenGenerator ?? $this->createMock(TokenGenerator::class),
+            $dbManager ?? $this->createMock(DbManager::class),
+            $tokenResponseCreator ?? $this->createMock(TokenResponseCreator::class),
+        );
+    }
+
+    protected function createRefreshAuthenticatorInstance(
+        ?UserProviderInterface $userProvider = null,
+        ?TokenIdentifier $identifier = null,
+        ?PayloadGenerator $payloadGenerator = null,
+        ?TokenGenerator $tokenGenerator = null,
+        ?TokenValidator $tokenValidator = null,
+        ?Config $configService = null,
+        ?DbManager $dbManager = null,
+        ?TokenResponseCreator $tokenResponseCreator = null,
+        ?ResponseSerializerInterface $responseSerializer = null,
+        ?EventDispatcherInterface $eventDispatcher = null,
+    ): RefreshAuthenticator {
+        return new RefreshAuthenticator(
+            $configService ?? $this->createConfigServiceInstance(),
+            $eventDispatcher ?? $this->createMock(EventDispatcher::class),
+            $userProvider ?? $this->createMock(EntityUserProvider::class),
+            $identifier ?? $this->createMock(TokenIdentifier::class),
+            $payloadGenerator ?? $this->createMock(PayloadGenerator::class),
+            $tokenGenerator ?? $this->createMock(TokenGenerator::class),
+            $tokenValidator ?? $this->createMock(TokenValidator::class),
+            $responseSerializer ?? $this->createMock(ResponseSerializer::class),
             $dbManager ?? $this->createMock(DbManager::class),
             $tokenResponseCreator ?? $this->createMock(TokenResponseCreator::class),
         );
