@@ -132,7 +132,7 @@ class LoginAuthenticator extends AbstractAuthenticator
     {
         $data = [
             'code' => $exception->getCode(),
-            'message' => strtr($exception->getMessageKey(), $exception->getMessageData()),
+            'message' => $exception->getMessage() ?: strtr($exception->getMessageKey(), $exception->getMessageData()),
         ];
 
         $response = new JsonResponse($data, Response::HTTP_FORBIDDEN);

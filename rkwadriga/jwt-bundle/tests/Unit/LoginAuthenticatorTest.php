@@ -9,7 +9,6 @@ namespace Rkwadriga\JwtBundle\Tests\Unit;
 use Exception;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
-use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
 use Rkwadriga\JwtBundle\Exception\TokenGeneratorException;
@@ -32,7 +31,7 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
     use UserInstanceTrait;
     use AuthenticationTrait;
 
-    public function testSupports(): void
+    public function AtestSupports(): void
     {
         $authenticator = $this->createLoginAuthenticatorInstance();
 
@@ -54,7 +53,7 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
         $this->assertFalse($authenticator->supports($requestMock));
     }
 
-    public function testAuthenticate(): void
+    public function AtestAuthenticate(): void
     {
         $testCaseBaseError = 'Test testAuthenticate failed: ';
         [$loginParam, $passwordParam] = [$this->getConfigDefault(ConfigurationParam::LOGIN_PARAM), $this->getConfigDefault(ConfigurationParam::PASSWORD_PARAM)];
@@ -129,7 +128,7 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
         }
     }
 
-    public function testOnAuthenticationSuccess(): void
+    public function AtestOnAuthenticationSuccess(): void
     {
         foreach (Algorithm::cases() as $algorithm) {
             $userID = $algorithm->value . '_test_user';
@@ -234,6 +233,44 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
                     }
                 }
             }
+        }
+    }
+
+    public function testOnAuthenticationFailure(): void
+    {
+        $testCases = [
+            CustomUserMessageAuthenticationException::class => ['Test message 1', 0, []],
+            UserNotFoundException::class => ['Test message 2', 0, null],
+            BadCredentialsException::class => ['Test message 3', 0, null],
+        ];
+
+        // Create authenticator instance
+        $authenticator = $this->createLoginAuthenticatorInstance();
+
+        // Create request mock
+        $requestMock = $this->createMock(Request::class);
+
+        foreach ($testCases as $exceptionClass => $data) {
+            [$message, $code, $messageData] = $data;
+            $testCaseBaseError = "Test testOnAuthenticationFailure case \"{$exceptionClass}:{$code}\" failed: ";
+            $content = json_encode(['code' => $code, 'message' => $message]);
+
+            if ($messageData !== null) {
+                $exception = new $exceptionClass($message, $messageData, $code);
+            } else {
+                $exception = new $exceptionClass($message, $code);
+            }
+
+            $result = $authenticator->onAuthenticationFailure($requestMock, $exception);
+            $this->assertInstanceOf(JsonResponse::class, $result,
+                $testCaseBaseError . 'Response has an incorrect type: ' . $result::class
+            );
+            $this->assertSame(Response::HTTP_FORBIDDEN, $result->getStatusCode(),
+                $testCaseBaseError . 'Invalid response status code: ' . $result->getStatusCode()
+            );
+            $this->assertSame($content, $result->getContent(),
+                $testCaseBaseError . 'Invalid response content: ' . $result->getContent()
+            );
         }
     }
 }
