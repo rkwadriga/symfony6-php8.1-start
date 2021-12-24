@@ -97,6 +97,7 @@ trait InstanceServiceTrait
         ?TokenGenerator $tokenGenerator = null,
         ?DbManager $dbManager = null,
         ?TokenResponseCreator $tokenResponseCreator = null,
+        ?ResponseSerializerInterface $responseSerializer = null,
         ?EventDispatcherInterface $eventDispatcher = null,
     ): LoginAuthenticator {
         return new LoginAuthenticator(

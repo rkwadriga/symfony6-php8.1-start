@@ -148,4 +148,13 @@ trait InstanceTokenTrait
     {
         return implode('.', $parts);
     }
+
+    protected function createTokenResponseArray(Token $accessToken, Token $refreshToken): array
+    {
+        return [
+            'accessToken' => $accessToken->getToken(),
+            'refreshToken' => $refreshToken->getToken(),
+            'expiredAt' => $accessToken->getExpiredAt(),
+        ];
+    }
 }

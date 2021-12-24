@@ -7,14 +7,22 @@
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
 use Exception;
+use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
+use Rkwadriga\JwtBundle\Exception\TokenGeneratorException;
 use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\UserInstanceTrait;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
+use Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken as SystemToken;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/Unit/LoginAuthenticatorTest.php
@@ -118,6 +126,114 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
         }
         if (!$exceptionWasThrown) {
             $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid password" exception was not thrown');
+        }
+    }
+
+    public function testOnAuthenticationSuccess(): void
+    {
+        foreach (Algorithm::cases() as $algorithm) {
+            $userID = $algorithm->value . '_test_user';
+            $userIdentifier = $this->getConfigDefault(ConfigurationParam::USER_IDENTIFIER);
+            // Create tokens and token response
+            [$accessToken, $refreshToken] = $this->createTokensPair($algorithm, $userID);
+            $tokenResponse = $this->createTokenResponseArray($accessToken, $refreshToken);
+            $tokenResponseString = json_encode($tokenResponse);
+            $invalidPayloadUserIDEmpty = $invalidPayloadUserIDNull = $accessToken->getPayload();
+            unset($invalidPayloadUserIDEmpty[$userIdentifier]);
+            $invalidPayloadUserIDNull[$userIdentifier] = null;
+            $refreshTokenPayloadUserIDEmptyMock = $this->mockToken($accessToken, ['getPayload' => $invalidPayloadUserIDEmpty]);
+            $refreshTokenPayloadUserIDENullMock = $this->mockToken($accessToken, ['getPayload' => $invalidPayloadUserIDNull]);
+
+            // Mock payload generator
+            $payloadGeneratorMock = $this->mockPayloadGeneratorService(['generate' => $accessToken->getPayload()]);
+            // Mock token generator service
+            $tokenGeneratorMock = $this->mockTokenGeneratorService(['fromPayload' => ['__map' => [
+                [$accessToken->getPayload(), TokenType::ACCESS, TokenCreationContext::LOGIN, null, $accessToken],
+                [$accessToken->getPayload(), TokenType::REFRESH, TokenCreationContext::LOGIN, null, $refreshToken],
+                [$invalidPayloadUserIDEmpty, TokenType::ACCESS, TokenCreationContext::LOGIN, null, $refreshTokenPayloadUserIDEmptyMock],
+                [$invalidPayloadUserIDNull, TokenType::ACCESS, TokenCreationContext::LOGIN, null, $refreshTokenPayloadUserIDENullMock],
+                [$invalidPayloadUserIDEmpty, TokenType::REFRESH, TokenCreationContext::LOGIN, null, $refreshTokenPayloadUserIDEmptyMock],
+                [$invalidPayloadUserIDNull, TokenType::REFRESH, TokenCreationContext::LOGIN, null, $refreshTokenPayloadUserIDENullMock],
+            ]]]);
+            // Mock DbManager service
+            $dbManagerMock = $this->mockDbManagerService();
+            // Mock ResponseCreator service
+            $tokenResponseCreatorMock = $this->mockTokenResponseCreatorService(['create' => $tokenResponse]);
+            // Mock Serializer service
+            $serializer = $this->mockResponseSerializer(['serialize' => $tokenResponseString]);
+            // Mock request
+            $requestMock = $this->createMock(Request::class);
+            // Mock system token
+            $systemToken = $this->createMock(SystemToken::class);
+
+            // Check for both cases - when refresh_token_in_db is enabled and not
+            $testCases = ['refresh_token_in_db Enabled' => true, 'refresh_token_in_db Disabled' => false];
+            foreach ($testCases as $testCaseName => $isDbServiceEnabled) {
+                $testCaseBaseError = "Test testOnAuthenticationSuccess case \"{$testCaseName}\" failed: ";
+                // Mock config service
+                $configMock = $this->mockConfigService([ConfigurationParam::REFRESH_TOKEN_IN_DB->value => $isDbServiceEnabled]);
+
+                // Create authenticator instance
+                $authenticator = $this->createLoginAuthenticatorInstance(
+                    null,
+                    null,
+                    $configMock,
+                    $payloadGeneratorMock,
+                    $tokenGeneratorMock,
+                    $dbManagerMock,
+                    $tokenResponseCreatorMock,
+                    $serializer
+                );
+
+                // Check successful result
+                $result = $authenticator->onAuthenticationSuccess($requestMock, $systemToken, 'main');
+                $this->assertInstanceOf(JsonResponse::class, $result,
+                    $testCaseBaseError . 'Response has an incorrect type: ' . $result::class
+                );
+                $this->assertSame(Response::HTTP_CREATED, $result->getStatusCode(),
+                    $testCaseBaseError . 'Invalid response status code: ' . $result->getStatusCode()
+                );
+                $this->assertSame($tokenResponseString, $result->getContent(),
+                    $testCaseBaseError . 'Invalid response content: ' . $result->getContent()
+                );
+
+                // Check "User identifier missed in payload" exception
+                if ($isDbServiceEnabled) {
+                    // ...for both variants - when user identifier in payload is not set and when it equals to null
+                    $subTestCases = ['user identifier in payload is not set' => 'empty', 'user identifier in payload is null' => 'null'];
+                    foreach ($subTestCases as $subTestCaseName => $subTestCaseType) {
+                        $subTestCaseBaseError = $testCaseBaseError . "({$subTestCaseName}): ";
+                        $invalidPayload = $subTestCaseType === 'empty' ? $invalidPayloadUserIDEmpty : $invalidPayloadUserIDNull;
+                        $invalidPayloadGeneratorMock = $this->mockPayloadGeneratorService(['generate' => $invalidPayload]);
+                        $authenticator = $this->createLoginAuthenticatorInstance(
+                            null,
+                            null,
+                            $configMock,
+                            $invalidPayloadGeneratorMock,
+                            $tokenGeneratorMock,
+                            $dbManagerMock,
+                            $tokenResponseCreatorMock,
+                            $serializer
+                        );
+                    }
+
+                    $exceptionWasThrown = false;
+                    try {
+                        $authenticator->onAuthenticationSuccess($requestMock, $systemToken, 'main');
+                    } catch (Exception $e) {
+                        $exceptionWasThrown = true;
+                        $this->assertInstanceOf(TokenGeneratorException::class, $e,
+                            $subTestCaseBaseError . '"User identifier missed in payload" exception has an incorrect type: ' . $e::class
+                        );
+                        $this->assertSame(TokenGeneratorException::INVALID_PAYLOAD, $e->getCode(),
+                            $subTestCaseBaseError . '"User identifier missed in payload" exception has an incorrect code: ' . $e->getCode()
+                        );
+                    }
+                    if (!$exceptionWasThrown) {
+                        $this->assertEquals(0 ,1, $subTestCaseBaseError . '"User identifier missed in payload" exception was not thrown');
+                    }
+                }
+            }
         }
     }
 }
