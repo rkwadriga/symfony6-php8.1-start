@@ -198,7 +198,6 @@ class JwtAuthenticatorTest extends AbstractUnitTestCase
 
         // For all token types...
         foreach (Algorithm::cases() as $algorithm){
-            $time = time();
             $userID = $algorithm->value . '_test_user';
             // Create user
             $user = $this->createUser($userID);
