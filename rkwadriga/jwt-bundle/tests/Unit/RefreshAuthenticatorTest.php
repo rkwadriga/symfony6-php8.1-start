@@ -28,6 +28,7 @@ use Rkwadriga\JwtBundle\Service\TokenValidator;
 use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\UserInstanceTrait;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken as AuthenticationToken;
@@ -391,6 +392,41 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
                     }
                 }
             }
+        }
+    }
+
+    public function testOnAuthenticationFailure(): void
+    {
+        /** @var array<Exception> $testCases */
+        $testCases = [
+            new AuthenticationException('Authentication error'),
+            new AuthenticationException('Refresh token does not exist', TokenValidatorException::INVALID_REFRESH_TOKEN,
+                new TokenValidatorException('Refresh token does not exist', TokenValidatorException::INVALID_REFRESH_TOKEN)
+            ),
+        ];
+
+        // Create authenticator instance
+        $authenticator = $this->createRefreshAuthenticatorInstance();
+
+        // Create request mock
+        $requestMock = $this->createMock(Request::class);
+
+        foreach ($testCases as $exception) {
+            [$exceptionClass, $message, $code] = [$exception::class, $exception->getMessage(), $exception->getCode()];
+            $responseStatusCode = $exception->getCode() === TokenValidatorException::ACCESS_TOKEN_EXPIRED ? Response::HTTP_UNAUTHORIZED : Response::HTTP_FORBIDDEN;
+            $testCaseBaseError = "Test testOnAuthenticationFailure case \"{$exceptionClass}:{$code}\" failed: ";
+            $content = json_encode(['code' => $code, 'message' => $message]);
+
+            $result = $authenticator->onAuthenticationFailure($requestMock, $exception);
+            $this->assertInstanceOf(JsonResponse::class, $result,
+                $testCaseBaseError . 'Response has an incorrect type: ' . $result::class
+            );
+            $this->assertSame($responseStatusCode, $result->getStatusCode(),
+                $testCaseBaseError . 'Invalid response status code: ' . $result->getStatusCode()
+            );
+            $this->assertSame($content, $result->getContent(),
+                $testCaseBaseError . 'Invalid response content: ' . $result->getContent()
+            );
         }
     }
 
