@@ -10,6 +10,7 @@ use Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator;
 use Rkwadriga\JwtBundle\Authenticator\RefreshAuthenticator;
 use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\Service\Config;
 use Rkwadriga\JwtBundle\Service\DbManager;
 use Rkwadriga\JwtBundle\Service\HeadGenerator;
@@ -124,6 +125,8 @@ trait InstanceServiceTrait
         ?PayloadGenerator $payloadGenerator = null,
         ?TokenResponseCreator $tokenResponseCreator = null,
         ?ResponseSerializerInterface $responseSerializer = null,
+        ?TokenInterface $oldRefreshToken = null,
+        mixed $userID = null,
         ?EventDispatcherInterface $eventDispatcher = null,
     ): RefreshAuthenticator {
         return new RefreshAuthenticator(
@@ -137,6 +140,8 @@ trait InstanceServiceTrait
             $responseSerializer ?? $this->createMock(ResponseSerializer::class),
             $dbManager ?? $this->createMock(DbManager::class),
             $tokenResponseCreator ?? $this->createMock(TokenResponseCreator::class),
+            $oldRefreshToken,
+            $userID,
         );
     }
 }

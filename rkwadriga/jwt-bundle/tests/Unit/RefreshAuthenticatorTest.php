@@ -15,6 +15,8 @@ use Rkwadriga\JwtBundle\Entity\RefreshToken512;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Entity\User;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
+use Rkwadriga\JwtBundle\Exception\DbServiceException;
 use Rkwadriga\JwtBundle\Exception\SerializerException;
 use Rkwadriga\JwtBundle\Exception\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
@@ -28,6 +30,8 @@ use Rkwadriga\JwtBundle\Tests\UserInstanceTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Http\Authenticator\Token\PostAuthenticationToken as AuthenticationToken;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/Unit/RefreshAuthenticatorTest.php
@@ -71,7 +75,7 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
         foreach (Algorithm::cases() as $algorithm) {
             $time = time();
             $userID = $algorithm->value . '_test_user';
-            $testCaseBaseError = "Test testAuthenticate case \"{$algorithm->value}\" failed: ";
+            $testCaseStartError = "Test testAuthenticate case \"{$algorithm->value}\" ";
 
             // Create token pair
             [$accessToken, $refreshToken] = $this->createTokensPair($algorithm, $userID, $time);
@@ -79,7 +83,7 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
             // Check for both cases - when refresh_token_in_db is enabled and not
             $testCases = ['refresh_token_in_db Enabled' => true, 'refresh_token_in_db Disabled' => false];
             foreach ($testCases as $testCaseName => $isDbServiceEnabled) {
-                $testCaseBaseError = "Test testOnAuthenticationSuccess case \"{$testCaseName}\" failed: ";
+                $testCaseBaseError = $testCaseStartError . "\"{$testCaseName}\" failed: ";
 
                 // Mock "Config" service
                 $configMock = $this->mockConfigService([ConfigurationParam::REFRESH_TOKEN_IN_DB->value => $isDbServiceEnabled]);
@@ -272,6 +276,120 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
                         $this->assertEquals(0 ,1, $testCaseBaseError . "\"{$error}\" exception was not thrown");
                     }
                 }
+
+                // Check "DbManager" service exceptions
+                $testCaseError = $subTestCaseBaseError . '"Refresh token not found in DB"';
+
+                // Mock "DbManager" service
+                $dbManagerMock = $this->mockDbManagerService(['findRefreshToken' => null]);
+                $authenticator = $this->createAuthenticatorService(
+                    $algorithm,
+                    $user,
+                    $accessToken,
+                    $refreshToken,
+                    $configMock,
+                    $requestMock,
+                    null,
+                    null,
+                    null,
+                    $dbManagerMock
+                );
+
+                $exceptionWasThrown = false;
+                try {
+                    $authenticator->authenticate($requestMock);
+                } catch (Exception $e) {
+                    $exceptionWasThrown = true;
+                    $expectedPreviousException = new TokenValidatorException('Refresh token does not exist', TokenValidatorException::INVALID_REFRESH_TOKEN);
+                    $expectedException = new AuthenticationException($expectedPreviousException->getMessage(), $expectedPreviousException->getCode());
+                    $this->compareExceptions($testCaseError, $e, $expectedException, $expectedPreviousException);
+                }
+                if ($isDbServiceEnabled && !$exceptionWasThrown) {
+                    $this->assertEquals(0 ,1, $testCaseError . 'exception was not thrown');
+                }
+            }
+        }
+    }
+
+    public function testOnAuthenticationSuccess(): void
+    {
+        // Create user
+        $user = $this->createUser();
+
+        // Mock request
+        $requestMock = $this->createMock(Request::class);
+
+        // Mock authentication token
+        $authenticationTokenMock = $this->createMock(AuthenticationToken::class);
+
+        // For all token types...
+        foreach (Algorithm::cases() as $algorithm) {
+            $time = time();
+            $userID = $algorithm->value . '_test_user';
+            $testCaseBaseError = "Test testAuthenticate case \"{$algorithm->value}\" ";
+
+            // Create token pair and token response
+            [$accessToken, $refreshToken] = $this->createTokensPair($algorithm, $userID, $time);
+            $tokenResponse = $this->createTokenResponseArray($accessToken, $refreshToken);
+            $tokenResponseString = json_encode($tokenResponse);
+
+            // Check for both cases - when refresh_token_in_db is enabled and not
+            $testCases = ['refresh_token_in_db Enabled' => true, 'refresh_token_in_db Disabled' => false];
+            foreach ($testCases as $testCaseName => $isDbServiceEnabled) {
+                $subTestCaseBaseError = $testCaseBaseError . "\"{$testCaseName}\" failed: ";
+                // Mock "Config" service
+                $configMock = $this->mockConfigService([ConfigurationParam::REFRESH_TOKEN_IN_DB->value => $isDbServiceEnabled]);
+
+                // Create authenticator instance
+                $authenticator = $this->createAuthenticatorService(
+                    $algorithm,
+                    $user,
+                    $accessToken,
+                    $refreshToken,
+                    $configMock,
+                    $requestMock
+                );
+
+                // Check successful authentication
+                $result = $authenticator->onAuthenticationSuccess($requestMock, $authenticationTokenMock, 'main');
+                $this->assertInstanceOf(JsonResponse::class, $result);
+                $this->assertSame($tokenResponseString, $result->getContent());
+
+                // Check "DbManager" service exceptions
+                /** @var array<DbServiceException> $testCases */
+                $testCases = [
+                    new DbServiceException('Refresh token not found', DbServiceException::REFRESH_TOKEN_MISSED),
+                    new DbServiceException('Can not update refresh token', DbServiceException::SQL_ERROR),
+                ];
+                foreach ($testCases as $exception) {
+                    $testCaseError = $subTestCaseBaseError . $exception->getMessage() . ' ';
+
+                    // Mock "DbManager" service
+                    $dbManagerMock = $this->mockDbManagerService(['updateRefreshToken' => $exception]);
+                    $authenticator = $this->createAuthenticatorService(
+                        $algorithm,
+                        $user,
+                        $accessToken,
+                        $refreshToken,
+                        $configMock,
+                        $requestMock,
+                        null,
+                        null,
+                        null,
+                        $dbManagerMock
+                    );
+
+                    $exceptionWasThrown = false;
+                    try {
+                        $authenticator->onAuthenticationSuccess($requestMock, $authenticationTokenMock, 'main');
+                    } catch (Exception $e) {
+                        $exceptionWasThrown = true;
+                        $this->compareExceptions($testCaseError, $e, $exception);
+                    }
+                    if ($isDbServiceEnabled && !$exceptionWasThrown) {
+                        $this->assertEquals(0 ,1, $testCaseError . 'exception was not thrown');
+                    }
+                }
             }
         }
     }
@@ -339,10 +457,16 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
 
         // Mock "TokenGenerator" service
         if ($tokenGenerator === null) {
-            $tokenGenerator = $this->mockTokenGeneratorService(['fromString' => ['__map' => [
-                [$accessToken->getToken(), TokenType::ACCESS, $accessToken],
-                [$refreshToken->getToken(), TokenType::REFRESH, $refreshToken],
-            ]]]);
+            $tokenGenerator = $this->mockTokenGeneratorService([
+                'fromString' => ['__map' => [
+                    [$accessToken->getToken(), TokenType::ACCESS, $accessToken],
+                    [$refreshToken->getToken(), TokenType::REFRESH, $refreshToken],
+                ]],
+                'fromPayload' => ['__map' => [
+                    [$accessToken->getPayload(), $accessToken->getType(), TokenCreationContext::REFRESH, null, $accessToken],
+                    [$accessToken->getPayload(), $refreshToken->getType(), TokenCreationContext::REFRESH, null, $refreshToken],
+                ]],
+            ]);
         }
 
         // Mock "TokenValidator" service
@@ -350,15 +474,32 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
             $tokenValidator = $this->mockTokenValidatorService();
         }
 
+        // Mock "ResponseSerializer" service
+        $tokenResponse = $this->createTokenResponseArray($accessToken, $refreshToken);
+        $responseSerializer = $this->mockResponseSerializer(['serialize' => json_encode($tokenResponse)]);
+
+        // Mock "PayloadGenerator" service
+        $payloadGeneratorMock = $this->mockPayloadGeneratorService(['generate' => $accessToken->getPayload()]);
+
+        // Mock "TokenResponseCreator" service
+        $tokenResponseCreatorMock = $this->mockTokenResponseCreatorService(['create' => $tokenResponse]);
+
         // Create authenticator instance
-        return $this->createRefreshAuthenticatorInstance(
+        $authenticator = $this->createRefreshAuthenticatorInstance(
             $userProviderMock,
             $tokenIdentifier,
             $tokenGenerator,
             $tokenValidator,
             $config,
-            $dbManager
+            $dbManager,
+            $payloadGeneratorMock,
+            $tokenResponseCreatorMock,
+            $responseSerializer,
+            $refreshToken,
+            $user->getEmail()
         );
+
+        return $authenticator;
     }
 
     private function getRefreshTokenEntityClass(Algorithm $algorithm): string

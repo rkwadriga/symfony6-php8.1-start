@@ -18,4 +18,10 @@ trait ReflectionTrait
 
         return $method->invokeArgs($obj, $arguments);
     }
+
+    protected function setPrivateProperty(object $object, string $property, mixed $value): void
+    {
+        $reflectionClass = new ReflectionClass($object::class);
+        $reflectionClass->getProperty($property)->setValue($object, $value);
+    }
 }
