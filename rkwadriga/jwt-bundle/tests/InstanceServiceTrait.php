@@ -147,11 +147,11 @@ trait InstanceServiceTrait
     }
 
     protected function createJwtAuthenticatorInstance (
-        ?UserProviderInterface $userProvider = null,
         ?TokenIdentifier $identifier = null,
         ?TokenGenerator $tokenGenerator = null,
         ?TokenValidator $tokenValidator = null,
         ?Config $configService = null,
+        ?UserProviderInterface $userProvider = null,
         ?EventDispatcherInterface $eventDispatcher = null,
     ): JwtAuthenticator {
         return new JwtAuthenticator(

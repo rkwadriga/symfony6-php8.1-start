@@ -76,10 +76,6 @@ class JwtAuthenticator extends AbstractAuthenticator
             return $this->userProvider->loadUserByIdentifier($userIdentifierValue);
         });
 
-        if ($userBridge->getUser() === null) {
-            throw new AuthenticationException('Invalid access token');
-        }
-
         return new SelfValidatingPassport($userBridge);
     }
 

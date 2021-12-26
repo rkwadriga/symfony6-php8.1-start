@@ -66,9 +66,6 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
 
     public function testAuthenticate(): void
     {
-        // Create user
-        $user = $this->createUser();
-
         // Mock request
         $requestMock = $this->createMock(Request::class);
 
@@ -77,6 +74,9 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
             $time = time();
             $userID = $algorithm->value . '_test_user';
             $testCaseStartError = "Test testAuthenticate case \"{$algorithm->value}\" ";
+
+            // Create user
+            $user = $this->createUser($userID);
 
             // Create token pair
             [$accessToken, $refreshToken] = $this->createTokensPair($algorithm, $userID, $time);
@@ -314,9 +314,6 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
 
     public function testOnAuthenticationSuccess(): void
     {
-        // Create user
-        $user = $this->createUser();
-
         // Mock request
         $requestMock = $this->createMock(Request::class);
 
@@ -328,6 +325,9 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
             $time = time();
             $userID = $algorithm->value . '_test_user';
             $testCaseBaseError = "Test testAuthenticate case \"{$algorithm->value}\" ";
+
+            // Create user
+            $user = $this->createUser($userID);
 
             // Create token pair and token response
             [$accessToken, $refreshToken] = $this->createTokensPair($algorithm, $userID, $time);
@@ -426,27 +426,6 @@ class RefreshAuthenticatorTest extends AbstractUnitTestCase
             );
             $this->assertSame($content, $result->getContent(),
                 $testCaseBaseError . 'Invalid response content: ' . $result->getContent()
-            );
-        }
-    }
-
-    private function compareExceptions(string $baseMessage, Exception $actual, Exception $expected, ?Exception $previous = null): void
-    {
-        $this->assertInstanceOf($expected::class, $actual,
-            $baseMessage . 'Exception has an invalid type: ' . $actual::class
-        );
-        $this->assertSame($expected->getMessage(), $actual->getMessage(),
-            $baseMessage . 'Exception has an invalid message: ' . $actual->getMessage()
-        );
-        $this->assertSame($expected->getCode(), $actual->getCode(),
-            $baseMessage . 'Exception has an invalid code: ' . $actual->getCode()
-        );
-        if ($previous !== null) {
-            $this->assertNotNull($actual->getPrevious(),
-                $baseMessage . 'Exception has no previous exception'
-            );
-            $this->assertInstanceOf($previous::class, $actual->getPrevious(),
-                $baseMessage . 'Exception previous has an invalid type: ' . $actual->getPrevious()::class
             );
         }
     }

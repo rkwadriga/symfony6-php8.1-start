@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
+use Rkwadriga\JwtBundle\Tests\CustomAssertionsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Tests\InstanceTokenTrait;
@@ -22,6 +23,7 @@ abstract class AbstractUnitTestCase extends KernelTestCase
     use InstanceServiceTrait;
     use InstanceTokenTrait;
     use ReflectionTrait;
+    use CustomAssertionsTrait;
 
     protected const USER_ID = 'test_user@gmail.com';
     protected const SECRET_KEY = 'Lm870sdfpOki78Yr6Tsdfkl09Iksdjf71sdfk';
