@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Tests;
 
+use Rkwadriga\JwtBundle\Authenticator\JwtAuthenticator;
 use Rkwadriga\JwtBundle\Authenticator\LoginAuthenticator;
 use Rkwadriga\JwtBundle\Authenticator\RefreshAuthenticator;
 use Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface;
@@ -142,6 +143,24 @@ trait InstanceServiceTrait
             $tokenResponseCreator ?? $this->createMock(TokenResponseCreator::class),
             $oldRefreshToken,
             $userID,
+        );
+    }
+
+    protected function createJwtAuthenticatorInstance (
+        ?UserProviderInterface $userProvider = null,
+        ?TokenIdentifier $identifier = null,
+        ?TokenGenerator $tokenGenerator = null,
+        ?TokenValidator $tokenValidator = null,
+        ?Config $configService = null,
+        ?EventDispatcherInterface $eventDispatcher = null,
+    ): JwtAuthenticator {
+        return new JwtAuthenticator(
+            $configService ?? $this->createConfigServiceInstance(),
+            $eventDispatcher ?? $this->createMock(EventDispatcher::class),
+            $userProvider ?? $this->createMock(EntityUserProvider::class),
+            $identifier ?? $this->createMock(TokenIdentifier::class),
+            $tokenGenerator ?? $this->createMock(TokenGenerator::class),
+            $tokenValidator ?? $this->createMock(TokenValidator::class)
         );
     }
 }
