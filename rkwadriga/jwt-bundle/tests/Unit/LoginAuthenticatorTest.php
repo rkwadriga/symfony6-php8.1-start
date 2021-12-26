@@ -199,24 +199,22 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
                 );
 
                 // Check "User identifier missed in payload" exception
-                if ($isDbServiceEnabled) {
-                    // ...for both variants - when user identifier in payload is not set and when it equals to null
-                    $subTestCases = ['user identifier in payload is not set' => 'empty', 'user identifier in payload is null' => 'null'];
-                    foreach ($subTestCases as $subTestCaseName => $subTestCaseType) {
-                        $subTestCaseBaseError = $testCaseBaseError . "({$subTestCaseName}): ";
-                        $invalidPayload = $subTestCaseType === 'empty' ? $invalidPayloadUserIDEmpty : $invalidPayloadUserIDNull;
-                        $invalidPayloadGeneratorMock = $this->mockPayloadGeneratorService(['generate' => $invalidPayload]);
-                        $authenticator = $this->createLoginAuthenticatorInstance(
-                            null,
-                            null,
-                            $configMock,
-                            $invalidPayloadGeneratorMock,
-                            $tokenGeneratorMock,
-                            $dbManagerMock,
-                            $tokenResponseCreatorMock,
-                            $serializer
-                        );
-                    }
+                // ...for both variants - when user identifier in payload is not set and when it equals to null
+                $subTestCases = ['user identifier in payload is not set' => 'empty', 'user identifier in payload is null' => 'null'];
+                foreach ($subTestCases as $subTestCaseName => $subTestCaseType) {
+                    $subTestCaseBaseError = $testCaseBaseError . "({$subTestCaseName}): ";
+                    $invalidPayload = $subTestCaseType === 'empty' ? $invalidPayloadUserIDEmpty : $invalidPayloadUserIDNull;
+                    $invalidPayloadGeneratorMock = $this->mockPayloadGeneratorService(['generate' => $invalidPayload]);
+                    $authenticator = $this->createLoginAuthenticatorInstance(
+                        null,
+                        null,
+                        $configMock,
+                        $invalidPayloadGeneratorMock,
+                        $tokenGeneratorMock,
+                        $dbManagerMock,
+                        $tokenResponseCreatorMock,
+                        $serializer
+                    );
 
                     $exceptionWasThrown = false;
                     try {
@@ -230,7 +228,7 @@ class LoginAuthenticatorTest extends AbstractUnitTestCase
                             $subTestCaseBaseError . '"User identifier missed in payload" exception has an incorrect code: ' . $e->getCode()
                         );
                     }
-                    if (!$exceptionWasThrown) {
+                    if ($isDbServiceEnabled && !$exceptionWasThrown) {
                         $this->assertEquals(0 ,1, $subTestCaseBaseError . '"User identifier missed in payload" exception was not thrown');
                     }
                 }
