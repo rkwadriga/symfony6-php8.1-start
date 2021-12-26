@@ -83,9 +83,9 @@ class TokenGeneratorTest extends AbstractUnitTestCase
                 // Create control token params
                 $controlToken = $this->generateTestTokenParams($tokenType, $algorithm);
                 $invalidHead = array_merge($controlToken->head, ['sub' => $tokenType === TokenType::ACCESS ? TokenType::REFRESH->value : TokenType::ACCESS->value]);
-                $invalidSignature = $this->getRefreshTokenSignature($algorithm, $invalidHead, $controlToken->payload);
-                $tokenWithInvalidHead = $this->implodeRefreshTokenParts('__invalid_head', $controlToken->payloadString, $controlToken->encodedSignature);
-                $tokenWithInvalidSignature = $this->implodeRefreshTokenParts($controlToken->headString, $controlToken->payloadString, '__invalid_signature');
+                $invalidSignature = $this->getTokenSignature($algorithm, $invalidHead, $controlToken->payload);
+                $tokenWithInvalidHead = $this->implodeTokenParts('__invalid_head', $controlToken->payloadString, $controlToken->encodedSignature);
+                $tokenWithInvalidSignature = $this->implodeTokenParts($controlToken->headString, $controlToken->payloadString, '__invalid_signature');
 
                 // ... SerializerService mock
                 $serializerServiceMock = $this->mockSerializerService([
