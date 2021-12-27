@@ -11,24 +11,29 @@ use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Service\Router\Generator;
-use Rkwadriga\JwtBundle\Tests\CreateUserTableTrait;
+use Rkwadriga\JwtBundle\Tests\CustomAssertionsTrait;
 use Rkwadriga\JwtBundle\Tests\RequestParamsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DomCrawler\Crawler;
+use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 
 abstract class AbstractE2eTestCase extends WebTestCase
 {
+    protected const USER_ID = 'test_user@gmail.com';
+    protected const SECRET_KEY = 'Lm870sdfpOki78Yr6Tsdfkl09Iksdjf71sdfk';
+
     use ConfigDefaultsTrait;
     use RequestParamsTrait;
     use AuthenticationTrait;
-    use CreateUserTableTrait;
+    use CustomAssertionsTrait;
 
     protected ?KernelBrowser $client = null;
     protected ContainerInterface $container;
     protected EntityManagerInterface $entityManager;
     protected Generator $router;
+    protected PasswordHasherFactoryInterface $passwordEncoderFactory;
     protected string $loginUrl;
     protected string $refreshUrl;
     protected string $loginParam;
@@ -43,6 +48,7 @@ abstract class AbstractE2eTestCase extends WebTestCase
         $this->container = $this->client->getContainer();
         $this->entityManager = $this->container->get('doctrine.orm.entity_manager');
         $this->router = new Generator($this->container->get('router.default'));
+        $this->passwordEncoderFactory = $this->container->get('security.password_hasher_factory');
         $this->loginUrl = $this->getConfigDefault(ConfigurationParam::LOGIN_URL);
         $this->refreshUrl = $this->getConfigDefault(ConfigurationParam::REFRESH_URL);
         $this->loginParam = $this->getConfigDefault(ConfigurationParam::LOGIN_PARAM);

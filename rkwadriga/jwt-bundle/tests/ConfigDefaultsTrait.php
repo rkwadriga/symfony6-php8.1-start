@@ -15,7 +15,7 @@ trait ConfigDefaultsTrait
 {
     protected function getConfigDefault(ConfigurationParam $param) {
         return match ($param) {
-            ConfigurationParam::PROVIDER => 'app_user_provider',
+            ConfigurationParam::PROVIDER => 'rkwadriga_jwt_default_user_provider',
             ConfigurationParam::LOGIN_URL => 'rkwadriga_jwt_auth_login',
             ConfigurationParam::REFRESH_URL => 'rkwadriga_jwt_refresh_token',
             ConfigurationParam::USER_IDENTIFIER => 'email',

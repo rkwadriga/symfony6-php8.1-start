@@ -33,6 +33,11 @@ trait UserInstanceTrait
         }
 
         $user = new User($email, $password, $roles);
+        if (property_exists($this, 'passwordEncoderFactory')) {
+            $password = $this->passwordEncoderFactory->getPasswordHasher($user)->hash($password);
+            $user->setPassword($password);
+        }
+
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 

@@ -13,7 +13,7 @@ use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 
 class HeadGenerator implements HeadGeneratorInterface
 {
-    private const TOKEN_TYPE = 'JWT';
+    public const TOKEN_TYPE = 'JWT';
 
     public function __construct(
         private Config $config

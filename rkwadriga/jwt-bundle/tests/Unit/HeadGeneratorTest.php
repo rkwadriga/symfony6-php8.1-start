@@ -9,6 +9,7 @@ namespace Rkwadriga\JwtBundle\Tests\Unit;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Service\HeadGenerator;
 
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/Unit/HeadGeneratorTest.php
@@ -43,7 +44,7 @@ class HeadGeneratorTest extends AbstractUnitTestCase
                     $this->assertArrayHasKey('alg', $head2, $errorStartMsg . 'head has no "alg" key');
                     $this->assertSame($algorithm->value, $head2['alg'], $errorStartMsg . 'head has invalid "alg" value');
                     $this->assertArrayHasKey('typ', $head2, $errorStartMsg . 'head has no "typ" key');
-                    $this->assertSame('JWT', $head2['typ'], $errorStartMsg . 'head has invalid "typ" value');
+                    $this->assertSame(HeadGenerator::TOKEN_TYPE, $head2['typ'], $errorStartMsg . 'head has invalid "typ" value');
                     $this->assertArrayHasKey('sub', $head2, $errorStartMsg . 'head has no "sub" key');
                     $this->assertSame($tokenType->value, $head2['sub'], $errorStartMsg . 'head has invalid "sub" value');
                 }

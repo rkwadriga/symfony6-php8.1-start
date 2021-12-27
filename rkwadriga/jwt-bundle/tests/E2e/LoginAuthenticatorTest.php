@@ -6,19 +6,27 @@
 
 namespace Rkwadriga\JwtBundle\Tests\E2e;
 
+use Rkwadriga\JwtBundle\Tests\InstanceTokenTrait;
+use Rkwadriga\JwtBundle\Tests\UserInstanceTrait;
+
 /**
  * @Run: test rkwadriga/jwt-bundle/tests/E2e/LoginAuthenticatorTest.php
  */
 class LoginAuthenticatorTest extends AbstractE2eTestCase
 {
+    use UserInstanceTrait;
+    use InstanceTokenTrait;
+
     public function testSuccessfulLogin(): void
     {
+        // Crate user
+        $user = $this->createUser();
+
         $this->send($this->loginUrl, [
-            $this->loginParam => 'test_user@mail.com',
-            $this->passwordParam => 'test_passwd',
+            $this->loginParam => $user->getEmail(),
+            $this->passwordParam => self::$password,
         ]);
 
-        dd($this->getErrorResponseParams());
-        dd($this->getResponseStatusCode(), $this->getResponseParams());
+        $this->checkTokenResponse($user);
     }
 }

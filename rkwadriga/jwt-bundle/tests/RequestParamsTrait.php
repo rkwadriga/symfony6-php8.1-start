@@ -14,16 +14,21 @@ trait RequestParamsTrait
     protected string $requestContentType = Request::CONTENT_TYPE_JSON;
     protected string $requestAssept = Request::CONTENT_TYPE_JSON;
 
-    public function getResponseStatusCode(): int
+    protected function getResponseStatusCode(): int
     {
         return $this->getClient()->getResponse()->getStatusCode();
     }
 
-    public function getResponseParams(mixed $params = null, mixed $defaultValue = null): mixed
+    protected function getResponseBody(): string
+    {
+        return $this->getClient()->getResponse()->getContent();
+    }
+
+    protected function getResponseParams(mixed $params = null, mixed $defaultValue = null): mixed
     {
         // Decode content
         try {
-            $content = json_decode($this->getClient()->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+            $content = json_decode($this->getResponseBody(), true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
             throw new JsonException($e->getMessage(), $e->getCode());
         }
@@ -49,8 +54,8 @@ trait RequestParamsTrait
         }, ARRAY_FILTER_USE_KEY);
     }
 
-    public function getErrorResponseParams(): array
+    protected function getErrorResponseParams(): array
     {
-        return ['code' => $this->getResponseStatusCode(), 'message' => $this->getResponseParams('detail')];
+        return ['code' => $this->getResponseStatusCode(), 'message' => $this->getResponseParams('message')];
     }
 }

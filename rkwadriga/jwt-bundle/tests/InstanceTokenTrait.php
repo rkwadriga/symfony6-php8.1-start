@@ -14,6 +14,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Service\HeadGenerator;
 use Rkwadriga\JwtBundle\Tests\Entity\TokenTestPramsEntity;
 
 trait InstanceTokenTrait
@@ -66,7 +67,7 @@ trait InstanceTokenTrait
         if ($userID === null) {
             $userID = $tokenType->value . '_' . $algorithm->value;
         }
-        $head = ['alg' => $algorithm->value, 'typ' => 'JWT', 'sub' => $tokenType->value];
+        $head = ['alg' => $algorithm->value, 'typ' => HeadGenerator::TOKEN_TYPE, 'sub' => $tokenType->value];
         $payload = ['created' => $created, 'email' => $userID];
         [$headString, $payloadString] = [$this->encodeTokenData($head), $this->encodeTokenData($payload)];
         [$createdAtDateTime, $expiredAtDateTime] = $this->getTokenLifeTime($created, $tokenType);
@@ -114,7 +115,7 @@ trait InstanceTokenTrait
     {
         return [
             'alg' => $algorithm->value,
-            'typ' => 'JWT',
+            'typ' => HeadGenerator::TOKEN_TYPE,
             'sub' => $type->value,
         ];
     }
@@ -140,8 +141,9 @@ trait InstanceTokenTrait
     protected function getTokenSignature(Algorithm $algorithm, array $head, array $payload): string
     {
         $contentPart = $this->implodeTokenParts($this->encodeTokenData($head), $this->encodeTokenData($payload));
+        $secretKey = $this->getConfigDefault(ConfigurationParam::SECRET_KEY);
 
-        return hash_hmac($algorithm->value, $contentPart, self::SECRET_KEY);
+        return hash_hmac($algorithm->value, $contentPart, $secretKey);
     }
 
     protected function implodeTokenParts(string ...$parts): string

@@ -29,6 +29,9 @@ class RkwadrigaJwtExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
         $this->checkConfig($config);
 
+        // Set user provider
+        // rkwadriga_jwt_default_user_provider
+        //[$userProviderConfigID, $userProviderConfigShortID] = [ConfigurationParam::PROVIDER->value(), ConfigurationParam::PROVIDER->shortValue()];
         $container->setAlias(ConfigurationParam::PROVIDER->value(), 'security.user.provider.concrete.' . $config[ConfigurationParam::PROVIDER->shortValue()]);
         foreach (ConfigurationParam::cases() as $case) {
             $container->setParameter($case->value(), $config[$case->shortValue()]);

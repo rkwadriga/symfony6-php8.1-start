@@ -9,6 +9,14 @@ services:
             - '@Rkwadriga\JwtBundle\Service\Config'
         tags: [ routing.loader ]
 
+    Rkwadriga\JwtBundle\Security\UserProvider:
+        arguments:
+            - Rkwadriga\JwtBundle\Entity\User
+            - '@doctrine.orm.entity_manager'
+    security.user.provider.concrete.rkwadriga_jwt_default_user_provider:
+        alias: Rkwadriga\JwtBundle\Security\UserProvider
+        public: false
+
     Rkwadriga\JwtBundle\Service\PayloadGenerator: ~
     Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface:
         alias: Rkwadriga\JwtBundle\Service\PayloadGenerator
@@ -56,6 +64,11 @@ services:
     Rkwadriga\JwtBundle\DependencyInjection\TokenValidatorInterface:
         alias: Rkwadriga\JwtBundle\Service\TokenValidator
         public: true
+
+    Rkwadriga\JwtBundle\Repository\UserRepository:
+        arguments:
+            - '@doctrine'
+        tags: [ 'doctrine.repository_service' ]
 
     Rkwadriga\JwtBundle\Repository\RefreshToken256Repository:
         arguments:
