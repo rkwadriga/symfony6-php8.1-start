@@ -18,14 +18,19 @@ trait AuthenticationTrait
         $this->logout();
     }
 
-    protected function login(?string $userID = null, ?string $password = null): ?array
+    protected function login(mixed $userID = null, mixed $password = null): ?array
     {
         $this->token = null;
 
-        $this->send($this->loginUrl, [
-            $this->loginParam => $userID ?? self::$userID,
-            $this->passwordParam => $password ?? self::$password,
-        ]);
+        $loginParams = [];
+        if ($userID !== false) {
+            $loginParams[$this->loginParam] = $userID ?? self::$userID;
+        }
+        if ($password !== false) {
+            $loginParams[$this->passwordParam] = $password ?? self::$password;
+        }
+
+        $this->send($this->loginUrl, $loginParams);
 
         if (!in_array($this->getResponseStatusCode(), [Response::HTTP_CREATED, Response::HTTP_OK])) {
             return null;

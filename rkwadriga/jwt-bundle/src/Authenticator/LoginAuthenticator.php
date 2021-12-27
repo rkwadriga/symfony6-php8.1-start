@@ -88,7 +88,7 @@ class LoginAuthenticator extends AbstractAuthenticator
         if ($user instanceof PasswordAuthenticatedUserInterface
             && !$this->encoderFactory->getPasswordHasher($user)->verify($user->getPassword(), $params[$passwordParam])
         ) {
-            throw new BadCredentialsException('Invalid credentials');
+            throw new BadCredentialsException('Bad credentials');
         }
 
         return new SelfValidatingPassport($userBridge);

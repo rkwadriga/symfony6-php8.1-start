@@ -23,10 +23,10 @@ trait UserInstanceTrait
     protected function createUser(?string $email = null, ?string $password = null, array $roles = []): User
     {
         if ($email === null) {
-            $email = static::$userID;
+            $email = self::$userID;
         }
         if ($password === null) {
-            $password = static::$password;
+            $password = self::$password;
         }
 
         $user = new User($email, $password, $roles);

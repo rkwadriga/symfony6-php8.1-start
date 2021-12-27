@@ -114,4 +114,26 @@ trait CustomAssertionsTrait
         $createdAt = $expiredAt->add(DateInterval::createFromDateString("-{$lifeTime} seconds"));
         $this->assertEquals($createdAt, $refreshToken->getCreatedAt());
     }
+
+    protected function checkErrorResponse(int $responseCode, mixed $errorMessage = null, ?int $errorCode = null): void
+    {
+        $this->assertResponseStatusCodeSame($responseCode);
+        $responseParams = $this->getResponseParams();
+        $this->assertIsArray($responseParams);
+        $this->assertArrayHasKey('code', $responseParams);
+        $this->assertArrayHasKey('message', $responseParams);
+        $this->assertIsInt($responseParams['code']);
+        $this->assertIsString($responseParams['message']);
+        if ($errorMessage !== null) {
+            if (is_string($errorMessage)) {
+                $errorMessage = [$errorMessage];
+            }
+            foreach ($errorMessage as $message) {
+                $this->assertStringContainsStringIgnoringCase($message, $responseParams['message']);
+            }
+        }
+        if ($errorCode !== null) {
+            $this->assertSame($errorCode, $responseParams['code']);
+        }
+    }
 }
