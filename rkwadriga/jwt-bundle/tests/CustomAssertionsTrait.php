@@ -9,8 +9,11 @@ namespace Rkwadriga\JwtBundle\Tests;
 use Exception;
 use DateTime;
 use DateInterval;
+use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\RefreshToken256;
+use Rkwadriga\JwtBundle\Entity\RefreshToken512;
+use Rkwadriga\JwtBundle\Entity\RefreshTokenEntityInterface;
 use Rkwadriga\JwtBundle\Entity\User;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Service\HeadGenerator;
@@ -100,8 +103,9 @@ trait CustomAssertionsTrait
         $this->assertSame($accessTokenPayload, $refreshTokenPayload);
 
         // Check refresh token in DB
-        /** @var RefreshToken256|null $refreshToken */
-        $refreshToken = $this->entityManager->getRepository(RefreshToken256::class)->findOneBy(['userId' => $user->getEmail(), 'refreshToken' => $signature]);
+        /** @var RefreshTokenEntityInterface|null $refreshToken */
+        $refreshTokenEntityClass = $algorithm === Algorithm::SHA256->value ? RefreshToken256::class : RefreshToken512::class;
+        $refreshToken = $this->entityManager->getRepository($refreshTokenEntityClass)->findOneBy(['userId' => $user->getEmail(), 'refreshToken' => $signature]);
         $this->assertNotNull($refreshToken);
 
         // Check payload expiredAt
