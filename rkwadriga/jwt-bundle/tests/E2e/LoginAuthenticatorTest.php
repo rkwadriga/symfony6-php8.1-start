@@ -29,4 +29,12 @@ class LoginAuthenticatorTest extends AbstractE2eTestCase
 
         $this->checkTokenResponse($user);
     }
+
+    public function testInvalidCredentialsException(): void
+    {
+        // Check not existed user login
+        $this->login();
+
+        $this->assertSame(1, 1);
+    }
 }

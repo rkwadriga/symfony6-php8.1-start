@@ -12,6 +12,7 @@ use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Service\Router\Generator;
 use Rkwadriga\JwtBundle\Tests\CustomAssertionsTrait;
+use Rkwadriga\JwtBundle\Tests\DefaultParamsTrait;
 use Rkwadriga\JwtBundle\Tests\RequestParamsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -21,9 +22,7 @@ use Symfony\Component\PasswordHasher\Hasher\PasswordHasherFactoryInterface;
 
 abstract class AbstractE2eTestCase extends WebTestCase
 {
-    protected const USER_ID = 'test_user@gmail.com';
-    protected const SECRET_KEY = 'Lm870sdfpOki78Yr6Tsdfkl09Iksdjf71sdfk';
-
+    use DefaultParamsTrait;
     use ConfigDefaultsTrait;
     use RequestParamsTrait;
     use AuthenticationTrait;

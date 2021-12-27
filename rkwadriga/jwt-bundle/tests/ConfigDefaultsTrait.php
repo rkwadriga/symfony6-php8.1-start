@@ -21,7 +21,7 @@ trait ConfigDefaultsTrait
             ConfigurationParam::USER_IDENTIFIER => 'email',
             ConfigurationParam::LOGIN_PARAM => 'email',
             ConfigurationParam::PASSWORD_PARAM => 'password',
-            ConfigurationParam::SECRET_KEY => self::SECRET_KEY,
+            ConfigurationParam::SECRET_KEY => self::$secretKey,
             ConfigurationParam::ENCODING_ALGORITHM => Algorithm::SHA256->value,
             ConfigurationParam::ENCODING_HASHING_COUNT => 3,
             ConfigurationParam::ACCESS_TOKEN_LIFE_TIME => 3600,

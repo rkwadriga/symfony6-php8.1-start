@@ -24,9 +24,12 @@ trait InstanceTokenTrait
      */
     protected function createTokensPair(
         Algorithm $algorithm,
-        string $userID = self::USER_ID,
+        ?string $userID = null,
         ?int $createdAt = null
     ): array {
+        if ($userID === null) {
+            $userID = self::$userID;
+        }
         $accessToken = $this->createToken($algorithm, TokenType::ACCESS, $userID, $createdAt);
         return [
             $accessToken,
@@ -37,9 +40,12 @@ trait InstanceTokenTrait
     protected function createToken(
         Algorithm $algorithm,
         TokenType $type,
-        string $userID = self::USER_ID,
+        ?string $userID = null,
         ?int $createdAt = null
     ): TokenInterface {
+        if ($userID === null) {
+            $userID = self::$userID;
+        }
         if ($createdAt === null) {
             $createdAt = time();
         }

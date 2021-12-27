@@ -12,9 +12,6 @@ use Rkwadriga\JwtBundle\Exception\DbServiceException;
 
 trait UserInstanceTrait
 {
-    protected static string $userID = 'test_user@mail.com';
-    protected static string $password = '12345';
-
     protected function setUp(): void
     {
         parent::setUp();
