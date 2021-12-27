@@ -147,7 +147,7 @@ class RefreshAuthenticator extends AbstractAuthenticator
         $json = $this->serializer->serialize($event->getTokenResponse(), 'json', [
             'json_encode_options' => JsonResponse::DEFAULT_ENCODING_OPTIONS,
         ]);
-        $response = new JsonResponse($json, Response::HTTP_CREATED, [], true);
+        $response = new JsonResponse($json, Response::HTTP_OK, [], true);
 
         // This event can be used to change response
         $event = new AuthenticationFinishedSuccessful(AuthenticationType::REFRESH, $response);

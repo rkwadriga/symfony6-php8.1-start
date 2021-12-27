@@ -6,6 +6,10 @@
 
 namespace Rkwadriga\JwtBundle\Tests;
 
+use Rkwadriga\JwtBundle\Entity\Token;
+use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Enum\TokenParamLocation;
+use Rkwadriga\JwtBundle\Enum\TokenParamType;
 use Symfony\Component\HttpFoundation\Response;
 
 trait AuthenticationTrait
@@ -42,6 +46,62 @@ trait AuthenticationTrait
         }
 
         return $result;
+    }
+
+    protected function refresh(Token $accessToken, Token $refreshToken): ?array
+    {
+        [$accessTokenParamName, $refreshTokenParamName, $accessTokenLocation, $refreshTokenLocation, $accessTokenType] = [
+            $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_PARAM_NAME),
+            $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_PARAM_NAME),
+            $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_LOCATION),
+            $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LOCATION),
+            $this->getConfigDefault(ConfigurationParam::TOKEN_TYPE),
+        ];
+        [$accessTokenString, $refreshTokenString] = [
+            $accessTokenLocation === TokenParamLocation::HEADER->value && $accessTokenType === TokenParamType::BEARER->value
+                ? TokenParamType::BEARER->value . ' ' . $accessToken->getToken()
+                : $accessToken->getToken(),
+            $refreshToken->getToken(),
+        ];
+        $uri = $this->refreshUrl;
+
+        $headers = $body = [];
+        switch ($accessTokenLocation) {
+            case TokenParamLocation::HEADER->value:
+                $accessTokenParamName = 'HTTP_' . strtoupper($accessTokenParamName);
+                $headers[$accessTokenParamName] = $accessTokenString;
+                break;
+            case TokenParamLocation::URI->value:
+                $uri = [$uri, $accessTokenParamName => $accessTokenString];
+                break;
+            default:
+                $body[$accessTokenParamName] = $accessTokenString;
+                break;
+        }
+
+        switch ($refreshTokenLocation) {
+            case TokenParamLocation::HEADER->value:
+                $refreshTokenParamName = 'HTTP_' . strtoupper($refreshTokenParamName);
+                $headers[$refreshTokenParamName] = $refreshTokenString;
+                break;
+            case TokenParamLocation::URI->value:
+                if (!is_array($uri)) {
+                    $uri = [$uri];
+                }
+                $uri[$refreshTokenParamName] = $refreshTokenString;
+                break;
+            default:
+                $body[$refreshTokenParamName] = $refreshTokenString;
+                break;
+        }
+
+        $this->send($uri, $body, $headers);
+
+        if (!in_array($this->getResponseStatusCode(), [Response::HTTP_CREATED, Response::HTTP_OK])) {
+            return null;
+        }
+
+        return $this->getResponseParams();
     }
 
     protected function logout(): void

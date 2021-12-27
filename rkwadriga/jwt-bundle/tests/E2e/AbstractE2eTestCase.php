@@ -12,6 +12,7 @@ use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Service\Router\Generator;
 use Rkwadriga\JwtBundle\Tests\CustomAssertionsTrait;
+use Rkwadriga\JwtBundle\Tests\DatabaseTrait;
 use Rkwadriga\JwtBundle\Tests\DefaultParamsTrait;
 use Rkwadriga\JwtBundle\Tests\RequestParamsTrait;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -24,6 +25,7 @@ abstract class AbstractE2eTestCase extends WebTestCase
 {
     use DefaultParamsTrait;
     use ConfigDefaultsTrait;
+    use DatabaseTrait;
     use RequestParamsTrait;
     use AuthenticationTrait;
     use CustomAssertionsTrait;

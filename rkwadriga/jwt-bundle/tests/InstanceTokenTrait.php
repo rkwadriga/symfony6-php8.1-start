@@ -25,7 +25,8 @@ trait InstanceTokenTrait
     protected function createTokensPair(
         Algorithm $algorithm,
         ?string $userID = null,
-        ?int $createdAt = null
+        ?int $createdAt = null,
+        bool $saveToDb = false
     ): array {
         if ($userID === null) {
             $userID = self::$userID;
@@ -33,7 +34,7 @@ trait InstanceTokenTrait
         $accessToken = $this->createToken($algorithm, TokenType::ACCESS, $userID, $createdAt);
         return [
             $accessToken,
-            $this->createToken($algorithm, TokenType::REFRESH, $userID, $accessToken->getPayload()['created']),
+            $this->createToken($algorithm, TokenType::REFRESH, $userID, $accessToken->getPayload()['created'], $saveToDb),
         ];
     }
 
@@ -41,7 +42,8 @@ trait InstanceTokenTrait
         Algorithm $algorithm,
         TokenType $type,
         ?string $userID = null,
-        ?int $createdAt = null
+        ?int $createdAt = null,
+        bool $saveToDb = false
     ): TokenInterface {
         if ($userID === null) {
             $userID = self::$userID;
@@ -54,7 +56,7 @@ trait InstanceTokenTrait
         [$headString, $payloadString] = [$this->encodeTokenData($head), $this->encodeTokenData($payload)];
         $signature = $this->getTokenSignature($algorithm, $head, $payload);
 
-        return new Token(
+        $token = new Token(
             $type,
             $this->implodeTokenParts($headString, $payloadString, $this->encodeTokenPart($signature)),
             $createdAtDateTime,
@@ -63,6 +65,13 @@ trait InstanceTokenTrait
             $payload,
             $signature
         );
+
+        if ($saveToDb) {
+            // Save token to DB
+            $this->saveRefreshToken($token, $algorithm);
+        }
+
+        return $token;
     }
 
     protected function generateTestTokenParams(TokenType $tokenType, Algorithm $algorithm, ?int $created = null, ?string $userID = null): TokenTestPramsEntity
