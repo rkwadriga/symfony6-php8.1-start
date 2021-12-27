@@ -13,7 +13,14 @@ use Rkwadriga\JwtBundle\Enum\TokenParamType;
 
 trait ConfigDefaultsTrait
 {
-    protected function getConfigDefault(ConfigurationParam $param) {
+    private array $customConfig = [];
+
+    protected function getConfigDefault(ConfigurationParam $param)
+    {
+        if (isset($this->customConfig[$param->value])) {
+            return $this->customConfig[$param->value];
+        }
+
         return match ($param) {
             ConfigurationParam::PROVIDER => 'rkwadriga_jwt_default_user_provider',
             ConfigurationParam::LOGIN_URL => 'rkwadriga_jwt_auth_login',
@@ -36,5 +43,10 @@ trait ConfigDefaultsTrait
             ConfigurationParam::REFRESH_TOKENS_LIMIT => 3,
             ConfigurationParam::REWRITE_ON_LIMIT_EXCEEDED => true,
         };
+    }
+
+    protected function setConfigDefault(ConfigurationParam $param, mixed $vale): void
+    {
+        $this->customConfig[$param->value] = $vale;
     }
 }
