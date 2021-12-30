@@ -48,7 +48,7 @@ trait AuthenticationTrait
         return $result;
     }
 
-    protected function refresh(Token $accessToken, Token $refreshToken): ?array
+    protected function refresh(Token|string $accessToken, Token|string $refreshToken): ?array
     {
         [$accessTokenParamName, $refreshTokenParamName, $accessTokenLocation, $refreshTokenLocation, $accessTokenType] = [
             $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_PARAM_NAME),
@@ -57,12 +57,22 @@ trait AuthenticationTrait
             $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LOCATION),
             $this->getConfigDefault(ConfigurationParam::TOKEN_TYPE),
         ];
-        [$accessTokenString, $refreshTokenString] = [
-            $accessTokenLocation === TokenParamLocation::HEADER->value && $accessTokenType === TokenParamType::BEARER->value
+
+        if ($accessToken instanceof Token) {
+            $accessTokenString = $accessTokenLocation === TokenParamLocation::HEADER->value && $accessTokenType === TokenParamType::BEARER->value
                 ? TokenParamType::BEARER->value . ' ' . $accessToken->getToken()
-                : $accessToken->getToken(),
-            $refreshToken->getToken(),
-        ];
+                : $accessToken->getToken();
+        } else {
+            $accessTokenString = $accessTokenLocation === TokenParamLocation::HEADER->value && $accessTokenType === TokenParamType::BEARER->value
+                ? TokenParamType::BEARER->value . ' ' . $accessToken
+                : $accessToken;
+        }
+        if ($refreshToken instanceof Token) {
+            $refreshTokenString = $refreshToken->getToken();
+        } else {
+            $refreshTokenString = $refreshToken;
+        }
+
         $uri = $this->refreshUrl;
 
         $headers = $body = [];

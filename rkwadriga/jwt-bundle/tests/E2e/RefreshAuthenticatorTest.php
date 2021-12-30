@@ -6,12 +6,15 @@
 
 namespace Rkwadriga\JwtBundle\Tests\E2e;
 
+use Exception;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
+use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenParamLocation;
 use Rkwadriga\JwtBundle\Enum\TokenParamType;
+use Rkwadriga\JwtBundle\Exception\SerializerException;
 use Rkwadriga\JwtBundle\Exception\TokenIdentifierException;
-use Rkwadriga\JwtBundle\Tests\ClearDatabaseTrait;
+use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
 use Rkwadriga\JwtBundle\Tests\InstanceTokenTrait;
 use Rkwadriga\JwtBundle\Tests\RefreshTokenTrait;
 use Rkwadriga\JwtBundle\Tests\UserInstanceTrait;
@@ -26,7 +29,7 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
     use UserInstanceTrait;
     use InstanceTokenTrait;
 
-    public function testSuccessfulRefresh(): void
+    public function AtestSuccessfulRefresh(): void
     {
         // Do not forget to clear the refresh tokens table
         $this->clearRefreshTokenTable();
@@ -42,7 +45,7 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         $this->checkTokenResponse($user, Response::HTTP_OK);
     }
 
-    public function testTokenIdentifierExceptions(): void
+    public function AtestTokenIdentifierExceptions(): void
     {
         // Do not forget to clear the refresh tokens table
         $this->clearRefreshTokenTable();
@@ -117,10 +120,127 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         $user = $this->createUser();
 
         // Create token pair and save refresh token to DB
-        [$accessToken, $refreshToken] = $this->createTokensPair($this->getDefaultAlgorithm(), $user->getEmail(), null, true);
+        $created = time();
+        $this->createTokensPair($this->getDefaultAlgorithm(), $user->getEmail(), $created, true);
 
-        /** @todo make real test */
-        $this->assertSame(1, 1);
+        // Create token params pair and save refresh token to DB
+        $algorithm = $this->getDefaultAlgorithm();
+
+        $invalidAlgorithm = $algorithm === Algorithm::SHA256 ? Algorithm::SHA512 : Algorithm::SHA256;
+        $refreshTokenLifeTime = $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);
+        [$accessTokenParams, $refreshTokenParams] = [
+            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created, $user->getEmail()),
+            $this->generateTestTokenParams(TokenType::REFRESH, $algorithm, $created, $user->getEmail())
+        ];
+        [$accessTokenExpiredParams, $refreshTokenExpiredParams] = [
+            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created - $refreshTokenLifeTime, $user->getEmail()),
+            $this->generateTestTokenParams(TokenType::REFRESH, $algorithm, $created - $refreshTokenLifeTime, $user->getEmail())
+        ];
+        $invalidBase64String = "ûï¾møçž\n";
+
+        $accessTokenInvalidHeadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($accessTokenParams->head)));
+        $accessTokenInvalidHeadDecoded = json_encode($accessTokenParams->head);
+        $accessTokenInvalidPayloadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($accessTokenParams->payload)));
+        $accessTokenInvalidPayloadDecoded = json_encode($accessTokenParams->payload);
+        $accessTokenInvalidHeadType = $this->encodeTokenData(array_merge($accessTokenParams->head, ['sub' => TokenType::REFRESH->value]));
+        $accessTokenInvalidHeadAlg = $this->encodeTokenData(array_merge($accessTokenParams->head, ['alg' => $invalidAlgorithm]));
+
+        $refreshTokenInvalidHeadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($refreshTokenParams->head)));
+        $refreshTokenInvalidHeadDecoded = json_encode($refreshTokenParams->head);
+        $refreshTokenInvalidPayloadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($refreshTokenParams->payload)));
+        $refreshTokenInvalidPayloadDecoded = json_encode($refreshTokenParams->payload);
+        $refreshTokenInvalidHeadType = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['sub' => TokenType::ACCESS->value]));
+        $refreshTokenInvalidHeadAlg = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['alg' => $invalidAlgorithm]));
+
+        // Check exceptions
+        $testCases = [
+            // <--- Access token part --->
+            [
+                $this->implodeTokenParts($accessTokenInvalidHeadEncoded, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, SerializerException::INVALID_JSON_DATA, 'Invalid json'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenInvalidHeadDecoded, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, SerializerException::INVALID_JSON_DATA, 'Invalid json'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenParams->headString, $accessTokenInvalidPayloadEncoded, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, SerializerException::INVALID_JSON_DATA, 'Invalid json'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenParams->contentPart, $invalidBase64String),
+                $refreshTokenExpiredParams->tokenString, Response::HTTP_FORBIDDEN, SerializerException::INVALID_BASE64_DATA, 'Invalid base64'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenParams->headString, $accessTokenInvalidPayloadDecoded, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_FORMAT, 'Invalid token format'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenParams->headString, $accessTokenInvalidPayloadDecoded, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_FORMAT, 'Invalid token format'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenInvalidHeadType, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenExpiredParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_TYPE, 'Invalid token'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenInvalidHeadAlg, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenExpiredParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_SIGNATURE, 'Invalid token'
+            ],
+            // <--- /Access token part --->
+            // <--- Refresh token part --->
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenInvalidHeadEncoded, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, SerializerException::INVALID_JSON_DATA, 'Invalid json'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenInvalidHeadDecoded, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, SerializerException::INVALID_JSON_DATA, 'Invalid json'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenParams->headString, $refreshTokenInvalidPayloadEncoded, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, SerializerException::INVALID_JSON_DATA, 'Invalid json'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenParams->contentPart, $invalidBase64String),
+                Response::HTTP_FORBIDDEN, SerializerException::INVALID_BASE64_DATA, 'Invalid base64'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenParams->headString, $refreshTokenInvalidPayloadDecoded, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_FORMAT, 'Invalid token format'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenParams->headString, $refreshTokenInvalidPayloadDecoded, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_FORMAT, 'Invalid token format'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenInvalidHeadType, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_TYPE, 'Invalid token'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenInvalidHeadAlg, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_SIGNATURE, 'Invalid token'
+            ],
+            [
+                $accessTokenExpiredParams->tokenString,
+                $refreshTokenExpiredParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::REFRESH_TOKEN_EXPIRED, 'Token expired'
+            ],
+            // <--- /Refresh token part --->
+        ];
+        foreach ($testCases as $testCase) {
+            [$accessToken, $refreshToken, $responseCode, $errorCode, $errorMsg] = $testCase;
+            $this->refresh($accessToken, $refreshToken);
+            //dd($this->getResponseParams(), $this->getResponseStatusCode());
+            $this->checkErrorResponse($responseCode, $errorMsg, $errorCode);
+        }
     }
 
     private function getDefaultAlgorithm(): Algorithm

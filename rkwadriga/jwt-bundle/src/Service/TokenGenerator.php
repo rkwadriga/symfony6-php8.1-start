@@ -119,7 +119,7 @@ class TokenGenerator implements TokenGeneratorInterface
      */
     private function lifePeriodFromPayload(array $payload, TokenType $type): array
     {
-        $timeStamp = $payload['timestamp'] ?? time();
+        $timeStamp = $payload['created'] ?? time();
         $lifeTime = $type === TokenType::ACCESS
             ? $this->config->get(ConfigurationParam::ACCESS_TOKEN_LIFE_TIME)
             : $this->config->get(ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);

@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Service;
 
+use Exception;
 use Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
@@ -30,7 +31,7 @@ class Serializer implements SerializerInterface
         }
 
         if (($decoded = base64_decode($data)) === false || $decoded === '') {
-            throw new SerializerException("Invalid data \"{$data}\"", SerializerException::INVALID_BASE64_DATA);
+            throw new SerializerException("Invalid base64-string", SerializerException::INVALID_BASE64_DATA);
         }
 
         return $decoded;
@@ -53,7 +54,7 @@ class Serializer implements SerializerInterface
     {
         $jsonData = $this->decode($data);
         if (($deserialized = json_decode($jsonData, true)) === null) {
-            $message = "Invalid data \"{$jsonData}\"";
+            $message = 'Invalid json';
             if ($jsonLastError = json_last_error_msg()) {
                 $message .= ". Error: {$jsonLastError}";
             }
