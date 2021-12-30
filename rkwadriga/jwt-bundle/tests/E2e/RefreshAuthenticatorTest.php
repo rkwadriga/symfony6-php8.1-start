@@ -384,8 +384,27 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         foreach ($testCases as $testCase) {
             [$accessToken, $refreshToken, $responseCode, $errorCode, $errorMsg] = $testCase;
             $this->refresh($accessToken, $refreshToken);
-            //dd($this->getResponseParams(), $this->getResponseStatusCode());
             $this->checkErrorResponse($responseCode, $errorMsg, $errorCode);
+        }
+    }
+
+    public function testRefreshTokenDoesNotExistFound(): void
+    {
+        // Do not forget to clear the refresh tokens table
+        $this->clearRefreshTokenTable();
+
+        // Crate user
+        $user = $this->createUser();
+
+        // Create token pair and save refresh token to DB
+        $created = time();
+        [$accessToken, $refreshToken] = $this->createTokensPair($this->getDefaultAlgorithm(), $user->getEmail(), $created);
+
+        $this->refresh($accessToken, $refreshToken);
+        if ($this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
+            $this->checkErrorResponse(Response::HTTP_FORBIDDEN, 'Refresh token does not exist', TokenValidatorException::INVALID_REFRESH_TOKEN);
+        } else {
+            $this->assertSame(1, 1);
         }
     }
 
