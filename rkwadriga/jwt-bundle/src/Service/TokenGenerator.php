@@ -23,7 +23,7 @@ use Rkwadriga\JwtBundle\Event\TokenCreatingStarted;
 use Rkwadriga\JwtBundle\Event\TokenParsingFinishedSuccessful;
 use Rkwadriga\JwtBundle\Event\TokenParsingFinishedUnsuccessful;
 use Rkwadriga\JwtBundle\Event\TokenParsingStarted;
-use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
+use Rkwadriga\JwtBundle\Exception\TokenGeneratorException;
 use Rkwadriga\JwtBundle\Helpers\TimeHelper;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -79,32 +79,54 @@ class TokenGenerator implements TokenGeneratorInterface
         try {
             // Get token head, payload and signature
             [$headString, $payloadString, $signature] = $this->serializer->explode($token);
-            [$head, $payload] = [$this->serializer->deserialiaze($headString), $this->serializer->deserialiaze($payloadString)];
+            [$head, $payload, $signature] = [
+                $this->serializer->deserialiaze($headString),
+                $this->serializer->deserialiaze($payloadString),
+                $this->serializer->decode($signature),
+            ];
 
-            // Check token type
-            if (isset($head['sub']) && $head['sub'] !== $type->value) {
-                throw new TokenValidatorException('Invalid token', TokenValidatorException::INVALID_TYPE);
+            // If token type set in header - get token type from it
+            $tokenType = $type;
+            if (isset($head['sub'])) {
+                $tokenType = TokenType::tryFrom($head['sub']);
+                if ($tokenType === null) {
+                    throw new TokenGeneratorException('Invalid token head', TokenGeneratorException::INVALID_TOKEN_TYPE);
+                }
             }
 
-            // Check token signature
-            $algorithm = isset($head['alg']) ? Algorithm::getByValue($head['alg']) : null;
-            $content = $this->serializer->implode($headString, $payloadString);
-            if ($this->serializer->decode($signature) !== $this->serializer->signature($content, $algorithm)) {
-                throw new TokenValidatorException('Invalid token', TokenValidatorException::INVALID_SIGNATURE);
+            // If encoding algorithm set in header - get token type from it
+            $algorithm = null;
+            if (isset($head['alg'])) {
+                $algorithm = Algorithm::tryFrom($head['alg']);
+                if ($algorithm === null) {
+                    throw new TokenGeneratorException('Invalid token head', TokenGeneratorException::INVALID_ALGORITHM);
+                }
             }
+
 
             // Get token life dates
-            [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $type);
+            [$cratedAt, $expiredAt] = $this->lifePeriodFromPayload($payload, $tokenType);
+
+            // Calculate signature
+            $calculatedSignature = $this->serializer->signature($this->serializer->implode($headString, $payloadString), $algorithm);
 
             // Create token
-            $token = new Token($type, $token, $cratedAt, $expiredAt, $head, $payload, $this->serializer->decode($signature));
+            $token = new Token(
+                $tokenType,
+                $token,
+                $cratedAt,
+                $expiredAt,
+                $head,
+                $payload,
+                $signature,
+                $calculatedSignature
+            );
         } catch (Exception $e) {
             // This event can be used to change the error handling
             $event = new TokenParsingFinishedUnsuccessful($e, $token, $type, $head, $payload);
             $this->eventsDispatcher->dispatch($event, $event::getName());
             throw $event->getException();
         }
-
 
         // This event can be used to change the token
         $event = new TokenParsingFinishedSuccessful($token);

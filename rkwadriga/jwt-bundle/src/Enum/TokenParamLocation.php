@@ -6,12 +6,9 @@
 
 namespace Rkwadriga\JwtBundle\Enum;
 
-use Rkwadriga\JwtBundle\Exception\TokenException;
-
 enum TokenParamLocation: string
 {
     use BackedEnumTrait;
-    use FindByValueEnumTrait;
 
     case HEADER = 'header';
     case URI = 'uri';

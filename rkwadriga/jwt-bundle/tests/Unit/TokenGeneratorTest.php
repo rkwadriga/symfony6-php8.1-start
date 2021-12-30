@@ -12,7 +12,7 @@ use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
 use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenCreationContext;
-use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
+use Rkwadriga\JwtBundle\Exception\TokenGeneratorException;
 use Rkwadriga\JwtBundle\Service\TokenGenerator;
 use Rkwadriga\JwtBundle\Tests\Entity\TokenTestPramsEntity;
 
@@ -82,28 +82,26 @@ class TokenGeneratorTest extends AbstractUnitTestCase
             foreach (Algorithm::cases() as $algorithm) {
                 // Create control token params
                 $controlToken = $this->generateTestTokenParams($tokenType, $algorithm);
-                $invalidHead = array_merge($controlToken->head, ['sub' => $tokenType === TokenType::ACCESS ? TokenType::REFRESH->value : TokenType::ACCESS->value]);
-                $invalidSignature = $this->getTokenSignature($algorithm, $invalidHead, $controlToken->payload);
-                $tokenWithInvalidHead = $this->implodeTokenParts('__invalid_head', $controlToken->payloadString, $controlToken->encodedSignature);
-                $tokenWithInvalidSignature = $this->implodeTokenParts($controlToken->headString, $controlToken->payloadString, '__invalid_signature');
+                $invalidTypeHead = array_merge($controlToken->head, ['sub' => 'INVALID_TOKEN_TYPE']);
+                $tokenWithInvalidType = $this->implodeTokenParts('__invalid_token_type_head', $controlToken->payloadString, $controlToken->encodedSignature);
+                $invalidAlgorithmHead = array_merge($controlToken->head, ['alg' => 'INVALID_ALGORITHM']);
+                $tokenWithInvalidAlgorithm = $this->implodeTokenParts('__invalid_algorithm_head', $controlToken->payloadString, $controlToken->encodedSignature);
 
                 // ... SerializerService mock
                 $serializerServiceMock = $this->mockSerializerService([
                     'explode' => ['__map' => [
                         [$controlToken->tokenString, [$controlToken->headString, $controlToken->payloadString, $controlToken->encodedSignature]],
-                        [$tokenWithInvalidHead, ['__invalid_head', $controlToken->payloadString, $controlToken->encodedSignature]],
-                        [$tokenWithInvalidSignature, [$controlToken->headString, $controlToken->payloadString, '__invalid_signature']],
+                        [$tokenWithInvalidType, ['__invalid_token_type_head', $controlToken->payloadString, $controlToken->encodedSignature]],
+                        [$tokenWithInvalidAlgorithm, ['__invalid_algorithm_head', $controlToken->payloadString, $controlToken->encodedSignature]],
                     ]],
                     'deserialiaze' => ['__map' => [
                         [$controlToken->headString, $controlToken->head],
                         [$controlToken->payloadString, $controlToken->payload],
-                        ['__invalid_head', $invalidHead],
+                        ['__invalid_token_type_head', $invalidTypeHead],
+                        ['__invalid_algorithm_head', $invalidAlgorithmHead],
                     ]],
-                    'implode' => $controlToken->contentPart,
-                    'decode' => ['__map' => [
-                        [$controlToken->encodedSignature, $controlToken->signature],
-                        ['__invalid_signature', $invalidSignature],
-                    ]],
+                    'implode' => $controlToken->tokenString,
+                    'decode' => $controlToken->signature,
                     'signature' => $controlToken->signature,
                 ]);
 
@@ -112,37 +110,38 @@ class TokenGeneratorTest extends AbstractUnitTestCase
 
                 $testCaseBaseError = "Test testFromString, case \"{$tokenType->value}_{$algorithm->value}\" failed: ";
 
-                // Generate token
+                // Generate token and check generated token params
                 $token = $tokenGenerator->fromString($controlToken->tokenString, $tokenType);
-
-                // Check token params
                 $this->checkTokenParams($token, $controlToken, $tokenType, $testCaseBaseError);
 
-                // Test "Invalid token type" exception
-                $exceptionWasThrown = false;
-                try {
-                    $tokenGenerator->fromString($tokenWithInvalidHead, $tokenType);
-                } catch (Exception $e) {
-                    $exceptionWasThrown = true;
-                    $this->assertInstanceOf(TokenValidatorException::class, $e);
-                    $this->assertSame(TokenValidatorException::INVALID_TYPE, $e->getCode());
-                }
-                if (!$exceptionWasThrown) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid token type" exception was not thrown');
+                // Check exceptions
+                $testCases = [
+                    [
+                        $tokenWithInvalidType,
+                        new TokenGeneratorException('Invalid token head', TokenGeneratorException::INVALID_TOKEN_TYPE),
+                    ],
+                    [
+                        $tokenWithInvalidAlgorithm,
+                        new TokenGeneratorException('Invalid token head', TokenGeneratorException::INVALID_ALGORITHM),
+                    ],
+                ];
+                foreach ($testCases as $testCase) {
+                    /** @var Exception $exception */
+                    [$invalidToken, $exception] = $testCase;
+                    $testCaseBaseError .= sprintf('"%s" exception ', $exception->getMessage());
+                    $exceptionWasThrown = false;
+                    try {
+                        $tokenGenerator->fromString($invalidToken, $tokenType);
+                    } catch (Exception $e) {
+                        $exceptionWasThrown = true;
+                        $this->assertInstanceOf($exception::class, $e, $testCaseBaseError . sprintf('has an incorrect class: %s', $e::class));
+                        $this->assertSame($exception->getCode(), $e->getCode(), $testCaseBaseError . sprintf('has an incorrect code: %s', $e->getCode()));
+                    }
+                    if (!$exceptionWasThrown) {
+                        $this->assertEquals(0 ,1, $testCaseBaseError . 'was not thrown');
+                    }
                 }
 
-                // Test "Invalid signature" exception
-                $exceptionWasThrown = false;
-                try {
-                    $tokenGenerator->fromString($tokenWithInvalidSignature, $tokenType);
-                } catch (Exception $e) {
-                    $exceptionWasThrown = true;
-                    $this->assertInstanceOf(TokenValidatorException::class, $e);
-                    $this->assertSame(TokenValidatorException::INVALID_SIGNATURE, $e->getCode());
-                }
-                if (!$exceptionWasThrown) {
-                    $this->assertEquals(0 ,1, $testCaseBaseError . '"Invalid signature" exception was not thrown');
-                }
             }
         }
     }

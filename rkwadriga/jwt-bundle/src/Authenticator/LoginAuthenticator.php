@@ -105,7 +105,7 @@ class LoginAuthenticator extends AbstractAuthenticator
         if ($this->config->get(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
             // Check user ID in payload
             $userIdentifier = $this->config->get(ConfigurationParam::USER_IDENTIFIER);
-            if (!isset($accessToken->getPayload()[$userIdentifier])) {
+            if (!isset($payload[$userIdentifier])) {
                 throw new TokenGeneratorException("User identifier \"{$userIdentifier}\" missed in token's payload", TokenGeneratorException::INVALID_PAYLOAD);
             }
             $this->dbManager->writeRefreshToken($accessToken->getPayload()[$userIdentifier], $refreshToken, TokenRefreshingContext::LOGIN);

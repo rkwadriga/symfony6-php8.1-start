@@ -9,7 +9,6 @@ namespace Rkwadriga\JwtBundle\Enum;
 enum TokenParamType: string
 {
     use BackedEnumTrait;
-    use FindByValueEnumTrait;
 
     case BEARER = 'Bearer';
     case SIMPLE = 'Simple';

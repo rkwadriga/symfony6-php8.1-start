@@ -29,7 +29,7 @@ class TokenIdentifier implements TokenIdentifierInterface
             $location = $this->config->get(ConfigurationParam::REFRESH_TOKEN_LOCATION);
             $paramName = $this->config->get(ConfigurationParam::REFRESH_TOKEN_PARAM_NAME);
         }
-        $location = TokenParamLocation::getByValue($location);
+        $location = TokenParamLocation::from($location);
 
         $token = match($location) {
             TokenParamLocation::HEADER => $this->getTokenFromHeader($request, $paramName),

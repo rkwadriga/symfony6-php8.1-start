@@ -23,4 +23,6 @@ interface TokenInterface
     public function getPayload(): array;
 
     public function getSignature(): string;
+
+    public function getCalculatedSignature(): ?string;
 }

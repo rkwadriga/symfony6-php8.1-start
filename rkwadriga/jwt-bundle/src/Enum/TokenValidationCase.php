@@ -12,4 +12,5 @@ enum TokenValidationCase
     case TYPE;
     case USER_IDENTIFIER;
     case TOKEN_PARAM_TYPE;
+    case SIGNATURE;
 }

@@ -19,7 +19,7 @@ trait RefreshTokenTrait
     protected function getRefreshTokenTableName(Algorithm|string $algorithm): string
     {
         if (is_string($algorithm)) {
-            $algorithm = Algorithm::getByValue($algorithm);
+            $algorithm = Algorithm::from($algorithm);
         }
 
         return $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_TABLE) . ($algorithm === Algorithm::SHA256 ? '_256' : '_512');
@@ -28,7 +28,7 @@ trait RefreshTokenTrait
     protected function getRefreshTokenEntityClass(Algorithm|string $algorithm): string
     {
         if (is_string($algorithm)) {
-            $algorithm = Algorithm::getByValue($algorithm);
+            $algorithm = Algorithm::from($algorithm);
         }
 
         return $algorithm === Algorithm::SHA256 ? RefreshToken256::class : RefreshToken512::class;
@@ -60,7 +60,7 @@ trait RefreshTokenTrait
     protected function saveRefreshToken(Token $refreshToken, mixed $algorithm = null): RefreshTokenEntityInterface
     {
         if ($algorithm === null) {
-            $algorithm = Algorithm::getByValue($refreshToken->getHead()['alg']);
+            $algorithm = Algorithm::from($refreshToken->getHead()['alg']);
         }
 
         // Create refresh token table name

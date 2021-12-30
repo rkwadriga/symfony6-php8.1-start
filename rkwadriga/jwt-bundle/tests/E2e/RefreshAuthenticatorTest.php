@@ -13,6 +13,7 @@ use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenParamLocation;
 use Rkwadriga\JwtBundle\Enum\TokenParamType;
 use Rkwadriga\JwtBundle\Exception\SerializerException;
+use Rkwadriga\JwtBundle\Exception\TokenGeneratorException;
 use Rkwadriga\JwtBundle\Exception\TokenIdentifierException;
 use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
 use Rkwadriga\JwtBundle\Tests\InstanceTokenTrait;
@@ -29,7 +30,7 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
     use UserInstanceTrait;
     use InstanceTokenTrait;
 
-    public function AtestSuccessfulRefresh(): void
+    public function testSuccessfulRefresh(): void
     {
         // Do not forget to clear the refresh tokens table
         $this->clearRefreshTokenTable();
@@ -45,7 +46,7 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         $this->checkTokenResponse($user, Response::HTTP_OK);
     }
 
-    public function AtestTokenIdentifierExceptions(): void
+    public function testTokenIdentifierExceptions(): void
     {
         // Do not forget to clear the refresh tokens table
         $this->clearRefreshTokenTable();
@@ -121,11 +122,10 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
 
         // Create token pair and save refresh token to DB
         $created = time();
-        $this->createTokensPair($this->getDefaultAlgorithm(), $user->getEmail(), $created, true);
-
-        // Create token params pair and save refresh token to DB
         $algorithm = $this->getDefaultAlgorithm();
+        $this->createTokensPair($algorithm, $user->getEmail(), $created, true);
 
+        // Create token params
         $invalidAlgorithm = $algorithm === Algorithm::SHA256 ? Algorithm::SHA512 : Algorithm::SHA256;
         $refreshTokenLifeTime = $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);
         [$accessTokenParams, $refreshTokenParams] = [
@@ -138,23 +138,34 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         ];
         $invalidBase64String = "ûï¾møçž\n";
 
+        // Crete invalid tokens params
+        $accessTokenInvalidTypeHead = $this->encodeTokenData(array_merge($accessTokenParams->head, ['sub' => 'INVALID_TOKEN_TYPE']));
+        $accessTokenInvalidAlgorithmHead = $this->encodeTokenData(array_merge($accessTokenParams->head, ['alg' => 'INVALID_ALGORITHM']));
         $accessTokenInvalidHeadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($accessTokenParams->head)));
         $accessTokenInvalidHeadDecoded = json_encode($accessTokenParams->head);
         $accessTokenInvalidPayloadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($accessTokenParams->payload)));
         $accessTokenInvalidPayloadDecoded = json_encode($accessTokenParams->payload);
-        $accessTokenInvalidHeadType = $this->encodeTokenData(array_merge($accessTokenParams->head, ['sub' => TokenType::REFRESH->value]));
         $accessTokenInvalidHeadAlg = $this->encodeTokenData(array_merge($accessTokenParams->head, ['alg' => $invalidAlgorithm]));
 
+        $refreshTokenInvalidTypeHead = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['sub' => 'INVALID_TOKEN_TYPE']));
+        $refreshTokenInvalidAlgorithmHead = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['alg' => 'INVALID_ALGORITHM']));
         $refreshTokenInvalidHeadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($refreshTokenParams->head)));
         $refreshTokenInvalidHeadDecoded = json_encode($refreshTokenParams->head);
         $refreshTokenInvalidPayloadEncoded = $this->encodeTokenPart(str_replace('{', '[', json_encode($refreshTokenParams->payload)));
         $refreshTokenInvalidPayloadDecoded = json_encode($refreshTokenParams->payload);
-        $refreshTokenInvalidHeadType = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['sub' => TokenType::ACCESS->value]));
         $refreshTokenInvalidHeadAlg = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['alg' => $invalidAlgorithm]));
 
         // Check exceptions
         $testCases = [
             // <--- Access token part --->
+            [
+                $this->implodeTokenParts($accessTokenInvalidTypeHead, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenGeneratorException::INVALID_TOKEN_TYPE, 'Invalid token head'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenInvalidAlgorithmHead, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenGeneratorException::INVALID_ALGORITHM, 'Invalid token head'
+            ],
             [
                 $this->implodeTokenParts($accessTokenInvalidHeadEncoded, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
                 $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, SerializerException::INVALID_JSON_DATA, 'Invalid json'
@@ -180,15 +191,19 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
                 $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_FORMAT, 'Invalid token format'
             ],
             [
-                $this->implodeTokenParts($accessTokenInvalidHeadType, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
-                $refreshTokenExpiredParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_TYPE, 'Invalid token'
-            ],
-            [
                 $this->implodeTokenParts($accessTokenInvalidHeadAlg, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
                 $refreshTokenExpiredParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_SIGNATURE, 'Invalid token'
             ],
             // <--- /Access token part --->
             // <--- Refresh token part --->
+            [
+                $this->implodeTokenParts($refreshTokenInvalidTypeHead, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenGeneratorException::INVALID_TOKEN_TYPE, 'Invalid token head'
+            ],
+            [
+                $this->implodeTokenParts($refreshTokenInvalidAlgorithmHead, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenGeneratorException::INVALID_ALGORITHM, 'Invalid token head'
+            ],
             [
                 $accessTokenParams->tokenString,
                 $this->implodeTokenParts($refreshTokenInvalidHeadEncoded, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
@@ -221,11 +236,6 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
             ],
             [
                 $accessTokenParams->tokenString,
-                $this->implodeTokenParts($refreshTokenInvalidHeadType, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
-                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_TYPE, 'Invalid token'
-            ],
-            [
-                $accessTokenParams->tokenString,
                 $this->implodeTokenParts($refreshTokenInvalidHeadAlg, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
                 Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_SIGNATURE, 'Invalid token'
             ],
@@ -238,6 +248,49 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         foreach ($testCases as $testCase) {
             [$accessToken, $refreshToken, $responseCode, $errorCode, $errorMsg] = $testCase;
             $this->refresh($accessToken, $refreshToken);
+            $this->checkErrorResponse($responseCode, $errorMsg, $errorCode);
+        }
+    }
+
+    public function testTokenValidatorExceptions(): void
+    {
+        // Do not forget to clear the refresh tokens table
+        $this->clearRefreshTokenTable();
+
+        // Crate user
+        $user = $this->createUser();
+
+        // Create token pair with expired access token and save refresh token to DB
+        $accessTokenLifeTime = $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);
+        $created = time() - $accessTokenLifeTime;
+        $algorithm = $this->getDefaultAlgorithm();
+        $this->createTokensPair($algorithm, $user->getEmail(), $created, true);
+
+        // Create tokens params
+        $invalidAlgorithm = $algorithm === Algorithm::SHA256 ? Algorithm::SHA512 : Algorithm::SHA256;
+        [$accessTokenParams, $refreshTokenParams] = [
+            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created, $user->getEmail()),
+            $this->generateTestTokenParams(TokenType::REFRESH, $algorithm, $created, $user->getEmail())
+        ];
+
+        // Crete invalid tokens params
+        $accessTokenInvalidHeadType = $this->encodeTokenData(array_merge($accessTokenParams->head, ['sub' => TokenType::REFRESH->value]));
+        $accessTokenInvalidHeadAlg = $this->encodeTokenData(array_merge($accessTokenParams->head, ['alg' => $invalidAlgorithm]));
+
+        // Check exceptions
+        $testCases = [
+            // <--- Access token part --->
+            [
+                $this->implodeTokenParts($accessTokenInvalidHeadType, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_ACCESS_TOKEN, 'Invalid token type'
+            ],
+            // <--- /Access token part --->
+            // <--- Refresh token part --->
+            // <--- /Refresh token part --->
+        ];
+        foreach ($testCases as $testCase) {
+            [$accessToken, $refreshToken, $responseCode, $errorCode, $errorMsg] = $testCase;
+            $this->refresh($accessToken, $refreshToken);
             //dd($this->getResponseParams(), $this->getResponseStatusCode());
             $this->checkErrorResponse($responseCode, $errorMsg, $errorCode);
         }
@@ -245,6 +298,6 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
 
     private function getDefaultAlgorithm(): Algorithm
     {
-        return Algorithm::getByValue($this->getConfigDefault(ConfigurationParam::ENCODING_ALGORITHM));
+        return Algorithm::from($this->getConfigDefault(ConfigurationParam::ENCODING_ALGORITHM));
     }
 }

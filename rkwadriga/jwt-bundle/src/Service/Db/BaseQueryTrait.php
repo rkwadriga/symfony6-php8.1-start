@@ -42,7 +42,7 @@ trait BaseQueryTrait
             return $this->algorithm;
         }
 
-        return $this->algorithm = Algorithm::getByValue($this->config->get(ConfigurationParam::ENCODING_ALGORITHM));
+        return $this->algorithm = Algorithm::from($this->config->get(ConfigurationParam::ENCODING_ALGORITHM));
     }
 
     private function getEntityClass(): string
