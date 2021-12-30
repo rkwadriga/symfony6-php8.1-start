@@ -50,20 +50,20 @@ class TokenValidator implements TokenValidatorInterface
             }
         }
 
+        if (in_array(TokenValidationCase::TOKEN_PARAM_TYPE, $validationCases)) {
+            $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
+            $head = $token->getHead();
+            if (!isset($head['sub']) || $head['sub'] !== $tokenType->value) {
+                throw new TokenValidatorException('Invalid token head', $code);
+            }
+        }
+
         if (in_array(TokenValidationCase::USER_IDENTIFIER, $validationCases)) {
             $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
             $userIdentifier = $this->config->get(ConfigurationParam::USER_IDENTIFIER);
             $payload = $token->getPayload();
             if (!isset($payload[$userIdentifier])) {
                 throw new TokenValidatorException('Invalid token payload', $code);
-            }
-        }
-
-        if (in_array(TokenValidationCase::TOKEN_PARAM_TYPE, $validationCases)) {
-            $code = $tokenType === TokenType::ACCESS ? TokenValidatorException::INVALID_ACCESS_TOKEN : TokenValidatorException::INVALID_REFRESH_TOKEN;
-            $head = $token->getHead();
-            if (!isset($head['sub']) || $head['sub'] !== $tokenType->value) {
-                throw new TokenValidatorException('Invalid token head', $code);
             }
         }
 

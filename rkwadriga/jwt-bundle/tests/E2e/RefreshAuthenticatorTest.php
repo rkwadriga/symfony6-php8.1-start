@@ -261,32 +261,125 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         $user = $this->createUser();
 
         // Create token pair with expired access token and save refresh token to DB
-        $accessTokenLifeTime = $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);
-        $created = time() - $accessTokenLifeTime;
+        $accessTokenLifeTime = $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_LIFE_TIME);
+        $created = time();
         $algorithm = $this->getDefaultAlgorithm();
         $this->createTokensPair($algorithm, $user->getEmail(), $created, true);
 
         // Create tokens params
-        $invalidAlgorithm = $algorithm === Algorithm::SHA256 ? Algorithm::SHA512 : Algorithm::SHA256;
         [$accessTokenParams, $refreshTokenParams] = [
-            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created, $user->getEmail()),
+            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created - $accessTokenLifeTime, $user->getEmail()),
             $this->generateTestTokenParams(TokenType::REFRESH, $algorithm, $created, $user->getEmail())
         ];
 
         // Crete invalid tokens params
-        $accessTokenInvalidHeadType = $this->encodeTokenData(array_merge($accessTokenParams->head, ['sub' => TokenType::REFRESH->value]));
-        $accessTokenInvalidHeadAlg = $this->encodeTokenData(array_merge($accessTokenParams->head, ['alg' => $invalidAlgorithm]));
+        $userIdentifier = $this->getConfigDefault(ConfigurationParam::USER_IDENTIFIER);
+        $accessHeadWithoutTokenType = $accessTokenParams->head;
+        unset($accessHeadWithoutTokenType['sub']);
+        $accessPayloadWithoutUserIdentifier = $accessTokenParams->payload;
+        unset($accessPayloadWithoutUserIdentifier[$userIdentifier]);
+        $accessTokenHeadInvalidTokenType = $this->encodeTokenData(array_merge($accessTokenParams->head, ['sub' => TokenType::REFRESH->value]));
+        $accessTokenHeadWithoutTokenType = $this->encodeTokenData($accessHeadWithoutTokenType);
+        $accessTokenHeadEmptyTokenType = $this->encodeTokenData(array_merge($accessTokenParams->head, ['sub' => null]));
+        $accessTokenPayloadWithoutUserIdentifier = $this->encodeTokenData($accessPayloadWithoutUserIdentifier);
+        $accessTokenPayloadEmptyUserIdentifier = $this->encodeTokenData(array_merge($accessTokenParams->payload, [$userIdentifier => null]));
+
+        $refreshTokenLifeTime = $this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_LIFE_TIME);
+        $refreshHeadWithoutTokenType = $refreshTokenParams->head;
+        unset($refreshHeadWithoutTokenType['sub']);
+        $refreshPayloadWithoutUserIdentifier = $refreshTokenParams->payload;
+        unset($refreshPayloadWithoutUserIdentifier[$userIdentifier]);
+        $refreshTokenHeadInvalidTokenType = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['sub' => TokenType::ACCESS->value]));
+        $refreshTokenHeadWithoutTokenType = $this->encodeTokenData($refreshHeadWithoutTokenType);
+        $refreshTokenHeadEmptyTokenType = $this->encodeTokenData(array_merge($refreshTokenParams->head, ['sub' => null]));
+        $refreshTokenPayloadWithoutUserIdentifier = $this->encodeTokenData($refreshPayloadWithoutUserIdentifier);
+        $refreshTokenPayloadEmptyUserIdentifier = $this->encodeTokenData(array_merge($refreshTokenParams->payload, [$userIdentifier => null]));
+        [$expiredAccessTokenParams, $expiredRefreshTokenParams] = [
+            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created - $refreshTokenLifeTime, $user->getEmail()),
+            $this->generateTestTokenParams(TokenType::REFRESH, $algorithm, $created - $refreshTokenLifeTime, $user->getEmail())
+        ];
+
+        [$invalidUserIdentifierAccessTokenParams, $invalidUserIdentifierRefreshTokenParams] = [
+            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created, $user->getEmail()),
+            $this->generateTestTokenParams(TokenType::REFRESH, $algorithm, $created, $user->getEmail() . '_1')
+        ];
+        [$invalidCreatedAtAccessTokenParams, $invalidCreatedAtRefreshTokenParams] = [
+            $this->generateTestTokenParams(TokenType::ACCESS, $algorithm, $created, $user->getEmail()),
+            $this->generateTestTokenParams(TokenType::REFRESH, $algorithm, $created + 1, $user->getEmail())
+        ];
 
         // Check exceptions
         $testCases = [
             // <--- Access token part --->
             [
-                $this->implodeTokenParts($accessTokenInvalidHeadType, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $this->implodeTokenParts($accessTokenHeadInvalidTokenType, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
                 $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_ACCESS_TOKEN, 'Invalid token type'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenHeadWithoutTokenType, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_ACCESS_TOKEN, 'Invalid token head'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenHeadEmptyTokenType, $accessTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_ACCESS_TOKEN, 'Invalid token head'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenParams->headString, $accessTokenPayloadWithoutUserIdentifier, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_ACCESS_TOKEN, 'Invalid token payload'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenParams->headString, $accessTokenPayloadEmptyUserIdentifier, $accessTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_ACCESS_TOKEN, 'Invalid token payload'
+            ],
+            [
+                $this->implodeTokenParts($accessTokenParams->headString, $accessTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                $refreshTokenParams->tokenString, Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_SIGNATURE, 'Invalid token'
             ],
             // <--- /Access token part --->
             // <--- Refresh token part --->
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenHeadInvalidTokenType, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_REFRESH_TOKEN, 'Invalid token type'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenHeadWithoutTokenType, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_REFRESH_TOKEN, 'Invalid token head'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenHeadEmptyTokenType, $refreshTokenParams->payloadString, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_REFRESH_TOKEN, 'Invalid token head'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenParams->headString, $refreshTokenPayloadWithoutUserIdentifier, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_REFRESH_TOKEN, 'Invalid token payload'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenParams->headString, $refreshTokenPayloadEmptyUserIdentifier, $refreshTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_REFRESH_TOKEN, 'Invalid token payload'
+            ],
+            [
+                $accessTokenParams->tokenString,
+                $this->implodeTokenParts($refreshTokenParams->headString, $refreshTokenParams->payloadString, $accessTokenParams->encodedSignature),
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_SIGNATURE, 'Invalid token'
+            ],
+            [
+                $expiredAccessTokenParams->tokenString, $expiredRefreshTokenParams->tokenString,
+                Response::HTTP_FORBIDDEN, TokenValidatorException::REFRESH_TOKEN_EXPIRED, 'Token expired'
+            ],
             // <--- /Refresh token part --->
+            [
+                $invalidUserIdentifierAccessTokenParams->tokenString, $invalidUserIdentifierRefreshTokenParams->tokenString,
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_REFRESH_TOKEN, 'Invalid refresh token payload'
+            ],
+            [
+                $invalidCreatedAtAccessTokenParams->tokenString, $invalidCreatedAtRefreshTokenParams->tokenString,
+                Response::HTTP_FORBIDDEN, TokenValidatorException::INVALID_REFRESH_TOKEN, 'Invalid refresh token payload'
+            ],
         ];
         foreach ($testCases as $testCase) {
             [$accessToken, $refreshToken, $responseCode, $errorCode, $errorMsg] = $testCase;
