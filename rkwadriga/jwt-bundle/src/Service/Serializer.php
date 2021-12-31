@@ -42,14 +42,6 @@ class Serializer implements SerializerInterface
         return $this->encode(json_encode($data));
     }
 
-    public function signature(string $data, ?Algorithm $algorithm = null): string
-    {
-        $algo = $algorithm?->value ?: $this->config->get(ConfigurationParam::ENCODING_ALGORITHM);
-        $secret = $this->config->get(ConfigurationParam::SECRET_KEY);
-
-        return hash_hmac($algo, $data, $secret);
-    }
-
     public function deserialiaze(string $data): array
     {
         $jsonData = $this->decode($data);
@@ -62,6 +54,20 @@ class Serializer implements SerializerInterface
         }
 
         return $deserialized;
+    }
+
+    public function signature(string $data, ?Algorithm $algorithm = null): string
+    {
+        $algo = $algorithm?->value ?: $this->config->get(ConfigurationParam::ENCODING_ALGORITHM);
+        $secret = $this->config->get(ConfigurationParam::SECRET_KEY);
+        $encodingHashingCount = $this->config->get(ConfigurationParam::ENCODING_HASHING_COUNT);
+
+        $result = hash_hmac($algo, $data, $secret);
+        for ($i = 1; $i < $encodingHashingCount; $i++) {
+            $result = hash_hmac($algo, $i . $result, $secret . ':' . $i);
+        }
+
+        return $result;
     }
 
     public function implode(string ...$parts): string

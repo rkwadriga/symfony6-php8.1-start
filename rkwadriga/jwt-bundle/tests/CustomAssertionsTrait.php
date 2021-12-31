@@ -68,23 +68,25 @@ trait CustomAssertionsTrait
             $tokenType = $tokenName === 'accessToken' ? TokenType::ACCESS : TokenType::REFRESH;
 
             // Check signature
-            [$head, $payload, $signature] = explode('.', $responseParams[$tokenName]);
-            [$jsonHead, $jsonPayload, $signature] = [base64_decode($head), base64_decode($payload), base64_decode($signature)];
+            [$headString, $payloadString, $signatureString] = $this->explodeToken($responseParams[$tokenName]);
+            [$head, $payload, $signature] = [
+                $this->parseTokenPart($headString),
+                $this->parseTokenPart($payloadString),
+                $this->decodeTokenPart($signatureString),
+            ];
             $userIDParam = $this->getConfigDefault(ConfigurationParam::USER_IDENTIFIER);
             $algorithm = $this->getConfigDefault(ConfigurationParam::ENCODING_ALGORITHM);
-            $secret = $this->getConfigDefault(ConfigurationParam::SECRET_KEY);
-            $expectedSignature = hash_hmac($algorithm, $head . '.' . $payload, $secret);
+            $expectedSignature = $this->getTokenSignature(Algorithm::from($algorithm), $head, $payload);
             $this->assertSame($expectedSignature, $signature);
 
             // Remember tokens payload
             if ($tokenName === 'accessToken') {
-                $accessTokenPayload = $payload;
+                $accessTokenPayload = $payloadString;
             } else {
-                $refreshTokenPayload = $payload;
+                $refreshTokenPayload = $payloadString;
             }
 
             // Check head and payload
-            [$head, $payload] = [json_decode($jsonHead, true), json_decode($jsonPayload, true)];
             $this->assertNotNull($head);
             $this->assertNotNull($payload);
             $this->assertArrayHasKey('alg', $head);

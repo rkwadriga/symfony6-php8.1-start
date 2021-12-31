@@ -167,8 +167,14 @@ trait InstanceTokenTrait
     {
         $contentPart = $this->implodeTokenParts($this->encodeTokenData($head), $this->encodeTokenData($payload));
         $secretKey = $this->getConfigDefault(ConfigurationParam::SECRET_KEY);
+        $encodingHashingCount = $this->getConfigDefault(ConfigurationParam::ENCODING_HASHING_COUNT);
 
-        return hash_hmac($algorithm->value, $contentPart, $secretKey);
+        $result = hash_hmac($algorithm->value, $contentPart, $secretKey);
+        for ($i = 1; $i < $encodingHashingCount; $i++) {
+            $result = hash_hmac($algorithm->value, $i . $result, $secretKey . ':' . $i);
+        }
+
+        return $result;
     }
 
     protected function implodeTokenParts(string ...$parts): string

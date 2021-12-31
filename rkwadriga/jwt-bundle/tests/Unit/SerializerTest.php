@@ -6,6 +6,7 @@
 
 namespace Rkwadriga\JwtBundle\Tests\Unit;
 
+use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\Exception\SerializerException;
 use Rkwadriga\JwtBundle\Exception\TokenValidatorException;
 
@@ -107,6 +108,25 @@ class SerializerTest extends AbstractUnitTestCase
         $this->expectException(SerializerException::class);
         $this->expectExceptionCode(SerializerException::INVALID_JSON_DATA);
         $this->createSerializerInstance()->deserialiaze($invalidJsonString);
+    }
+
+    public function testSignature(): void
+    {
+        $testCases = [
+            'eyJwYXJhbV8xIjoiVmFsdWVfMSIsInBhcmFtXzIiOiJWYWx1ZV8yIiwiYXJyYXlfdmFsdWUiOnsiMCI6MSwiMSI6MywicGFyYW1fMSI6IlZhbHVlXzEiLCIyIjoicGFyYW1fMiJ9LCIwIjpudWxsLCIxIjozLCIyIjo1fQ'
+                => [Algorithm::SHA256, '568f587f0e402a184cc3e270db374a41d6a4035496e6203375e72b58b251b87e'],
+            'SHA256_SHORT_STRING'
+                => [Algorithm::SHA256, '66e6e7e61a9ca6c8ff12a9ffe5c8cd6935c84361f866f8da4e0808b51bc4fc68'],
+            'eyJwYXJhbV8xIjoiVmFsdWVfMSIsInBhcmFtXzIiOiJWYWx1ZV8yIiwiYXJyYXlfdmFsdWUiOnsiMCI6MSwiMSI6MywicGFyYW1fMSI6IlZhbHVlXzEiLCIyIjoicGFyYW1fMiJ9LCIwIjpudWxsLCIxIjozLCIyIjowLCIzIjozfQ'
+                => [Algorithm::SHA512, '9b6bb03b7c30ac91d25315aac1e4e3147ae1767aedacfebfa5d9df5c9ebee559d756b7eb985929e76c8421afd0b95cb887066a80c5bfb6900c8d689fb6514ccd'],
+            'SHA512_SHORT_STRING'
+                => [Algorithm::SHA512, 'd004370e41293fb9a5f2588c61a34abb667c13d47cbf65e3d8fdc01b9244470aceed147cfa0a7be9e919b404a4e93985559c78b0aa8451eec6fa2c456b3cfd0b'],
+        ];
+        $serializer = $this->createSerializerInstance();
+        foreach ($testCases as $case => $data) {
+            [$algorithm, $result] = $data;
+            $this->assertSame($result, $serializer->signature($case, $algorithm));
+        }
     }
 
     public function testImplode(): void
