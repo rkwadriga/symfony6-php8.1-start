@@ -148,6 +148,16 @@ trait InstanceTokenTrait
         return str_replace('=', '', base64_encode($data));
     }
 
+    protected function decodeTokenPart(string $data): string
+    {
+        return base64_decode($data);
+    }
+
+    protected function parseTokenPart(string $data): ?array
+    {
+        return json_decode($this->decodeTokenPart($data), true);
+    }
+
     protected function encodeTokenData(array $data): string
     {
         return $this->encodeTokenPart(json_encode($data));
@@ -164,6 +174,11 @@ trait InstanceTokenTrait
     protected function implodeTokenParts(string ...$parts): string
     {
         return implode('.', $parts);
+    }
+
+    protected function explodeToken(string $token): array
+    {
+        return explode('.', $token);
     }
 
     protected function createTokenResponseArray(Token $accessToken, Token $refreshToken): array

@@ -9,6 +9,7 @@ namespace Rkwadriga\JwtBundle\Tests\E2e;
 use Exception;
 use Rkwadriga\JwtBundle\DependencyInjection\Algorithm;
 use Rkwadriga\JwtBundle\DependencyInjection\TokenType;
+use Rkwadriga\JwtBundle\Entity\Token;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Rkwadriga\JwtBundle\Enum\TokenParamLocation;
 use Rkwadriga\JwtBundle\Enum\TokenParamType;
@@ -388,7 +389,7 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
         }
     }
 
-    public function testRefreshTokenDoesNotExistFound(): void
+    public function testRefreshTokenDoesNotExistException(): void
     {
         // Do not forget to clear the refresh tokens table
         $this->clearRefreshTokenTable();
@@ -405,6 +406,59 @@ class RefreshAuthenticatorTest extends AbstractE2eTestCase
             $this->checkErrorResponse(Response::HTTP_FORBIDDEN, 'Refresh token does not exist', TokenValidatorException::INVALID_REFRESH_TOKEN);
         } else {
             $this->assertSame(1, 1);
+        }
+    }
+
+    public function testUpdatingOldestDbRecord(): void
+    {
+        // Do not forget to clear the refresh tokens table
+        $this->clearRefreshTokenTable();
+
+        // Crate user
+        $user = $this->createUser();
+
+        // Check is writing to DB possible
+        $limit = $this->getConfigDefault(ConfigurationParam::REFRESH_TOKENS_LIMIT);
+        if ($limit === 0 || !$this->getConfigDefault(ConfigurationParam::REFRESH_TOKEN_IN_DB)) {
+            $this->assertSame(1, 1);
+            return;
+        }
+
+        // Write refresh tokens to DB
+        $algorithm = Algorithm::from($this->getConfigDefault(ConfigurationParam::ENCODING_ALGORITHM));
+        $created = time();
+        /** @var ?Token $oldestAccessToken */
+        /** @var ?Token $oldestRefreshToken */
+        $oldestAccessToken = $oldestRefreshToken = null;
+        /** @var array<Token> $notOldestTokens */
+        $notOldestTokens = [];
+        for ($i = 1; $i <= $limit; $i++) {
+            // Create token pair and save refresh token to DB
+            [$accessToken, $refreshToken] = $this->createTokensPair($this->getDefaultAlgorithm(), $user->getEmail(), $created + $i + 10, true);
+            if ($oldestRefreshToken === null) {
+                [$oldestAccessToken, $oldestRefreshToken] = [$accessToken, $refreshToken];
+            } else {
+                $notOldestTokens[] = $refreshToken;
+            }
+        }
+
+        // Login the user
+        $this->refresh($oldestAccessToken, $oldestRefreshToken);
+
+        // Check that oldest token is not presented in DB
+        $oldestTokenInDb = $this->findRefreshTokenBy($algorithm, ['userId' => $user->getEmail(), 'refreshToken' => $oldestRefreshToken->getSignature()]);
+        $this->assertNull($oldestTokenInDb);
+
+        // Check token params and check refresh token in DB
+        $tokenParts = $this->explodeToken($this->getResponseParams('refreshToken'));
+        $signature = $this->decodeTokenPart(end($tokenParts));
+        $tokenInDb = $this->findRefreshTokenBy($algorithm, ['userId' => $user->getEmail(), 'refreshToken' => $signature]);
+        $this->assertNotNull($tokenInDb);
+
+        // Check that not the oldest tokens are presented in DB
+        foreach ($notOldestTokens as $notOldestToken) {
+            $tokenInDb = $this->findRefreshTokenBy($algorithm, ['userId' => $user->getEmail(), 'refreshToken' => $notOldestToken->getSignature()]);
+            $this->assertNotNull($tokenInDb);
         }
     }
 
