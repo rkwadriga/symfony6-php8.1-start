@@ -8,6 +8,8 @@ namespace Rkwadriga\JwtBundle\Tests\E2e;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
+use Rkwadriga\JwtBundle\Enum\TokenParamLocation;
+use Rkwadriga\JwtBundle\Enum\TokenParamType;
 use Rkwadriga\JwtBundle\Tests\AuthenticationTrait;
 use Rkwadriga\JwtBundle\Tests\ConfigDefaultsTrait;
 use Rkwadriga\JwtBundle\Service\Router\Generator;
@@ -58,16 +60,42 @@ abstract class AbstractE2eTestCase extends WebTestCase
 
     protected function send(string|array $route, array $params = [], array $headers = []): Crawler
     {
-        $client = $this->getClient();
         [$method, $uri] = $this->router->createRoute($route);
 
+        return $this->sendRequest($method, $uri, [], $params, $headers);
+    }
+
+    protected function sendRequest(string $method, string $uri, array $getParameters = [], array $postParameters = [], array $headers = []): Crawler
+    {
+        $client = $this->getClient();
         $client->setServerParameter('CONTENT_TYPE', $this->requestContentType);
         $client->setServerParameter('HTTP_ACCEPT', $this->requestAssept);
         if ($this->getToken() !== null) {
-            $client->setServerParameter('HTTP_AUTHORIZATION', 'Bearer ' . $this->getToken());
+            $token = $this->getToken();
+            [$tokenType, $tokenLocation, $tokenParamName] = [
+                $this->getConfigDefault(ConfigurationParam::TOKEN_TYPE),
+                $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_PARAM_NAME),
+                $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_PARAM_NAME),
+            ];
+
+            switch ($tokenLocation) {
+                case TokenParamLocation::HEADER->value:
+                    if ($tokenType !== TokenParamType::SIMPLE->value) {
+                        $token = $tokenType . ' ' . $token;
+                    }
+                    $headerName = 'HTTP_' . strtoupper($tokenParamName);
+                    $client->setServerParameter($headerName, $token);
+                    break;
+                case TokenParamLocation::URI->value:
+                    $getParameters[$tokenParamName] = $token;
+                    break;
+                default:
+                    $postParameters[$tokenParamName] = $token;
+                    break;
+            }
         }
 
-        return $client->request($method, $uri, [], [], $headers, json_encode($params));
+        return $client->request($method, $uri, $getParameters, [], $headers, json_encode($postParameters));
     }
 
     protected function getClient(): KernelBrowser
