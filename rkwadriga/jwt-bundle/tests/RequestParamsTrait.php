@@ -56,6 +56,10 @@ trait RequestParamsTrait
 
     protected function getErrorResponseParams(): array
     {
-        return ['code' => $this->getResponseStatusCode(), 'message' => $this->getResponseParams('message')];
+        $message = $this->getResponseParams('message');
+        if ($message === null) {
+            $message = $this->getResponseParams('detail');
+        }
+        return ['code' => $this->getResponseStatusCode(), 'message' => $message];
     }
 }

@@ -34,6 +34,10 @@ class Loader extends BaseLoader
                 'path' => '/api/token',
                 'method' => 'PUT',
             ],
+            'rkwadriga_jwt_test_route' => [
+                'path' => '/api/rkwadriga-jwt-test-route',
+                'method' => 'GET',
+            ],
         ];
 
         $routes = new RouteCollection();

@@ -67,14 +67,16 @@ abstract class AbstractE2eTestCase extends WebTestCase
 
     protected function sendRequest(string $method, string $uri, array $getParameters = [], array $postParameters = [], array $headers = []): Crawler
     {
+        // Clear client cache
         $client = $this->getClient();
         $client->setServerParameter('CONTENT_TYPE', $this->requestContentType);
         $client->setServerParameter('HTTP_ACCEPT', $this->requestAssept);
+        $headerTokenParam = null;
         if ($this->getToken() !== null) {
             $token = $this->getToken();
             [$tokenType, $tokenLocation, $tokenParamName] = [
                 $this->getConfigDefault(ConfigurationParam::TOKEN_TYPE),
-                $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_PARAM_NAME),
+                $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_LOCATION),
                 $this->getConfigDefault(ConfigurationParam::ACCESS_TOKEN_PARAM_NAME),
             ];
 
@@ -85,6 +87,7 @@ abstract class AbstractE2eTestCase extends WebTestCase
                     }
                     $headerName = 'HTTP_' . strtoupper($tokenParamName);
                     $client->setServerParameter($headerName, $token);
+                    $headerTokenParam = $headerName;
                     break;
                 case TokenParamLocation::URI->value:
                     $getParameters[$tokenParamName] = $token;
@@ -95,7 +98,13 @@ abstract class AbstractE2eTestCase extends WebTestCase
             }
         }
 
-        return $client->request($method, $uri, $getParameters, [], $headers, json_encode($postParameters));
+        $result = $client->request($method, $uri, $getParameters, [], $headers, json_encode($postParameters));
+        // Remove token from headers after request
+        if ($headerTokenParam !== null) {
+            $client->setServerParameters([$headerTokenParam => null]);
+        }
+
+        return $result;
     }
 
     protected function getClient(): KernelBrowser
