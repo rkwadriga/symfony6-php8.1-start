@@ -96,7 +96,7 @@ services:
             - '@Rkwadriga\JwtBundle\DependencyInjection\TokenIdentifierInterface'
             - '@Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface'
             - '@Rkwadriga\JwtBundle\DependencyInjection\TokenValidatorInterface'
-    rkwadriga.jwt.jws_authenticator:
+    rkwadriga.jwt.jwt_authenticator:
         alias: Rkwadriga\JwtBundle\Authenticator\JwtAuthenticator
         public: true
 
