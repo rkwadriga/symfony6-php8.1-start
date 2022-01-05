@@ -45,9 +45,9 @@ security:
 ### 1. Create your secret key and write it in .env:
 ```yaml
 ...
-###< rkwadriga/jws-bundle ###
+###< rkwadriga/jwt-bundle ###
 SECRET_KEY=890Uytsde56serKsdf098yJt540Iuyrse56Pok8O89dsWer45Ty
-###> rkwadriga/jws-bundle ###
+###> rkwadriga/jwt-bundle ###
 ```
 * Do not copy the secret-key from here. It's an important part of the authorization security. Create your own secret key, it can be any random string of any length.
 
