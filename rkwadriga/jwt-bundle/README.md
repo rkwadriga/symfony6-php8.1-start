@@ -189,7 +189,7 @@ Also, you can change some behavior or add some logic in process of bundle`s work
 * Rkwadriga\JwtBundle\Event\TokenRefreshingFinishedUnsuccessful (alias: "rkwadriga.jwt.token_refreshing_finished_unsuccessful")
 * Rkwadriga\JwtBundle\Event\TokenResponseCreated (alias: "rkwadriga.jwt.token_response_created")
 
-For example, if you want to do something when the user successfully authorized. To do that, create the event`s listener:
+For example, if you want to do something when the user successfully authorized, create the event`s listener:
 ```php
 <?php declare(strict_types=1);
 
