@@ -113,7 +113,7 @@ rkwadriga_jwt:
     # If you don`t want hold the refresh-tokens in your DB, set it to FALSE
     refresh_tokens_in_db: true
 
-    # Refresh token table name. But the real table will have name "<base_name>_256"
+    # Refresh token table name. But the real table name will be "<base_name>_256"
     # or "<base_name>_512" depending on the hashing algorithm you chose
     refresh_tokens_table: refresh_token
 
@@ -127,3 +127,88 @@ rkwadriga_jwt:
     rewrite_on_limit_exceeded: true
 ```
 * All these parameters are optional, but we strongly recommend you to create your own user provider and set it`s name to "provider" option.
+
+## Usage
+
+### Interfaces
+To change behavior of some components, use the next interfaces:
+* Rkwadriga\JwtBundle\DependencyInjection\HeadGeneratorInterface
+* Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface
+* Rkwadriga\JwtBundle\DependencyInjection\TokenIdentifierInterface
+* Rkwadriga\JwtBundle\DependencyInjection\TokenGeneratorInterface
+* Rkwadriga\JwtBundle\DependencyInjection\TokenValidatorInterface
+* Rkwadriga\JwtBundle\DependencyInjection\SerializerInterface
+* Rkwadriga\JwtBundle\DependencyInjection\TokenResponseCreatorInterface
+* Rkwadriga\JwtBundle\DependencyInjection\DbManagerInterface
+
+For example to change the token`s payload, create the implementation of PayloadGeneratorInterface:
+```php
+<?php declare(strict_types=1);
+
+namespace App\Service;
+
+use Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\HttpFoundation\Request;
+
+class PayloadGenerator implements PayloadGeneratorInterface
+{
+    public function generate(TokenInterface $token, Request $request): array
+    {
+        return [
+            'created' => time(),
+            'email' => $token->getUser()->getEmail(),
+            'additional_param_1' => 'Some value 1',
+            'additional_param_2' => 'Some value 2'
+        ];
+    }
+}
+```
+* But do not forget to set the "created" param (unix-time of creation of token) and the user identifier (in this example is user`s email)
+
+After that add this service to config/services.yaml:
+```yaml
+...
+Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface:
+    alias: App\Service\PayloadGenerator
+```
+
+### Events
+Also, you can change some behavior or add some logic in process of bundle`s work using the next events:
+* Rkwadriga\JwtBundle\Event\AuthenticationStarted (alias: "rkwadriga.jwt.authentication_started")
+* Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessful (alias: "rkwadriga.jwt.authentication_finished_successful")
+* Rkwadriga\JwtBundle\Event\AuthenticationFinishedUnsuccessful (alias: "rkwadriga.jwt.authentication_finished_unsuccessful")
+* Rkwadriga\JwtBundle\Event\TokenCreatingStarted (alias: "rkwadriga.jwt.token_creating_started")
+* Rkwadriga\JwtBundle\Event\TokenCreatingFinishedSuccessful (alias: "rkwadriga.jwt.token_creating_finished_successful")
+* Rkwadriga\JwtBundle\Event\TokenCreatingFinishedUnsuccessful (alias: "rkwadriga.jwt.token_creating_finished_unsuccessful")
+* Rkwadriga\JwtBundle\Event\TokenParsingStarted (alias: "rkwadriga.jwt.token_parsing_started")
+* Rkwadriga\JwtBundle\Event\TokenParsingFinishedSuccessful (alias: "rkwadriga.jwt.token_parsing_finished_successful")
+* Rkwadriga\JwtBundle\Event\TokenParsingFinishedUnsuccessful (alias: "rkwadriga.jwt.token_parsing_finished_unsuccessful")
+* Rkwadriga\JwtBundle\Event\TokenRefreshingStarted (alias: "rkwadriga.jwt.token_refreshing_started")
+* Rkwadriga\JwtBundle\Event\TokenRefreshingFinishedSuccessful (alias: "rkwadriga.jwt.token_refreshing_finished_successful")
+* Rkwadriga\JwtBundle\Event\TokenRefreshingFinishedUnsuccessful (alias: "rkwadriga.jwt.token_refreshing_finished_unsuccessful")
+* Rkwadriga\JwtBundle\Event\TokenResponseCreated (alias: "rkwadriga.jwt.token_response_created")
+
+For example, if you want to do something when the user successfully authorized. To do that, create the event`s listener:
+```php
+<?php declare(strict_types=1);
+
+namespace App\EventListener;
+
+use Rkwadriga\JwtBundle\Event\AuthenticationFinishedSuccessful;
+
+class AuthenticationFinishedSuccessfulListener
+{
+    public function process(AuthenticationFinishedSuccessful $event): void
+    {
+        // Do something...
+    }
+}
+```
+
+After that add this listener to config/services.yaml:
+```yaml
+App\EventListener\AuthenticationFinishedSuccessfulListener:
+    tags:
+        - { name: kernel.event_listener, event: rkwadriga.jwt.authentication_finished_successful, method: process }
+```

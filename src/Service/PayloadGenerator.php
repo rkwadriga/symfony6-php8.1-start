@@ -14,6 +14,10 @@ class PayloadGenerator implements PayloadGeneratorInterface
 {
     public function generate(TokenInterface $token, Request $request): array
     {
-        return ['param_1' => 111, 'param_2' => 2222, 'param_3' => 33333];
+        return [
+            $token->getUserIdentifier() => 'current_user@mail.com',
+            'param_2' => 2222,
+            'param_3' => 33333
+        ];
     }
 }
