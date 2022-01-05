@@ -42,7 +42,7 @@ security:
 
 ## Configuration
 
-### 1. Create your secret key and write it in .env:
+### 1. Create your secret key and write it in .env file:
 ```yaml
 ...
 ###< rkwadriga/jwt-bundle ###
