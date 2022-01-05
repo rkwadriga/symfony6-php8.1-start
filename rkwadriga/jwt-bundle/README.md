@@ -208,6 +208,7 @@ class AuthenticationFinishedSuccessfulListener
 
 After that add this listener to config/services.yaml:
 ```yaml
+...
 App\EventListener\AuthenticationFinishedSuccessfulListener:
     tags:
         - { name: kernel.event_listener, event: rkwadriga.jwt.authentication_finished_successful, method: process }
