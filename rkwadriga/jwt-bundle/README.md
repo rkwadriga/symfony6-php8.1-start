@@ -3,12 +3,12 @@ JWT-authentication bundle for Symfony 6.
 
 ## Installation
 
-###1. Install the bundle using composer:
+### 1. Install the bundle using composer:
 ```bash
 $ composer require rkwadriga/jwt-bundle
 ```
 
-###2. Enable the bundle in config/bundles.php:
+### 2. Enable the bundle in config/bundles.php:
 ```php
 <?php
 
@@ -18,7 +18,7 @@ return [
 ];
 ```
 
-###3. Create user provider and add jwt-authenticators in config/packages/security.yaml:
+### 3. Create user provider and add jwt-authenticators in config/packages/security.yaml:
 ```yaml
 security:
     ...
