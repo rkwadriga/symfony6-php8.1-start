@@ -46,7 +46,7 @@ security:
 ```yaml
 ...
 ###< rkwadriga/jwt-bundle ###
-SECRET_KEY=890Uytsde56serKsdf098yJt540Iuyrse56Pok8O89dsWer45Ty
+RKWADRIGA_JWT_SECRET=890Uytsde56serKsdf098yJt540Iuyrse56Pok8O89dsWer45Ty
 ###> rkwadriga/jwt-bundle ###
 ```
 * Do not copy the secret-key from here. It's an important part of the authorization security. Create your own secret key, it can be any random string of any length.
@@ -76,7 +76,7 @@ rkwadriga_jwt:
     password_param: password
 
     # The secret key from .env file
-    secret_key: '%env(string::SECRET_KEY)%'
+    secret_key: '%env(string::RKWADRIGA_JWT_SECRET)%'
 
     # Encoding algorithm for creating a token signature.
     # Possible values: "SHA256" and "SHA512"

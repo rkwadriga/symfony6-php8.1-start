@@ -26,7 +26,7 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode(ConfigurationParam::USER_IDENTIFIER->shortValue())->defaultValue('email')->end()
                 ->scalarNode(ConfigurationParam::LOGIN_PARAM->shortValue())->defaultValue('email')->end()
                 ->scalarNode(ConfigurationParam::PASSWORD_PARAM->shortValue())->defaultValue('password')->end()
-                ->scalarNode(ConfigurationParam::SECRET_KEY->shortValue())->defaultValue('%env(SECRET_KEY)%')->end()
+                ->scalarNode(ConfigurationParam::SECRET_KEY->shortValue())->defaultValue('%env(RKWADRIGA_JWT_SECRET)%')->end()
                 ->scalarNode(ConfigurationParam::ENCODING_ALGORITHM->shortValue())->defaultValue(Algorithm::SHA256->value)->end()
                 ->scalarNode(ConfigurationParam::ENCODING_HASHING_COUNT->shortValue())->defaultValue(3)->end()
                 ->integerNode(ConfigurationParam::ACCESS_TOKEN_LIFE_TIME->shortValue())->defaultValue(3600)->end()

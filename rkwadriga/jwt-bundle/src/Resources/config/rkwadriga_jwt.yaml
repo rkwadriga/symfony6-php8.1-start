@@ -5,7 +5,7 @@ rkwadriga_jwt:
     user_identifier: email
     login_pram: email
     password_param: password
-    secret_key: '%env(string::SECRET_KEY)%'
+    secret_key: '%env(string::RKWADRIGA_JWT_SECRET)%'
     encoding_algorithm: SHA256
     encoding_hashing_count: 3
     access_token_life_time: 3600
