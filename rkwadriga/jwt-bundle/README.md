@@ -40,9 +40,7 @@ security:
    ...
 ```
 
-## Configuration
-
-### 1. Create your secret key and write it in .env file:
+### 4. Create your secret key and write it in .env file:
 ```yaml
 ...
 ###< rkwadriga/jwt-bundle ###
@@ -51,7 +49,10 @@ RKWADRIGA_JWT_SECRET=890Uytsde56serKsdf098yJt540Iuyrse56Pok8O89dsWer45Ty
 ```
 * Do not copy the secret-key from here. It's an important part of the authorization security. Create your own secret key, it can be any random string of any length.
 
-### 2. Create file config/packages/rkwadriga_jwt.yaml and set your configuration
+
+## Configuration
+
+### Create file config/packages/rkwadriga_jwt.yaml and set your configuration
 ```yaml
 rkwadriga_jwt:
     # The user provider that will be used to log-in the user
