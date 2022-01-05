@@ -165,7 +165,7 @@ class PayloadGenerator implements PayloadGeneratorInterface
     }
 }
 ```
-* But do not forget to set the "created" param (unix-time of creation of token) and the user identifier (in this example is user`s email)
+* But do not forget to set the "created" param (unix-time of creation the token) and the user identifier (in this example is user`s email)
 
 After that add this service to config/services.yaml:
 ```yaml
