@@ -1,5 +1,0 @@
-rkwadriga_jwt:
-    #provider: app_user_provider
-    #refresh_tokens_table: refresh_token_rk
-    #refresh_tokens_limit: 3
-    #encoding_algorithm: SHA512

@@ -50,9 +50,9 @@ trait InstanceServiceTrait
         return new HeadGenerator($configService ?? $this->createConfigServiceInstance());
     }
 
-    protected function createPayloadGeneratorInstance(): PayloadGenerator
+    protected function createPayloadGeneratorInstance(?Config $configService = null): PayloadGenerator
     {
-        return new PayloadGenerator();
+        return new PayloadGenerator($configService ?? $this->createConfigServiceInstance());
     }
 
     protected function createSerializerInstance(?Config $configService = null): Serializer

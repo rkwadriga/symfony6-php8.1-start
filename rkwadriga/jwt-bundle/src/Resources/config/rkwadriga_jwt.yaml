@@ -1,8 +1,8 @@
 rkwadriga_jwt:
     provider: app_user_provider
+    user_identifier: email
     login_url: rkwadriga_jwt_auth_login
     refresh_url: rkwadriga_jwt_refresh_token
-    user_identifier: email
     login_pram: email
     password_param: password
     secret_key: '%env(string::RKWADRIGA_JWT_SECRET)%'

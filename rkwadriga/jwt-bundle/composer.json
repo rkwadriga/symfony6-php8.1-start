@@ -6,6 +6,8 @@
     "require": {
         "php": ">=8.0.0",
         "ext-openssl": "*",
-        "hautelook/alice-bundle": "^2.9"
+        "symfony/orm-pack": "^2.1",
+        "symfony/security-bundle": "5.4.*",
+        "symfony/serializer": "5.4.*"
     }
 }

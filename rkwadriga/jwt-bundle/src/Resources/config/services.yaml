@@ -17,7 +17,9 @@ services:
         alias: Rkwadriga\JwtBundle\Security\UserProvider
         public: false
 
-    Rkwadriga\JwtBundle\Service\PayloadGenerator: ~
+    Rkwadriga\JwtBundle\Service\PayloadGenerator:
+        arguments:
+            - '@Rkwadriga\JwtBundle\Service\Config'
     Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface:
         alias: Rkwadriga\JwtBundle\Service\PayloadGenerator
         public: true

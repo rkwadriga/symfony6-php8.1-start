@@ -57,6 +57,10 @@ RKWADRIGA_JWT_SECRET=890Uytsde56serKsdf098yJt540Iuyrse56Pok8O89dsWer45Ty
 rkwadriga_jwt:
     # The user provider that will be used to log-in the user
     provider: app_user_provider
+
+    # The user identifier that you use in your user provider to identify
+    # the user (usually its "email" or "username")
+    user_identifier: email
     
     # Log-in url. By defaul it`s "POST /api/token"
     # but you can create your own url
@@ -65,10 +69,6 @@ rkwadriga_jwt:
     # Refresh url. Url for refreshing expired token.
     # By default it`s "PUT /api/token"
     refresh_url: rkwadriga_jwt_refresh_token
-
-    # The user identifier that you use in your user provider to identify
-    # the user (usually its "email" or "username")
-    user_identifier: email
 
     # The name of parameter that will be used in log-in request to identify the user
     login_pram: email
@@ -127,7 +127,7 @@ rkwadriga_jwt:
     # (if option is TRUE) or an exception will be thrown (if option is FALSE)
     rewrite_on_limit_exceeded: true
 ```
-* All these parameters are optional, but we strongly recommend you to create your own user provider and set it`s name to "provider" option.
+* All these parameters are optional, but we strongly recommend you to create your own user provider and set it`s name to "provider" option, the same about "user_identifier" param.
 
 ## Usage
 

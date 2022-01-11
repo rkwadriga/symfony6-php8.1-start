@@ -23,9 +23,9 @@ trait ConfigDefaultsTrait
 
         return match ($param) {
             ConfigurationParam::PROVIDER => 'rkwadriga_jwt_default_user_provider',
+            ConfigurationParam::USER_IDENTIFIER => 'email',
             ConfigurationParam::LOGIN_URL => 'rkwadriga_jwt_auth_login',
             ConfigurationParam::REFRESH_URL => 'rkwadriga_jwt_refresh_token',
-            ConfigurationParam::USER_IDENTIFIER => 'email',
             ConfigurationParam::LOGIN_PARAM => 'email',
             ConfigurationParam::PASSWORD_PARAM => 'password',
             ConfigurationParam::SECRET_KEY => self::$secretKey,

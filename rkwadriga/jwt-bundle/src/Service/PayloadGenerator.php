@@ -7,16 +7,22 @@
 namespace Rkwadriga\JwtBundle\Service;
 
 use Rkwadriga\JwtBundle\DependencyInjection\PayloadGeneratorInterface;
+use Rkwadriga\JwtBundle\Enum\ConfigurationParam;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
 
 class PayloadGenerator implements PayloadGeneratorInterface
 {
+    public function __construct(
+        private Config $config,
+    ) {}
+
     public function generate(TokenInterface $token, Request $request): array
     {
         $payload = ['created' => time()];
 
-        [$user, $identifier] = [$token->getUser(), $token->getUserIdentifier()];
+        [$user, $identifier] = [$token->getUser(), $this->config->get(ConfigurationParam::USER_IDENTIFIER)];
         $getter = 'get' . ucfirst($identifier);
         if (method_exists($user, $getter)) {
             $payload[$identifier] = $user->$getter();

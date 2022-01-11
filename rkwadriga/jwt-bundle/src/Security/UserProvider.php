@@ -11,7 +11,6 @@ use Rkwadriga\JwtBundle\Repository\UserRepository;
 use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
-use Symfony\Bridge\Doctrine\Security\User\EntityUserProvider;
 
 class UserProvider implements UserProviderInterface
 {
@@ -46,5 +45,10 @@ class UserProvider implements UserProviderInterface
         }
 
         return $user;
+    }
+
+    public function loadUserByUsername(string $username): UserInterface
+    {
+        return $this->loadUserByIdentifier($username);
     }
 }
